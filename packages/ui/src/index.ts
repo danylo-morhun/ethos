@@ -48,6 +48,7 @@ export {
 	useFormField,
 } from "./components/form";
 export { cn } from "./lib/utils";
+export { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/tabs";
 export {
   DropdownMenu,
   DropdownMenuTrigger,
