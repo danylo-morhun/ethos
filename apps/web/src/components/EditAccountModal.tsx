@@ -1,0 +1,170 @@
+'use client';
+
+import * as React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@ethos/ui';
+import { getAccounts } from '@/actions/getAccounts';
+import { updateAccount } from '@/actions/updateAccount';
+
+const ACCOUNT_TYPES = ['ASSET', 'LIABILITY', 'INCOME', 'EXPENSE'] as const;
+
+const formSchema = z.object({
+  name: z.string().min(1, 'Name required'),
+  type: z.enum(ACCOUNT_TYPES, { error: 'Select a type' }),
+  parentId: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+type Account = Awaited<ReturnType<typeof getAccounts>>[number];
+
+interface Props {
+  account: Account;
+  workspaceId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function EditAccountModal({ account, workspaceId, open, onOpenChange }: Props) {
+  const [accounts, setAccounts] = React.useState<Account[]>([]);
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: account.name,
+      type: account.type,
+      parentId: account.parentId ?? undefined,
+    },
+  });
+
+  React.useEffect(() => {
+    if (open) {
+      getAccounts(workspaceId).then(setAccounts);
+      reset({
+        name: account.name,
+        type: account.type,
+        parentId: account.parentId ?? undefined,
+      });
+    }
+  }, [open, workspaceId, account, reset]);
+
+  const onSubmit = async (values: FormValues) => {
+    try {
+      await updateAccount(account.id, {
+        name: values.name,
+        type: values.type,
+        parentId: values.parentId || null,
+      });
+      toast.success('Account updated');
+      router.refresh();
+      onOpenChange(false);
+    } catch {
+      toast.error('Failed to update account');
+    }
+  };
+
+  // Exclude self from parent options to prevent cycles
+  const parentOptions = accounts.filter((a) => a.id !== account.id);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Account</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-acc-name">Name</Label>
+            <Input id="edit-acc-name" {...register('name')} />
+            {errors.name && (
+              <p className="text-destructive text-[0.8rem]">{errors.name.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Type</Label>
+            <Controller
+              control={control}
+              name="type"
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACCOUNT_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t.charAt(0) + t.slice(1).toLowerCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.type && (
+              <p className="text-destructive text-[0.8rem]">{errors.type.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Parent Account (optional)</Label>
+            <Controller
+              control={control}
+              name="parentId"
+              render={({ field }) => (
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value ?? ''}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {parentOptions.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.name} ({a.type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving…' : 'Save'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
