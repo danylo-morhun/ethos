@@ -143,6 +143,7 @@ export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
 
   const onOpenChange = (val: boolean) => {
     setOpen(val);
+    setSuccess(false);
     if (!val) {
       reset({
         txType: 'expense',
@@ -152,7 +153,6 @@ export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
         categoryId: '',
       } as FormValues);
       setTxType('expense');
-      setSuccess(false);
     }
   };
 
