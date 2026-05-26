@@ -29,9 +29,17 @@ import { createTransaction } from '@/actions/createTransaction';
 
 type TxType = 'expense' | 'income' | 'transfer';
 
+const CURRENCIES = ['PLN', 'EUR', 'USD', 'CHF', 'GBP'] as const;
+type Currency = (typeof CURRENCIES)[number];
+
+function toCurrency(c: string): Currency {
+  return (CURRENCIES as readonly string[]).includes(c) ? (c as Currency) : 'PLN';
+}
+
 const baseFields = {
   description: z.string().min(1, 'Description required'),
   amount: z.number({ error: 'Amount required' }).positive('Amount must be positive'),
+  currency: z.enum(CURRENCIES),
   date: z.string().min(1, 'Date required'),
 };
 
@@ -113,7 +121,7 @@ function AccountSelect({
   );
 }
 
-export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
+export function AddTransactionModal({ workspaceId, baseCurrency }: { workspaceId: string; baseCurrency: string }) {
   const [open, setOpen] = React.useState(false);
   const [accounts, setAccounts] = React.useState<Account[]>([]);
   const [success, setSuccess] = React.useState(false);
@@ -131,15 +139,19 @@ export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
     defaultValues: {
       txType: 'expense',
       description: '',
+      amount: undefined,
+      currency: toCurrency(baseCurrency),
       date: new Date().toISOString().slice(0, 10),
       walletId: '',
       categoryId: '',
-    } as FormValues,
+    } as unknown as FormValues,
   });
 
   React.useEffect(() => {
     if (open) getAccounts(workspaceId).then(setAccounts);
   }, [open, workspaceId]);
+
+  const defaultCurrency = toCurrency(baseCurrency);
 
   const onOpenChange = (val: boolean) => {
     setOpen(val);
@@ -148,10 +160,11 @@ export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
       reset({
         txType: 'expense',
         description: '',
+        currency: defaultCurrency,
         date: new Date().toISOString().slice(0, 10),
         walletId: '',
         categoryId: '',
-      } as FormValues);
+      } as unknown as FormValues);
       setTxType('expense');
     }
   };
@@ -163,26 +176,29 @@ export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
       reset({
         txType: 'expense',
         description: '',
+        currency: defaultCurrency,
         date: new Date().toISOString().slice(0, 10),
         walletId: '',
         categoryId: '',
-      } as FormValues);
+      } as unknown as FormValues);
     } else if (next === 'income') {
       reset({
         txType: 'income',
         description: '',
+        currency: defaultCurrency,
         date: new Date().toISOString().slice(0, 10),
         categoryId: '',
         walletId: '',
-      } as FormValues);
+      } as unknown as FormValues);
     } else {
       reset({
         txType: 'transfer',
         description: '',
+        currency: defaultCurrency,
         date: new Date().toISOString().slice(0, 10),
         fromWalletId: '',
         toWalletId: '',
-      } as FormValues);
+      } as unknown as FormValues);
     }
   };
 
@@ -206,6 +222,7 @@ export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
       fromAccountId,
       toAccountId,
       amount: values.amount,
+      currency: values.currency,
       description: values.description,
       date: values.date,
     });
