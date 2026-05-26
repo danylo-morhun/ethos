@@ -1,9 +1,11 @@
 import {
   date,
   index,
+  integer,
   numeric,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -21,11 +23,59 @@ export const accountTypeEnum = pgEnum('account_type', [
   'EXPENSE',
 ]);
 
+// ─── Auth.js tables ──────────────────────────────────────────────────────────
+
+export const authUsers = pgTable('auth_users', {
+  id: text('id').primaryKey(),
+  name: text('name'),
+  email: text('email').notNull().unique(),
+  emailVerified: timestamp('email_verified', { mode: 'date' }),
+  image: text('image'),
+});
+
+export const authAccounts = pgTable(
+  'auth_accounts',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    provider: text('provider').notNull(),
+    providerAccountId: text('provider_account_id').notNull(),
+    refresh_token: text('refresh_token'),
+    access_token: text('access_token'),
+    expires_at: integer('expires_at'),
+    token_type: text('token_type'),
+    scope: text('scope'),
+    id_token: text('id_token'),
+    session_state: text('session_state'),
+  },
+  (t) => [primaryKey({ columns: [t.provider, t.providerAccountId] })],
+);
+
+export const authSessions = pgTable('auth_sessions', {
+  sessionToken: text('session_token').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => authUsers.id, { onDelete: 'cascade' }),
+  expires: timestamp('expires', { mode: 'date' }).notNull(),
+});
+
+export const verificationTokens = pgTable(
+  'verification_tokens',
+  {
+    identifier: text('identifier').notNull(),
+    token: text('token').notNull(),
+    expires: timestamp('expires', { mode: 'date' }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.identifier, t.token] })],
+);
+
 // ─── Tables ──────────────────────────────────────────────────────────────────
 
 export const workspaces = pgTable('workspaces', {
   id: uuid('id').primaryKey().defaultRandom(),
-  // NextAuth user id (string — no FK, auth is external)
+  // Auth user id — plain text ref, no DB FK (auth is external; avoids cascade issues)
   userId: text('user_id').notNull(),
   name: text('name').notNull(),
   baseCurrency: text('base_currency').notNull().default('USD'),
@@ -40,7 +90,6 @@ export const accounts = pgTable(
     workspaceId: uuid('workspace_id')
       .notNull()
       .references(() => workspaces.id, { onDelete: 'cascade' }),
-    // Lazy reference for self-referential FK (nested categories)
     parentId: uuid('parent_id').references((): AnyPgColumn => accounts.id, {
       onDelete: 'set null',
     }),
@@ -77,8 +126,6 @@ export const transactionEntries = pgTable(
     accountId: uuid('account_id')
       .notNull()
       .references(() => accounts.id),
-    // Stored as numeric string — avoids all floating-point precision errors.
-    // precision 19 covers amounts up to 999_999_999_999_999.9999
     amount: numeric('amount', { precision: 19, scale: 4 }).notNull(),
     currency: text('currency').notNull(),
     // Amount converted to workspace base currency; sum per transaction must = 0
@@ -110,7 +157,15 @@ export const exchangeRates = pgTable(
 
 // ─── Relations ───────────────────────────────────────────────────────────────
 
-export const workspacesRelations = relations(workspaces, ({ many }) => ({
+export const authUsersRelations = relations(authUsers, ({ many }) => ({
+  workspaces: many(workspaces),
+}));
+
+export const workspacesRelations = relations(workspaces, ({ one, many }) => ({
+  user: one(authUsers, {
+    fields: [workspaces.userId],
+    references: [authUsers.id],
+  }),
   accounts: many(accounts),
   transactions: many(transactions),
 }));
