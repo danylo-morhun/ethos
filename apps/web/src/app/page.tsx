@@ -1,4 +1,5 @@
-import { Button } from "@ethos/ui/button";
+import { signIn } from '@/auth';
+import { Button } from '@ethos/ui/button';
 import {
   Card,
   CardContent,
@@ -6,7 +7,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@ethos/ui/card";
+} from '@ethos/ui/card';
 
 export default function HomePage() {
   return (
@@ -18,11 +19,21 @@ export default function HomePage() {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm">
-            Connect your accounts to get started.
+            Sign in to manage your finances.
           </p>
         </CardContent>
         <CardFooter>
-          <Button className="w-full">Connect</Button>
+          <form
+            className="w-full"
+            action={async () => {
+              'use server';
+              await signIn('github', { redirectTo: '/dashboard' });
+            }}
+          >
+            <Button className="w-full" type="submit">
+              Sign in with GitHub
+            </Button>
+          </form>
         </CardFooter>
       </Card>
     </main>
