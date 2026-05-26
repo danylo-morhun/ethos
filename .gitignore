@@ -15,5 +15,6 @@ dist
 
 # misc
 .DS_Store
+*.tsbuildinfo
 *.pem
 next-env.d.ts
