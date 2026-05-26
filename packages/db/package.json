@@ -7,13 +7,17 @@
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "drizzle-orm": "^0.36.4",
     "postgres": "^3.4.5"
   },
   "devDependencies": {
+    "@types/node": "^22.19.19",
     "drizzle-kit": "^0.28.1",
     "typescript": "^5.7.2"
   }
