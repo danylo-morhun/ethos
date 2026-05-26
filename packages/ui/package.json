@@ -12,7 +12,8 @@
     "./table": "./src/components/table.tsx",
     "./select": "./src/components/select.tsx",
     "./form": "./src/components/form.tsx",
-    "./lib/utils": "./src/lib/utils.ts"
+    "./lib/utils": "./src/lib/utils.ts",
+    "./dropdown-menu": "./src/components/dropdown-menu.tsx"
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -29,6 +30,7 @@
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
@@ -36,6 +38,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",
     "react-hook-form": "^7.76.1",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0"
   }
 }
