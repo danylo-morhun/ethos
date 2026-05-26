@@ -9,6 +9,8 @@ export type RecentTransaction = {
   fromAccount: string;
   toAccount: string;
   amount: string;
+  currency: string;
+  baseAmount: string;
 };
 
 export async function getRecentTransactions(workspaceId: string): Promise<RecentTransaction[]> {
@@ -32,7 +34,9 @@ export async function getRecentTransactions(workspaceId: string): Promise<Recent
       description: txn.description,
       fromAccount: fromEntry?.account?.name ?? '—',
       toAccount: toEntry?.account?.name ?? '—',
-      amount: toEntry?.baseAmount ?? '0',
+      amount: toEntry?.amount ?? '0',
+      currency: toEntry?.currency ?? '',
+      baseAmount: toEntry?.baseAmount ?? '0',
     };
   });
 }
