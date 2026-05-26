@@ -1,3 +1,9 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -5,7 +11,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Button,
 } from '@ethos/ui';
+import { deleteTransaction } from '@/actions/deleteTransaction';
 import type { RecentTransaction } from '@/actions/getRecentTransactions';
 
 function fmt(amount: string, currency: string) {
@@ -23,6 +43,23 @@ interface Props {
 }
 
 export function TransactionTable({ transactions, currency }: Props) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
+  function handleDelete(id: string) {
+    startTransition(async () => {
+      const result = await deleteTransaction(id);
+      if ('error' in result) {
+        toast.error(result.error);
+      } else {
+        toast.success('Transaction deleted.');
+        router.refresh();
+      }
+      setPendingId(null);
+    });
+  }
+
   return (
     <section>
       <h2 className="mb-4 text-lg font-semibold">Recent Transactions</h2>
@@ -35,12 +72,13 @@ export function TransactionTable({ transactions, currency }: Props) {
               <TableHead>From</TableHead>
               <TableHead>To</TableHead>
               <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                   No transactions yet. Add one above.
                 </TableCell>
               </TableRow>
@@ -55,6 +93,49 @@ export function TransactionTable({ transactions, currency }: Props) {
                     {txn.currency && txn.currency !== currency
                       ? `${fmt(txn.amount, txn.currency)} (~${fmt(txn.baseAmount, currency)})`
                       : fmt(txn.baseAmount, currency)}
+                  </TableCell>
+                  <TableCell>
+                    <AlertDialog
+                      open={pendingId === txn.id}
+                      onOpenChange={(open) => !open && setPendingId(null)}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={() => setPendingId(txn.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete transaction?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will recalculate your account balances. This action cannot be
+                            undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            disabled={isPending}
+                            onClick={() => handleDelete(txn.id)}
+                          >
+                            {isPending ? 'Deleting…' : 'Delete'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))
