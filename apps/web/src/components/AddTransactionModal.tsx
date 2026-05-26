@@ -19,25 +19,105 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
 } from '@ethos/ui';
 import { getAccounts } from '@/actions/getAccounts';
 import { createTransaction } from '@/actions/createTransaction';
 
-const formSchema = z.object({
+type TxType = 'expense' | 'income' | 'transfer';
+
+const baseFields = {
   description: z.string().min(1, 'Description required'),
   amount: z.number({ error: 'Amount required' }).positive('Amount must be positive'),
   date: z.string().min(1, 'Date required'),
-  fromAccountId: z.string().min(1, 'Select an account'),
-  toAccountId: z.string().min(1, 'Select an account'),
+};
+
+const expenseSchema = z.object({
+  ...baseFields,
+  txType: z.literal('expense'),
+  walletId: z.string().min(1, 'Select a wallet'),
+  categoryId: z.string().min(1, 'Select a category'),
 });
+
+const incomeSchema = z.object({
+  ...baseFields,
+  txType: z.literal('income'),
+  categoryId: z.string().min(1, 'Select a category'),
+  walletId: z.string().min(1, 'Select a wallet'),
+});
+
+const transferSchema = z.object({
+  ...baseFields,
+  txType: z.literal('transfer'),
+  fromWalletId: z.string().min(1, 'Select from wallet'),
+  toWalletId: z.string().min(1, 'Select to wallet'),
+});
+
+const formSchema = z.discriminatedUnion('txType', [expenseSchema, incomeSchema, transferSchema]);
 
 type FormValues = z.infer<typeof formSchema>;
 type Account = Awaited<ReturnType<typeof getAccounts>>[number];
+
+const WALLET_TYPES = ['ASSET', 'LIABILITY'] as const;
+const EXPENSE_TYPES = ['EXPENSE'] as const;
+const INCOME_TYPES = ['INCOME'] as const;
+
+function isWallet(a: Account) {
+  return (WALLET_TYPES as readonly string[]).includes(a.type);
+}
+function isExpenseCategory(a: Account) {
+  return (EXPENSE_TYPES as readonly string[]).includes(a.type);
+}
+function isIncomeCategory(a: Account) {
+  return (INCOME_TYPES as readonly string[]).includes(a.type);
+}
+
+function AccountSelect({
+  control,
+  name,
+  accounts,
+  placeholder,
+  error,
+}: {
+  control: ReturnType<typeof useForm<FormValues>>['control'];
+  name: string;
+  accounts: Account[];
+  placeholder: string;
+  error?: string;
+}) {
+  return (
+    <Controller
+      control={control as never}
+      name={name as never}
+      render={({ field }: { field: { onChange: (v: string) => void; value: string } }) => (
+        <>
+          <Select onValueChange={field.onChange} value={field.value ?? ''}>
+            <SelectTrigger>
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {accounts.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  {a.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {error && <p className="text-destructive text-[0.8rem]">{error}</p>}
+        </>
+      )}
+    />
+  );
+}
 
 export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
   const [open, setOpen] = React.useState(false);
   const [accounts, setAccounts] = React.useState<Account[]>([]);
   const [success, setSuccess] = React.useState(false);
+  const [txType, setTxType] = React.useState<TxType>('expense');
   const router = useRouter();
 
   const {
@@ -49,11 +129,12 @@ export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      txType: 'expense',
       description: '',
       date: new Date().toISOString().slice(0, 10),
-      fromAccountId: '',
-      toAccountId: '',
-    },
+      walletId: '',
+      categoryId: '',
+    } as FormValues,
   });
 
   React.useEffect(() => {
@@ -63,17 +144,81 @@ export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
   const onOpenChange = (val: boolean) => {
     setOpen(val);
     if (!val) {
-      reset();
+      reset({
+        txType: 'expense',
+        description: '',
+        date: new Date().toISOString().slice(0, 10),
+        walletId: '',
+        categoryId: '',
+      } as FormValues);
+      setTxType('expense');
       setSuccess(false);
     }
   };
 
+  const handleTabChange = (val: string) => {
+    const next = val as TxType;
+    setTxType(next);
+    if (next === 'expense') {
+      reset({
+        txType: 'expense',
+        description: '',
+        date: new Date().toISOString().slice(0, 10),
+        walletId: '',
+        categoryId: '',
+      } as FormValues);
+    } else if (next === 'income') {
+      reset({
+        txType: 'income',
+        description: '',
+        date: new Date().toISOString().slice(0, 10),
+        categoryId: '',
+        walletId: '',
+      } as FormValues);
+    } else {
+      reset({
+        txType: 'transfer',
+        description: '',
+        date: new Date().toISOString().slice(0, 10),
+        fromWalletId: '',
+        toWalletId: '',
+      } as FormValues);
+    }
+  };
+
   const onSubmit = async (values: FormValues) => {
-    await createTransaction({ workspaceId, ...values });
+    let fromAccountId: string;
+    let toAccountId: string;
+
+    if (values.txType === 'expense') {
+      fromAccountId = values.walletId;
+      toAccountId = values.categoryId;
+    } else if (values.txType === 'income') {
+      fromAccountId = values.categoryId;
+      toAccountId = values.walletId;
+    } else {
+      fromAccountId = values.fromWalletId;
+      toAccountId = values.toWalletId;
+    }
+
+    await createTransaction({
+      workspaceId,
+      fromAccountId,
+      toAccountId,
+      amount: values.amount,
+      description: values.description,
+      date: values.date,
+    });
     setSuccess(true);
     router.refresh();
     setTimeout(() => setOpen(false), 1200);
   };
+
+  const wallets = accounts.filter(isWallet);
+  const expenseCategories = accounts.filter(isExpenseCategory);
+  const incomeCategories = accounts.filter(isIncomeCategory);
+
+  const errs = errors as Record<string, { message?: string }>;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -92,6 +237,83 @@ export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <Tabs value={txType} onValueChange={handleTabChange} className="w-full">
+              <TabsList className="w-full">
+                <TabsTrigger value="expense" className="flex-1">Expense</TabsTrigger>
+                <TabsTrigger value="income" className="flex-1">Income</TabsTrigger>
+                <TabsTrigger value="transfer" className="flex-1">Transfer</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="expense" className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Wallet</Label>
+                  <AccountSelect
+                    control={control}
+                    name="walletId"
+                    accounts={wallets}
+                    placeholder="Select wallet"
+                    error={errs.walletId?.message}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Category</Label>
+                  <AccountSelect
+                    control={control}
+                    name="categoryId"
+                    accounts={expenseCategories}
+                    placeholder="Select expense category"
+                    error={errs.categoryId?.message}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="income" className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Category</Label>
+                  <AccountSelect
+                    control={control}
+                    name="categoryId"
+                    accounts={incomeCategories}
+                    placeholder="Select income category"
+                    error={errs.categoryId?.message}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Wallet</Label>
+                  <AccountSelect
+                    control={control}
+                    name="walletId"
+                    accounts={wallets}
+                    placeholder="Select wallet"
+                    error={errs.walletId?.message}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="transfer" className="space-y-4">
+                <div className="space-y-2">
+                  <Label>From Wallet</Label>
+                  <AccountSelect
+                    control={control}
+                    name="fromWalletId"
+                    accounts={wallets}
+                    placeholder="Select source wallet"
+                    error={errs.fromWalletId?.message}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>To Wallet</Label>
+                  <AccountSelect
+                    control={control}
+                    name="toWalletId"
+                    accounts={wallets}
+                    placeholder="Select destination wallet"
+                    error={errs.toWalletId?.message}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Input
@@ -99,8 +321,8 @@ export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
                 placeholder="e.g. Grocery run"
                 {...register('description')}
               />
-              {errors.description && (
-                <p className="text-destructive text-[0.8rem]">{errors.description.message}</p>
+              {errs.description && (
+                <p className="text-destructive text-[0.8rem]">{errs.description.message}</p>
               )}
             </div>
 
@@ -113,66 +335,16 @@ export function AddTransactionModal({ workspaceId }: { workspaceId: string }) {
                 placeholder="0.00"
                 {...register('amount', { valueAsNumber: true })}
               />
-              {errors.amount && (
-                <p className="text-destructive text-[0.8rem]">{errors.amount.message}</p>
+              {errs.amount && (
+                <p className="text-destructive text-[0.8rem]">{errs.amount.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="date">Date</Label>
               <Input id="date" type="date" {...register('date')} />
-              {errors.date && (
-                <p className="text-destructive text-[0.8rem]">{errors.date.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>From Account</Label>
-              <Controller
-                control={control}
-                name="fromAccountId"
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {accounts.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.name} ({a.type})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.fromAccountId && (
-                <p className="text-destructive text-[0.8rem]">{errors.fromAccountId.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>To Account</Label>
-              <Controller
-                control={control}
-                name="toAccountId"
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {accounts.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.name} ({a.type})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.toAccountId && (
-                <p className="text-destructive text-[0.8rem]">{errors.toAccountId.message}</p>
+              {errs.date && (
+                <p className="text-destructive text-[0.8rem]">{errs.date.message}</p>
               )}
             </div>
 
