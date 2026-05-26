@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { initializeWorkspace } from '@/actions/initializeWorkspace';
 import { getBalances } from '@/actions/getBalances';
+import { getAccounts } from '@/actions/getAccounts';
 import { getRecentTransactions } from '@/actions/getRecentTransactions';
 import { AddTransactionModal } from '@/components/AddTransactionModal';
 import { AccountsOverview } from '@/components/AccountsOverview';
@@ -14,8 +15,9 @@ export default async function DashboardPage() {
 
   const workspace = await initializeWorkspace(session.user.id);
 
-  const [balances, recentTransactions] = await Promise.all([
+  const [balances, accounts, recentTransactions] = await Promise.all([
     getBalances(workspace.id),
+    getAccounts(workspace.id),
     getRecentTransactions(workspace.id),
   ]);
 
@@ -31,7 +33,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="space-y-8">
-          <AccountsOverview balances={balances} currency={workspace.baseCurrency} />
+          <AccountsOverview balances={balances} accounts={accounts} currency={workspace.baseCurrency} workspaceId={workspace.id} />
           <TransactionTable transactions={recentTransactions} currency={workspace.baseCurrency} />
         </div>
       </div>
