@@ -29,7 +29,7 @@ export default async function DashboardPage() {
             <h1 className="text-2xl font-bold">{workspace.name}</h1>
             <p className="text-sm text-muted-foreground">{session.user.email}</p>
           </div>
-          <AddTransactionModal workspaceId={workspace.id} />
+          <AddTransactionModal workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
         </div>
 
         <div className="space-y-8">
