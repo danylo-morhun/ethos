@@ -1,5 +1,26 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@ethos/ui';
+'use client';
+
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@ethos/ui';
 import type { AccountBalance } from '@/actions/getBalances';
+import { deleteAccount } from '@/actions/deleteAccount';
+import { AddAccountModal } from '@/components/AddAccountModal';
+import { EditAccountModal } from '@/components/EditAccountModal';
+import { getAccounts } from '@/actions/getAccounts';
 
 const TYPE_LABELS: Record<string, string> = {
   ASSET: 'Assets',
@@ -19,28 +40,88 @@ function fmt(amount: string, currency: string) {
   }).format(Math.abs(Number(amount)));
 }
 
-function totalLabel(type: string, balances: AccountBalance[], currency: string) {
-  const sum = balances.reduce((acc, b) => acc + Number(b.balance), 0);
-  return fmt(String(sum), currency);
+type Account = Awaited<ReturnType<typeof getAccounts>>[number];
+
+interface AccountRow extends AccountBalance {
+  parentId: string | null;
 }
 
 interface Props {
   balances: AccountBalance[];
   currency: string;
+  workspaceId: string;
+  accounts: Account[];
 }
 
-export function AccountsOverview({ balances, currency }: Props) {
-  const grouped = TYPE_ORDER.reduce<Record<string, AccountBalance[]>>((acc, type) => {
-    acc[type] = balances.filter((b) => b.type === type);
+function sortWithChildren(rows: AccountRow[]): AccountRow[] {
+  const byId = new Map(rows.map((r) => [r.accountId, r]));
+  const result: AccountRow[] = [];
+  const visited = new Set<string>();
+
+  function visit(row: AccountRow) {
+    if (visited.has(row.accountId)) return;
+    visited.add(row.accountId);
+    result.push(row);
+    rows
+      .filter((r) => r.parentId === row.accountId)
+      .forEach(visit);
+  }
+
+  rows
+    .filter((r) => !r.parentId || !byId.has(r.parentId))
+    .forEach(visit);
+
+  // catch any orphans
+  rows.forEach((r) => visit(r));
+
+  return result;
+}
+
+export function AccountsOverview({ balances, currency, workspaceId, accounts }: Props) {
+  const router = useRouter();
+  const [editTarget, setEditTarget] = React.useState<Account | null>(null);
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+
+  // Merge parentId from accounts list into balance rows
+  const accountMap = new Map(accounts.map((a) => [a.id, a]));
+  const rows: AccountRow[] = balances.map((b) => ({
+    ...b,
+    parentId: accountMap.get(b.accountId)?.parentId ?? null,
+  }));
+
+  const grouped = TYPE_ORDER.reduce<Record<string, AccountRow[]>>((acc, type) => {
+    acc[type] = rows.filter((b) => b.type === type);
     return acc;
   }, {});
 
+  const handleDelete = async (accountId: string, name: string) => {
+    setDeletingId(accountId);
+    try {
+      const result = await deleteAccount(accountId);
+      if ('error' in result) {
+        toast.error(result.error);
+      } else {
+        toast.success(`"${name}" deleted`);
+        router.refresh();
+      }
+    } catch {
+      toast.error('Failed to delete account');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <section>
-      <h2 className="mb-4 text-lg font-semibold">Accounts</h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Accounts</h2>
+        <AddAccountModal workspaceId={workspaceId} />
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {TYPE_ORDER.map((type) => {
           const group = grouped[type] ?? [];
+          const sorted = sortWithChildren(group);
           const sum = group.reduce((acc, b) => acc + Number(b.balance), 0);
           const displaySum = fmt(String(Math.abs(sum)), currency);
 
@@ -53,24 +134,70 @@ export function AccountsOverview({ balances, currency }: Props) {
                 <p className="text-2xl font-bold">{displaySum}</p>
               </CardHeader>
               <CardContent>
-                {group.length === 0 ? (
+                {sorted.length === 0 ? (
                   <p className="text-xs text-muted-foreground">No accounts</p>
                 ) : (
                   <ul className="space-y-1">
-                    {group.map((b) => (
-                      <li key={b.accountId} className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{b.name}</span>
-                        <span
-                          className={
-                            Number(b.balance) < 0
-                              ? 'font-medium text-red-500'
-                              : 'font-medium text-foreground'
-                          }
+                    {sorted.map((b) => {
+                      const isChild = !!b.parentId;
+                      return (
+                        <li
+                          key={b.accountId}
+                          className={`flex items-center justify-between text-sm ${isChild ? 'ml-4' : ''}`}
                         >
-                          {fmt(b.balance, currency)}
-                        </span>
-                      </li>
-                    ))}
+                          <span className="flex items-center gap-1 text-muted-foreground min-w-0">
+                            {isChild && (
+                              <span className="shrink-0 text-muted-foreground/50">↳</span>
+                            )}
+                            <span className="truncate">{b.name}</span>
+                          </span>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span
+                              className={
+                                Number(b.balance) < 0
+                                  ? 'font-medium text-red-500'
+                                  : 'font-medium text-foreground'
+                              }
+                            >
+                              {fmt(b.balance, currency)}
+                            </span>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-muted-foreground/60 hover:text-foreground"
+                                >
+                                  <MoreHorizontal className="h-3.5 w-3.5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    const acct = accountMap.get(b.accountId);
+                                    if (acct) setEditTarget(acct);
+                                  }}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-red-500 focus:text-red-500"
+                                  disabled={deletingId === b.accountId}
+                                  onClick={() => handleDelete(b.accountId, b.name)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  {deletingId === b.accountId ? 'Deleting…' : 'Delete'}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </CardContent>
@@ -78,6 +205,15 @@ export function AccountsOverview({ balances, currency }: Props) {
           );
         })}
       </div>
+
+      {editTarget && (
+        <EditAccountModal
+          account={editTarget}
+          workspaceId={workspaceId}
+          open={!!editTarget}
+          onOpenChange={(v) => { if (!v) setEditTarget(null); }}
+        />
+      )}
     </section>
   );
 }
