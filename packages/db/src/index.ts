@@ -1,2 +1,2 @@
-// Drizzle ORM schema and client — schema defined here, imported by apps/web server-only code
-export {};
+export * from './schema';
+export { db } from './db';
