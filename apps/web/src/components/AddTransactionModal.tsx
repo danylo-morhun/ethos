@@ -345,13 +345,32 @@ export function AddTransactionModal({ workspaceId, baseCurrency }: { workspaceId
 
             <div className="space-y-2">
               <Label htmlFor="amount">Amount</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                {...register('amount', { valueAsNumber: true })}
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  className="flex-1"
+                  {...register('amount', { valueAsNumber: true })}
+                />
+                <Controller
+                  control={control}
+                  name="currency"
+                  render={({ field }: { field: { onChange: (v: string) => void; value: string } }) => (
+                    <Select onValueChange={field.onChange} value={field.value ?? defaultCurrency}>
+                      <SelectTrigger className="w-[90px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CURRENCIES.map((c) => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
               {errs.amount && (
                 <p className="text-destructive text-[0.8rem]">{errs.amount.message}</p>
               )}
