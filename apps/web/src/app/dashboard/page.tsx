@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { initializeWorkspace } from '@/actions/initializeWorkspace';
+import { AddTransactionModal } from '@/components/AddTransactionModal';
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -20,6 +21,7 @@ export default async function DashboardPage() {
           Workspace ID: <span className="text-foreground font-mono">{workspace.id}</span>
         </p>
       </div>
+      <AddTransactionModal workspaceId={workspace.id} />
     </main>
   );
 }
