@@ -3,7 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./button": "./src/components/button.tsx",
+    "./card": "./src/components/card.tsx",
+    "./input": "./src/components/input.tsx",
+    "./label": "./src/components/label.tsx",
+    "./dialog": "./src/components/dialog.tsx",
+    "./table": "./src/components/table.tsx",
+    "./lib/utils": "./src/lib/utils.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
