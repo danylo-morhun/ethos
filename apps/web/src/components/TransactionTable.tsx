@@ -52,7 +52,9 @@ export function TransactionTable({ transactions, currency }: Props) {
                   <TableCell className="text-muted-foreground">{txn.fromAccount}</TableCell>
                   <TableCell className="text-muted-foreground">{txn.toAccount}</TableCell>
                   <TableCell className="text-right font-mono font-medium">
-                    {fmt(txn.amount, currency)}
+                    {txn.currency && txn.currency !== currency
+                      ? `${fmt(txn.amount, txn.currency)} (~${fmt(txn.baseAmount, currency)})`
+                      : fmt(txn.baseAmount, currency)}
                   </TableCell>
                 </TableRow>
               ))
