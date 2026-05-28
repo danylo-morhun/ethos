@@ -9,6 +9,7 @@ export async function updateAccount(
     name: string;
     type: 'ASSET' | 'LIABILITY' | 'INCOME' | 'EXPENSE';
     parentId?: string | null;
+    budget?: number | null;
   },
 ) {
   const [account] = await db
@@ -17,6 +18,7 @@ export async function updateAccount(
       name: data.name,
       type: data.type,
       parentId: data.parentId ?? null,
+      budget: data.budget != null ? String(data.budget) : null,
       updatedAt: new Date(),
     })
     .where(eq(accounts.id, accountId))

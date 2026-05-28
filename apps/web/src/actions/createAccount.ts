@@ -8,6 +8,7 @@ export async function createAccount(
   name: string,
   type: 'ASSET' | 'LIABILITY' | 'INCOME' | 'EXPENSE',
   parentId?: string,
+  budget?: number,
 ) {
   const [workspace] = await db
     .select({ baseCurrency: workspaces.baseCurrency })
@@ -25,6 +26,7 @@ export async function createAccount(
       type,
       currency: workspace.baseCurrency,
       parentId: parentId ?? null,
+      budget: budget != null ? String(budget) : null,
     })
     .returning();
 
