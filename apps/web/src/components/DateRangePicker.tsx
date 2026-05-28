@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { CalendarIcon, X } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Calendar01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { Button, Calendar, Popover, PopoverContent, PopoverTrigger } from '@ethos/ui';
 import { parseLocal } from '@/lib/dates';
 
@@ -32,7 +33,7 @@ function DateButton({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="w-36 justify-start gap-2 font-normal">
-          <CalendarIcon className="h-4 w-4 shrink-0 opacity-50" />
+          <HugeiconsIcon icon={Calendar01Icon} className="h-4 w-4 shrink-0 opacity-50" />
           {date ? (
             format(date, 'MMM d, yyyy')
           ) : (
@@ -102,7 +103,7 @@ export function DateRangePicker({ from, to }: Props) {
           onClick={() => push(undefined, undefined)}
           aria-label="Clear date filter"
         >
-          <X className="h-4 w-4" />
+          <HugeiconsIcon icon={Cancel01Icon} className="h-4 w-4" />
         </Button>
       )}
     </div>
