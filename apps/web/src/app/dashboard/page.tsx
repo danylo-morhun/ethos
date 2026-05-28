@@ -42,8 +42,9 @@ export default async function DashboardPage({
   if (!session?.user?.id) redirect('/');
 
   const { from: rawFrom, to: rawTo } = await searchParams;
-  const from = rawFrom || undefined;
-  const to = rawTo || undefined;
+  const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+  const from = rawFrom && ISO_DATE.test(rawFrom) ? rawFrom : undefined;
+  const to   = rawTo   && ISO_DATE.test(rawTo)   ? rawTo   : undefined;
 
   const workspace = await initializeWorkspace(session.user.id);
   const periodLabel = buildPeriodLabel(from, to);
