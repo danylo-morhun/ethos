@@ -130,12 +130,12 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
           const displaySum = fmt(String(Math.abs(sum)), currency);
 
           return (
-            <Card key={type} className="overflow-hidden">
+            <Card key={type} className="overflow-hidden h-full flex flex-col">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {TYPE_LABELS[type]}
                 </CardTitle>
-                <p className="truncate text-2xl font-bold">{displaySum}</p>
+                <p className="text-2xl lg:text-3xl font-bold tracking-tight break-words">{displaySum}</p>
               </CardHeader>
               <CardContent>
                 {sorted.length === 0 ? (
