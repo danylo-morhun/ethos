@@ -19,6 +19,7 @@ import {
   Progress,
 } from '@ethos/ui';
 import type { AccountBalance } from '@/actions/getBalances';
+import { formatCurrency } from '@/lib/format';
 import { deleteAccount } from '@/actions/deleteAccount';
 import { AddAccountModal } from '@/components/AddAccountModal';
 import { EditAccountModal } from '@/components/EditAccountModal';
@@ -35,14 +36,6 @@ function typeLabels(periodLabel: string): Record<string, string> {
 
 const TYPE_ORDER = ['ASSET', 'INCOME', 'EXPENSE', 'LIABILITY'];
 
-function fmt(amount: string | number, currency: string) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Math.abs(Number(amount)));
-}
 
 type Account = Awaited<ReturnType<typeof getAccounts>>[number];
 
@@ -127,7 +120,7 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
           const group = grouped[type] ?? [];
           const sorted = sortWithChildren(group);
           const sum = group.reduce((acc, b) => acc + Number(b.balance), 0);
-          const displaySum = fmt(String(Math.abs(sum)), currency);
+          const displaySum = formatCurrency(Math.abs(sum), currency);
 
           return (
             <Card key={type} className="overflow-hidden h-full flex flex-col">
@@ -172,7 +165,7 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                                   Number(b.balance) < 0 ? 'text-red-500' : 'text-muted-foreground'
                                 }`}
                               >
-                                {fmt(b.balance, currency)}
+                                {formatCurrency(Math.abs(Number(b.balance)), currency)}
                               </span>
 
                               <DropdownMenu>
@@ -216,7 +209,7 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                                 indicatorClassName={overBudget ? 'bg-destructive' : undefined}
                               />
                               <p className="mt-0.5 text-xs text-muted-foreground">
-                                {fmt(b.balance, currency)} / {fmt(String(budget), currency)}
+                                {formatCurrency(Math.abs(Number(b.balance)), currency)} / {formatCurrency(budget, currency)}
                               </p>
                             </div>
                           )}
