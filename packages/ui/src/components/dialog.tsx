@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { XIcon } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { cn } from "../lib/utils";
 
 const Dialog = DialogPrimitive.Root;
@@ -41,7 +42,7 @@ const DialogContent = React.forwardRef<
 		>
 			{children}
 			<DialogClose className="ring-offset-background focus:ring-ring absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
-				<XIcon className="size-4" />
+				<HugeiconsIcon icon={Cancel01Icon} className="size-4" />
 				<span className="sr-only">Close</span>
 			</DialogClose>
 		</DialogPrimitive.Content>
