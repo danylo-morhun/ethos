@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { MoreHorizontalIcon, PencilEdit01Icon, Delete01Icon } from '@hugeicons/core-free-icons';
 import {
   Card,
   CardContent,
@@ -183,7 +184,7 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                                     size="icon"
                                     className="h-6 w-6 text-muted-foreground/60 hover:text-foreground"
                                   >
-                                    <MoreHorizontal className="h-3.5 w-3.5" />
+                                    <HugeiconsIcon icon={MoreHorizontalIcon} className="h-3.5 w-3.5" />
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
@@ -192,7 +193,7 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                                       if (acct) setEditTarget(acct);
                                     }}
                                   >
-                                    <Pencil className="mr-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={PencilEdit01Icon} className="mr-2 h-4 w-4" />
                                     Edit
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
@@ -201,7 +202,7 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                                     disabled={deletingId === b.accountId}
                                     onClick={() => handleDelete(b.accountId, b.name)}
                                   >
-                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={Delete01Icon} className="mr-2 h-4 w-4" />
                                     {deletingId === b.accountId ? 'Deleting…' : 'Delete'}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
