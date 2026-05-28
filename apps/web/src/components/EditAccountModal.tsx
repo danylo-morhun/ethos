@@ -29,6 +29,7 @@ const formSchema = z.object({
   name: z.string().min(1, 'Name required'),
   type: z.enum(ACCOUNT_TYPES, { error: 'Select a type' }),
   parentId: z.string().optional(),
+  budget: z.number().positive().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -49,6 +50,7 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
     register,
     handleSubmit,
     control,
+    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -57,8 +59,11 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
       name: account.name,
       type: account.type,
       parentId: account.parentId ?? undefined,
+      budget: account.budget != null ? Number(account.budget) : undefined,
     },
   });
+
+  const selectedType = watch('type');
 
   React.useEffect(() => {
     if (open) {
@@ -67,6 +72,7 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
         name: account.name,
         type: account.type,
         parentId: account.parentId ?? undefined,
+        budget: account.budget != null ? Number(account.budget) : undefined,
       });
     }
   }, [open, workspaceId, account, reset]);
@@ -77,6 +83,7 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
         name: values.name,
         type: values.type,
         parentId: values.parentId || null,
+        budget: values.type === 'EXPENSE' ? (values.budget ?? null) : null,
       });
       toast.success('Account updated');
       router.refresh();
@@ -86,7 +93,6 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
     }
   };
 
-  // Exclude self from parent options to prevent cycles
   const parentOptions = accounts.filter((a) => a.id !== account.id);
 
   return (
@@ -130,16 +136,30 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
             )}
           </div>
 
+          {selectedType === 'EXPENSE' && (
+            <div className="space-y-2">
+              <Label htmlFor="edit-acc-budget">Monthly Budget (Optional)</Label>
+              <Input
+                id="edit-acc-budget"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 500"
+                {...register('budget', { setValueAs: (v) => (v === '' || v == null) ? undefined : Number(v) })}
+              />
+              {errors.budget && (
+                <p className="text-destructive text-[0.8rem]">{errors.budget.message}</p>
+              )}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Parent Account (optional)</Label>
             <Controller
               control={control}
               name="parentId"
               render={({ field }) => (
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value ?? ''}
-                >
+                <Select onValueChange={field.onChange} value={field.value ?? ''}>
                   <SelectTrigger>
                     <SelectValue placeholder="None" />
                   </SelectTrigger>

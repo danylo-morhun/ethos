@@ -30,6 +30,7 @@ const formSchema = z.object({
   name: z.string().min(1, 'Name required'),
   type: z.enum(ACCOUNT_TYPES, { error: 'Select a type' }),
   parentId: z.string().optional(),
+  budget: z.number().positive().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -44,12 +45,15 @@ export function AddAccountModal({ workspaceId }: { workspaceId: string }) {
     register,
     handleSubmit,
     control,
+    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', type: undefined, parentId: undefined },
+    defaultValues: { name: '', type: undefined, parentId: undefined, budget: undefined },
   });
+
+  const selectedType = watch('type');
 
   React.useEffect(() => {
     if (open) getAccounts(workspaceId).then(setAccounts);
@@ -67,6 +71,7 @@ export function AddAccountModal({ workspaceId }: { workspaceId: string }) {
         values.name,
         values.type,
         values.parentId || undefined,
+        values.budget,
       );
       toast.success(`"${values.name}" created`);
       router.refresh();
@@ -121,6 +126,23 @@ export function AddAccountModal({ workspaceId }: { workspaceId: string }) {
               <p className="text-destructive text-[0.8rem]">{errors.type.message}</p>
             )}
           </div>
+
+          {selectedType === 'EXPENSE' && (
+            <div className="space-y-2">
+              <Label htmlFor="acc-budget">Monthly Budget (Optional)</Label>
+              <Input
+                id="acc-budget"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 500"
+                {...register('budget', { setValueAs: (v) => (v === '' || v == null) ? undefined : Number(v) })}
+              />
+              {errors.budget && (
+                <p className="text-destructive text-[0.8rem]">{errors.budget.message}</p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Parent Account (optional)</Label>
