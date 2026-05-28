@@ -28,15 +28,7 @@ import {
 } from '@ethos/ui';
 import { deleteTransaction } from '@/actions/deleteTransaction';
 import type { RecentTransaction } from '@/actions/getRecentTransactions';
-
-function fmt(amount: string, currency: string) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(amount));
-}
+import { formatCurrency } from '@/lib/format';
 
 interface Props {
   transactions: RecentTransaction[];
@@ -92,8 +84,8 @@ export function TransactionTable({ transactions, currency }: Props) {
                   <TableCell className="text-muted-foreground">{txn.toAccount}</TableCell>
                   <TableCell className="text-right font-mono font-medium">
                     {txn.currency && txn.currency !== currency
-                      ? `${fmt(txn.amount, txn.currency)} (~${fmt(txn.baseAmount, currency)})`
-                      : fmt(txn.baseAmount, currency)}
+                      ? `${formatCurrency(Number(txn.amount), txn.currency)} (~${formatCurrency(Number(txn.baseAmount), currency)})`
+                      : formatCurrency(Number(txn.baseAmount), currency)}
                   </TableCell>
                   <TableCell>
                     <AlertDialog
