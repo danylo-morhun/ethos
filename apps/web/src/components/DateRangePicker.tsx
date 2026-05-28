@@ -63,8 +63,19 @@ function DateButton({
 
 export function DateRangePicker({ from, to }: Props) {
   const router = useRouter();
+  // Local state prevents stale-closure bug: if the user picks "from" then
+  // immediately picks "to" before the server round-trip completes, the second
+  // pick would otherwise capture the old `from` prop from its closure.
+  const [localFrom, setLocalFrom] = React.useState(from);
+  const [localTo, setLocalTo] = React.useState(to);
+
+  // Keep local state in sync when URL-driven props change (e.g. browser back/forward).
+  React.useEffect(() => { setLocalFrom(from); }, [from]);
+  React.useEffect(() => { setLocalTo(to); }, [to]);
 
   function push(f: string | undefined, t: string | undefined) {
+    setLocalFrom(f);
+    setLocalTo(t);
     const params = new URLSearchParams();
     if (f) params.set('from', f);
     if (t) params.set('to', t);
@@ -75,17 +86,17 @@ export function DateRangePicker({ from, to }: Props) {
   return (
     <div className="flex items-center gap-2">
       <DateButton
-        value={from}
+        value={localFrom}
         placeholder="Start date"
-        onChange={(f) => push(f, to)}
+        onChange={(f) => push(f, localTo)}
       />
       <span className="text-sm text-muted-foreground">–</span>
       <DateButton
-        value={to}
+        value={localTo}
         placeholder="End date"
-        onChange={(t) => push(from, t)}
+        onChange={(t) => push(localFrom, t)}
       />
-      {(from || to) && (
+      {(localFrom || localTo) && (
         <Button
           variant="ghost"
           size="icon"
