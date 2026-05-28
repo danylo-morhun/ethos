@@ -22,12 +22,14 @@ import { AddAccountModal } from '@/components/AddAccountModal';
 import { EditAccountModal } from '@/components/EditAccountModal';
 import { getAccounts } from '@/actions/getAccounts';
 
-const TYPE_LABELS: Record<string, string> = {
-  ASSET: 'Assets',
-  LIABILITY: 'Liabilities',
-  INCOME: 'Income',
-  EXPENSE: 'Expenses',
-};
+function typeLabels(periodLabel: string): Record<string, string> {
+  return {
+    ASSET: 'Assets',
+    LIABILITY: 'Liabilities',
+    INCOME: `${periodLabel} Income`,
+    EXPENSE: `${periodLabel} Expenses`,
+  };
+}
 
 const TYPE_ORDER = ['ASSET', 'INCOME', 'EXPENSE', 'LIABILITY'];
 
@@ -51,6 +53,7 @@ interface Props {
   currency: string;
   workspaceId: string;
   accounts: Account[];
+  periodLabel: string;
 }
 
 function sortWithChildren(rows: AccountRow[]): AccountRow[] {
@@ -77,7 +80,8 @@ function sortWithChildren(rows: AccountRow[]): AccountRow[] {
   return result;
 }
 
-export function AccountsOverview({ balances, currency, workspaceId, accounts }: Props) {
+export function AccountsOverview({ balances, currency, workspaceId, accounts, periodLabel }: Props) {
+  const TYPE_LABELS = typeLabels(periodLabel);
   const router = useRouter();
   const [editTarget, setEditTarget] = React.useState<Account | null>(null);
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
