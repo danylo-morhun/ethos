@@ -96,6 +96,7 @@ export const accounts = pgTable(
     name: text('name').notNull(),
     type: accountTypeEnum('type').notNull(),
     currency: text('currency').notNull(),
+    budget: numeric('budget', { precision: 19, scale: 4 }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
