@@ -29,7 +29,10 @@ const formSchema = z.object({
   name: z.string().min(1, 'Name required'),
   type: z.enum(ACCOUNT_TYPES, { error: 'Select a type' }),
   parentId: z.string().optional(),
-  budget: z.number().positive().optional(),
+  budget: z.preprocess(
+    (val) => (val === '' || val === undefined) ? undefined : Number(val),
+    z.number().positive().optional(),
+  ),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -102,7 +105,7 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
           <DialogTitle>Edit Account</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit, (errors) => { console.log(errors); toast.error('Please check the form for errors'); })} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="edit-acc-name">Name</Label>
             <Input id="edit-acc-name" {...register('name')} />
@@ -145,7 +148,7 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
                 min="0"
                 step="0.01"
                 placeholder="e.g. 500"
-                {...register('budget', { setValueAs: (v) => (v === '' || v == null) ? undefined : Number(v) })}
+                {...register('budget')}
               />
               {errors.budget && (
                 <p className="text-destructive text-[0.8rem]">{errors.budget.message}</p>
