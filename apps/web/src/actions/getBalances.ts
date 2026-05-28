@@ -12,11 +12,13 @@ export type AccountBalance = {
 
 export async function getBalances(
   workspaceId: string,
-  from: string,
-  to: string,
+  from: string | undefined,
+  to: string | undefined,
 ): Promise<AccountBalance[]> {
-  // ASSET/LIABILITY: historical balance up to `to` (balance sheet)
-  // INCOME/EXPENSE: entries strictly within [from, to] (cash flow)
+  // ASSET/LIABILITY: historical balance up to `to` (balance sheet); no `to` → all time
+  // INCOME/EXPENSE: entries within [from, to]; null bounds → unbounded
+  const fromVal = from ?? null;
+  const toVal = to ?? null;
   const rows = await db
     .select({
       accountId: accounts.id,
@@ -26,11 +28,11 @@ export async function getBalances(
       balance: sql<string>`coalesce(sum(
         case
           when ${accounts.type} in ('ASSET', 'LIABILITY')
-               and (${transactions.date} is null or ${transactions.date} <= ${to})
+               and (${transactions.date} is null or ${toVal} is null or ${transactions.date} <= ${toVal})
             then ${transactionEntries.baseAmount}
           when ${accounts.type} in ('INCOME', 'EXPENSE')
-               and ${transactions.date} >= ${from}
-               and ${transactions.date} <= ${to}
+               and (${fromVal} is null or ${transactions.date} >= ${fromVal})
+               and (${toVal} is null or ${transactions.date} <= ${toVal})
             then ${transactionEntries.baseAmount}
           else null
         end

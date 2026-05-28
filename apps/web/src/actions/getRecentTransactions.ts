@@ -15,14 +15,14 @@ export type RecentTransaction = {
 
 export async function getRecentTransactions(
   workspaceId: string,
-  from: string,
-  to: string,
+  from: string | undefined,
+  to: string | undefined,
 ): Promise<RecentTransaction[]> {
   const rows = await db.query.transactions.findMany({
     where: and(
       eq(transactions.workspaceId, workspaceId),
-      gte(transactions.date, from),
-      lte(transactions.date, to),
+      from ? gte(transactions.date, from) : undefined,
+      to ? lte(transactions.date, to) : undefined,
     ),
     orderBy: [desc(transactions.date), desc(transactions.createdAt)],
     limit: 10,

@@ -8,22 +8,16 @@ import { getRecentTransactions } from '@/actions/getRecentTransactions';
 import { AddTransactionModal } from '@/components/AddTransactionModal';
 import { AccountsOverview } from '@/components/AccountsOverview';
 import { TransactionTable } from '@/components/TransactionTable';
-import { MonthPicker } from '@/components/MonthPicker';
-
-function defaultRange(): { from: string; to: string } {
-  const now = new Date();
-  return {
-    from: format(startOfMonth(now), 'yyyy-MM-dd'),
-    to: format(endOfMonth(now), 'yyyy-MM-dd'),
-  };
-}
+import { DateRangePicker } from '@/components/DateRangePicker';
 
 function parseLocalDate(str: string): Date {
   const [y, m, d] = str.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
 
-function buildPeriodLabel(from: string, to: string): string {
+function buildPeriodLabel(from: string | undefined, to: string | undefined): string {
+  if (!from && !to) return 'All time';
+  if (!from || !to) return 'Custom range';
   const f = parseLocalDate(from);
   const t = parseLocalDate(to);
   const isMonthStart = isSameDay(f, startOfMonth(f));
@@ -48,7 +42,8 @@ export default async function DashboardPage({
   if (!session?.user?.id) redirect('/');
 
   const { from: rawFrom, to: rawTo } = await searchParams;
-  const { from, to } = rawFrom && rawTo ? { from: rawFrom, to: rawTo } : defaultRange();
+  const from = rawFrom || undefined;
+  const to = rawTo || undefined;
 
   const workspace = await initializeWorkspace(session.user.id);
   const periodLabel = buildPeriodLabel(from, to);
@@ -68,7 +63,7 @@ export default async function DashboardPage({
             <p className="text-sm text-muted-foreground">{session.user.email}</p>
           </div>
           <div className="flex items-center gap-3">
-            <MonthPicker from={from} to={to} />
+            <DateRangePicker from={from} to={to} />
             <AddTransactionModal workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
           </div>
         </div>
