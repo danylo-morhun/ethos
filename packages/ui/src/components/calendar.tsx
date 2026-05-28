@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@hugeicons/core-free-icons";
 import { DayPicker } from 'react-day-picker';
 
 import { cn } from '../lib/utils';
@@ -52,8 +53,8 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" {...props} />,
-        IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" {...props} />,
+        IconLeft: ({ ...props }) => <HugeiconsIcon icon={ChevronLeftIcon} className="h-4 w-4" {...props} />,
+        IconRight: ({ ...props }) => <HugeiconsIcon icon={ChevronRightIcon} className="h-4 w-4" {...props} />,
         ...props.components,
       }}
       {...props}
