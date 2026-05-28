@@ -3,7 +3,10 @@
   "compilerOptions": {
     "lib": ["ES2022", "dom"],
     "jsx": "react-jsx",
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules"]
