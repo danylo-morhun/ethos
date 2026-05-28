@@ -10,6 +10,7 @@ import {
 } from '@ethos/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@ethos/ui';
 import type { AccountBalance } from '@/actions/getBalances';
+import { formatCurrency } from '@/lib/format';
 
 const CHART_COLORS = [
   'var(--chart-1)',
@@ -40,12 +41,6 @@ export function ExpenseChart({ balances, currency }: Props) {
   const chartConfig: ChartConfig = Object.fromEntries(
     data.map((d) => [d.name, { label: d.name, color: d.fill }]),
   );
-
-  const fmt = new Intl.NumberFormat(undefined, {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  });
 
   return (
     <Card className="flex flex-col">
@@ -90,7 +85,7 @@ export function ExpenseChart({ balances, currency }: Props) {
                           y={(viewBox.cy ?? 0) - 6}
                           className="fill-foreground text-lg font-bold"
                         >
-                          {fmt.format(total)}
+                          {formatCurrency(total, currency)}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
