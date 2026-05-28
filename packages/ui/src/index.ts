@@ -62,6 +62,9 @@ export {
   AlertDialogAction,
   AlertDialogCancel,
 } from "./components/alert-dialog";
+export { Calendar } from './components/calendar';
+export type { CalendarProps } from './components/calendar';
+export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from './components/popover';
 export {
   DropdownMenu,
   DropdownMenuTrigger,
