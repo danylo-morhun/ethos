@@ -141,7 +141,7 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                 {sorted.length === 0 ? (
                   <p className="text-xs text-muted-foreground">No accounts</p>
                 ) : (
-                  <ul className="space-y-2">
+                  <div className="mt-1 flex flex-col gap-3">
                     {sorted.map((b) => {
                       const isChild = !!b.parentId;
                       const acct = accountMap.get(b.accountId);
@@ -154,25 +154,23 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                       const overBudget = showBudget && balance > budget;
 
                       return (
-                        <li
+                        <div
                           key={b.accountId}
-                          className={`text-sm ${isChild ? 'ml-4' : ''}`}
+                          className={`flex flex-col gap-1 w-full ${isChild ? 'pl-4' : ''}`}
                         >
-                          <div className="flex items-center justify-between">
-                            <span className="flex min-w-0 items-center gap-1 text-muted-foreground">
+                          <div className="flex items-center justify-between w-full">
+                            <span className="flex min-w-0 items-center gap-1">
                               {isChild && (
                                 <span className="shrink-0 text-muted-foreground/50">↳</span>
                               )}
-                              <span className="truncate">{b.name}</span>
+                              <span className="text-sm font-medium pr-2 truncate">{b.name}</span>
                             </span>
 
                             <div className="flex shrink-0 items-center gap-1">
                               <span
-                                className={
-                                  Number(b.balance) < 0
-                                    ? 'font-medium text-red-500'
-                                    : 'font-medium text-foreground'
-                                }
+                                className={`text-sm whitespace-nowrap ${
+                                  Number(b.balance) < 0 ? 'text-red-500' : 'text-muted-foreground'
+                                }`}
                               >
                                 {fmt(b.balance, currency)}
                               </span>
@@ -211,7 +209,7 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                           </div>
 
                           {showBudget && pct !== null && (
-                            <div className="mt-1.5">
+                            <div className="mt-0.5">
                               <Progress
                                 value={pct}
                                 className="h-1.5"
@@ -222,10 +220,10 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                               </p>
                             </div>
                           )}
-                        </li>
+                        </div>
                       );
                     })}
-                  </ul>
+                  </div>
                 )}
               </CardContent>
             </Card>
