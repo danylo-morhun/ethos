@@ -1,6 +1,6 @@
 'use server';
 
-import { db, transactions, eq, desc } from '@ethos/db';
+import { db, transactions, eq, and, desc, gte, lte } from '@ethos/db';
 
 export type RecentTransaction = {
   id: string;
@@ -13,9 +13,17 @@ export type RecentTransaction = {
   baseAmount: string;
 };
 
-export async function getRecentTransactions(workspaceId: string): Promise<RecentTransaction[]> {
+export async function getRecentTransactions(
+  workspaceId: string,
+  from: string,
+  to: string,
+): Promise<RecentTransaction[]> {
   const rows = await db.query.transactions.findMany({
-    where: eq(transactions.workspaceId, workspaceId),
+    where: and(
+      eq(transactions.workspaceId, workspaceId),
+      gte(transactions.date, from),
+      lte(transactions.date, to),
+    ),
     orderBy: [desc(transactions.date), desc(transactions.createdAt)],
     limit: 10,
     with: {
