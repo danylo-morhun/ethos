@@ -74,11 +74,13 @@ export function DateRangePicker({ from, to }: Props) {
   React.useEffect(() => { setLocalTo(to); }, [to]);
 
   function push(f: string | undefined, t: string | undefined) {
-    setLocalFrom(f);
-    setLocalTo(t);
+    // Ensure from <= to; swap silently if inverted.
+    const [safeFrom, safeTo] = f && t && f > t ? [t, f] : [f, t];
+    setLocalFrom(safeFrom);
+    setLocalTo(safeTo);
     const params = new URLSearchParams();
-    if (f) params.set('from', f);
-    if (t) params.set('to', t);
+    if (safeFrom) params.set('from', safeFrom);
+    if (safeTo) params.set('to', safeTo);
     const qs = params.toString();
     router.push(qs ? `?${qs}` : '?');
   }
