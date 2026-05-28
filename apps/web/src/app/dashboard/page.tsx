@@ -9,17 +9,13 @@ import { AddTransactionModal } from '@/components/AddTransactionModal';
 import { AccountsOverview } from '@/components/AccountsOverview';
 import { TransactionTable } from '@/components/TransactionTable';
 import { DateRangePicker } from '@/components/DateRangePicker';
-
-function parseLocalDate(str: string): Date {
-  const [y, m, d] = str.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
+import { parseLocal } from '@/lib/dates';
 
 function buildPeriodLabel(from: string | undefined, to: string | undefined): string {
   if (!from && !to) return 'All time';
   if (!from || !to) return 'Custom range';
-  const f = parseLocalDate(from);
-  const t = parseLocalDate(to);
+  const f = parseLocal(from);
+  const t = parseLocal(to);
   const isMonthStart = isSameDay(f, startOfMonth(f));
   const isMonthEnd = isSameDay(t, endOfMonth(t));
   const singleMonth = f.getFullYear() === t.getFullYear() && f.getMonth() === t.getMonth();

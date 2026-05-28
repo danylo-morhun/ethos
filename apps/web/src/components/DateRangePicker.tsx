@@ -5,15 +5,11 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { CalendarIcon, X } from 'lucide-react';
 import { Button, Calendar, Popover, PopoverContent, PopoverTrigger } from '@ethos/ui';
+import { parseLocal } from '@/lib/dates';
 
 interface Props {
   from: string | undefined;
   to: string | undefined;
-}
-
-function parseLocal(str: string): Date {
-  const [y, m, d] = str.split('-').map(Number);
-  return new Date(y, m - 1, d);
 }
 
 function fmt(d: Date) {
