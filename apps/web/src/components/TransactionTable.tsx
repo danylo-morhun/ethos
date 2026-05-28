@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { MoreHorizontalIcon, Delete01Icon } from '@hugeicons/core-free-icons';
 import {
   Table,
   TableBody,
@@ -102,7 +103,7 @@ export function TransactionTable({ transactions, currency }: Props) {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
+                            <HugeiconsIcon icon={MoreHorizontalIcon} className="h-4 w-4" />
                             <span className="sr-only">Open menu</span>
                           </Button>
                         </DropdownMenuTrigger>
@@ -111,7 +112,7 @@ export function TransactionTable({ transactions, currency }: Props) {
                             className="text-destructive focus:text-destructive"
                             onSelect={() => setPendingId(txn.id)}
                           >
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <HugeiconsIcon icon={Delete01Icon} className="mr-2 h-4 w-4" />
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
