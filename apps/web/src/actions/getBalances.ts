@@ -15,10 +15,15 @@ export async function getBalances(
   from: string | undefined,
   to: string | undefined,
 ): Promise<AccountBalance[]> {
-  // ASSET/LIABILITY: historical balance up to `to` (balance sheet); no `to` → all time
-  // INCOME/EXPENSE: entries within [from, to]; null bounds → unbounded
-  const fromVal = from ?? null;
-  const toVal = to ?? null;
+  // Build date clauses conditionally — passing null parameters causes Postgres
+  // "could not determine data type of parameter $N" when there is no type context.
+  // Omitting the clause entirely is both correct and avoids the ambiguity.
+  const assetLiabDateClause = to
+    ? sql`and (${transactions.date} is null or ${transactions.date} <= ${to})`
+    : sql``;
+  const incomeFromClause = from ? sql`and ${transactions.date} >= ${from}` : sql``;
+  const incomeToClause   = to   ? sql`and ${transactions.date} <= ${to}`   : sql``;
+
   const rows = await db
     .select({
       accountId: accounts.id,
@@ -27,12 +32,9 @@ export async function getBalances(
       currency: accounts.currency,
       balance: sql<string>`coalesce(sum(
         case
-          when ${accounts.type} in ('ASSET', 'LIABILITY')
-               and (${transactions.date} is null or ${toVal} is null or ${transactions.date} <= ${toVal})
+          when ${accounts.type} in ('ASSET', 'LIABILITY') ${assetLiabDateClause}
             then ${transactionEntries.baseAmount}
-          when ${accounts.type} in ('INCOME', 'EXPENSE')
-               and (${fromVal} is null or ${transactions.date} >= ${fromVal})
-               and (${toVal} is null or ${transactions.date} <= ${toVal})
+          when ${accounts.type} in ('INCOME', 'EXPENSE') ${incomeFromClause} ${incomeToClause}
             then ${transactionEntries.baseAmount}
           else null
         end
