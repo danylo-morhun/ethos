@@ -7,6 +7,7 @@ import { getAccounts } from '@/actions/getAccounts';
 import { getRecentTransactions } from '@/actions/getRecentTransactions';
 import { AddTransactionModal } from '@/components/AddTransactionModal';
 import { AccountsOverview } from '@/components/AccountsOverview';
+import { ExpenseChart } from '@/components/ExpenseChart';
 import { TransactionTable } from '@/components/TransactionTable';
 import { DateRangePicker } from '@/components/DateRangePicker';
 import { parseLocal } from '@/lib/dates';
@@ -66,13 +67,18 @@ export default async function DashboardPage({
         </div>
 
         <div className="space-y-8">
-          <AccountsOverview
-            balances={balances}
-            accounts={accounts}
-            currency={workspace.baseCurrency}
-            workspaceId={workspace.id}
-            periodLabel={periodLabel}
-          />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <ExpenseChart balances={balances} currency={workspace.baseCurrency} />
+            <div className="lg:col-span-2">
+              <AccountsOverview
+                balances={balances}
+                accounts={accounts}
+                currency={workspace.baseCurrency}
+                workspaceId={workspace.id}
+                periodLabel={periodLabel}
+              />
+            </div>
+          </div>
           <TransactionTable transactions={recentTransactions} currency={workspace.baseCurrency} />
         </div>
       </div>
