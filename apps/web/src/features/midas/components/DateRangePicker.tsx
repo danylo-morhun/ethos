@@ -175,10 +175,10 @@ export function DateRangePicker() {
 
 					<div className="flex flex-col p-3">
 						<p className="mb-2 text-xs font-medium text-muted-foreground">Custom range</p>
-						<div className="mb-3 flex items-center gap-2">
+						<div className="mb-3 flex w-full items-center gap-2">
 							<span
 								className={cn(
-									"cursor-pointer rounded-md border px-2 py-1 text-sm transition-colors",
+									"flex-1 cursor-pointer rounded-md border px-2 py-1 text-center text-sm transition-colors",
 									picking === "from"
 										? "border-primary bg-primary/10 text-foreground"
 										: localFrom
@@ -189,10 +189,10 @@ export function DateRangePicker() {
 							>
 								{localFrom ? format(parseLocal(localFrom), "MMM d, yyyy") : "Start date"}
 							</span>
-							<span className="text-xs text-muted-foreground">–</span>
+							<span className="shrink-0 text-xs text-muted-foreground">–</span>
 							<span
 								className={cn(
-									"cursor-pointer rounded-md border px-2 py-1 text-sm transition-colors",
+									"flex-1 cursor-pointer rounded-md border px-2 py-1 text-center text-sm transition-colors",
 									picking === "to"
 										? "border-primary bg-primary/10 text-foreground"
 										: localTo
