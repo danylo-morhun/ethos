@@ -56,11 +56,10 @@ export function ExpenseBreakdown({ balances, currency }: Props) {
 
 				{/* Pie card */}
 				<Card className="w-44 h-44 shrink-0 p-3 flex flex-col gap-0">
-					<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-						Expenses
+					<p className="text-xs font-medium text-muted-foreground">
+						Total
 					</p>
 					<div className="flex flex-1 items-center justify-center">
-						{/* Fixed-size PieChart — no ResponsiveContainer, no layout surprises */}
 						<PieChart width={PIE_SIZE} height={PIE_SIZE} margin={{ top: 0, right: 0, bottom: 0, left: 0 }} style={{ outline: "none", border: "none" }}>
 							<Tooltip content={(props) => <PieTooltip {...props} currency={currency} />} />
 							<Pie
@@ -97,22 +96,20 @@ export function ExpenseBreakdown({ balances, currency }: Props) {
 				{expenses.map((exp) => {
 					const pct = total > 0 ? (exp.value / total) * 100 : 0;
 					return (
-						<Card key={exp.accountId} className="w-44 h-44 shrink-0 flex flex-col justify-between p-4">
-							<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">
-								<Link href={`/midas/accounts/${exp.accountId}`} className="hover:underline underline-offset-2">
-									{exp.name}
-								</Link>
-							</p>
-							<p className="text-2xl font-bold leading-none tracking-tight">
-								{formatCurrency(exp.value, currency)}
-							</p>
-							<div className="space-y-1">
-								<div className="h-1.5 overflow-hidden rounded-full bg-muted">
-									<div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: exp.fill }} />
+						<Link key={exp.accountId} href={`/midas/accounts/${exp.accountId}`}>
+							<Card className="w-44 h-44 shrink-0 flex flex-col justify-between p-4 hover:bg-muted/40 transition-colors cursor-pointer">
+								<p className="text-xs font-medium text-muted-foreground truncate">{exp.name}</p>
+								<p className="text-2xl font-bold leading-none tracking-tight">
+									{formatCurrency(exp.value, currency)}
+								</p>
+								<div className="space-y-1">
+									<div className="h-1.5 overflow-hidden rounded-full bg-muted">
+										<div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: exp.fill }} />
+									</div>
+									<p className="text-xs text-muted-foreground tabular-nums">{pct.toFixed(1)}% of total</p>
 								</div>
-								<p className="text-xs text-muted-foreground tabular-nums">{pct.toFixed(1)}% of total</p>
-							</div>
-						</Card>
+							</Card>
+						</Link>
 					);
 				})}
 
