@@ -34,16 +34,18 @@ function buildPeriodLabel(from: string | undefined, to: string | undefined): str
 export default async function MidasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; page?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; page?: string; account?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/');
 
-  const { from: rawFrom, to: rawTo, page: rawPage } = await searchParams;
+  const { from: rawFrom, to: rawTo, page: rawPage, account: rawAccount } = await searchParams;
   const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-  const from = rawFrom && ISO_DATE.test(rawFrom) ? rawFrom : undefined;
-  const to   = rawTo   && ISO_DATE.test(rawTo)   ? rawTo   : undefined;
-  const page = rawPage && /^\d+$/.test(rawPage) ? Math.max(0, parseInt(rawPage, 10)) : 0;
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const from      = rawFrom    && ISO_DATE.test(rawFrom)    ? rawFrom    : undefined;
+  const to        = rawTo      && ISO_DATE.test(rawTo)      ? rawTo      : undefined;
+  const page      = rawPage    && /^\d+$/.test(rawPage)     ? Math.max(0, parseInt(rawPage, 10)) : 0;
+  const accountId = rawAccount && UUID.test(rawAccount)     ? rawAccount : undefined;
 
   const workspace = await initializeWorkspace(session.user.id);
   const periodLabel = buildPeriodLabel(from, to);
@@ -51,7 +53,7 @@ export default async function MidasPage({
   const [balances, accounts, recentTransactions] = await Promise.all([
     getBalances(workspace.id, from, to),
     getAccounts(workspace.id),
-    getRecentTransactions(workspace.id, from, to, page),
+    getRecentTransactions(workspace.id, from, to, page, accountId),
   ]);
 
   return (
@@ -85,6 +87,8 @@ export default async function MidasPage({
               workspaceId={workspace.id}
               page={page}
               hasMore={recentTransactions.hasMore}
+              accountFilterId={accountId}
+              accountFilterName={accountId ? accounts.find((a) => a.id === accountId)?.name : undefined}
             />
           </div>
         </div>

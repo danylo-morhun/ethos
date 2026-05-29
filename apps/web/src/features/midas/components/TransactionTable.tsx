@@ -38,9 +38,11 @@ interface Props {
   workspaceId: string;
   page: number;
   hasMore: boolean;
+  accountFilterId?: string;
+  accountFilterName?: string;
 }
 
-export function TransactionTable({ transactions, currency, workspaceId, page, hasMore }: Props) {
+export function TransactionTable({ transactions, currency, workspaceId, page, hasMore, accountFilterId, accountFilterName }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -50,11 +52,22 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
 
   function navigate(newPage: number) {
     const params = new URLSearchParams(searchParams.toString());
-    if (newPage === 0) {
-      params.delete('page');
-    } else {
-      params.set('page', String(newPage));
-    }
+    if (newPage === 0) params.delete('page');
+    else params.set('page', String(newPage));
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function filterByAccount(id: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('account', id);
+    params.delete('page');
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function clearAccountFilter() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('account');
+    params.delete('page');
     router.push(`${pathname}?${params.toString()}`);
   }
 
@@ -73,7 +86,21 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
 
   return (
     <section>
-      <h2 className="mb-4 text-lg font-semibold">Recent Transactions</h2>
+      <div className="mb-4 flex items-center gap-3">
+        <h2 className="text-lg font-semibold">Recent Transactions</h2>
+        {accountFilterId && accountFilterName && (
+          <span className="flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium">
+            {accountFilterName}
+            <button
+              type="button"
+              className="ml-1 text-muted-foreground hover:text-foreground"
+              onClick={clearAccountFilter}
+            >
+              ×
+            </button>
+          </span>
+        )}
+      </div>
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
@@ -98,8 +125,24 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
                 <TableRow key={txn.id}>
                   <TableCell className="text-muted-foreground">{txn.date}</TableCell>
                   <TableCell className="font-medium">{txn.description ?? '—'}</TableCell>
-                  <TableCell className="text-muted-foreground">{txn.fromAccount}</TableCell>
-                  <TableCell className="text-muted-foreground">{txn.toAccount}</TableCell>
+                  <TableCell>
+                    <button
+                      type="button"
+                      className={`text-sm hover:underline ${accountFilterId === txn.fromAccountId ? 'text-foreground font-medium' : 'text-muted-foreground'}`}
+                      onClick={() => filterByAccount(txn.fromAccountId)}
+                    >
+                      {txn.fromAccount}
+                    </button>
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      type="button"
+                      className={`text-sm hover:underline ${accountFilterId === txn.toAccountId ? 'text-foreground font-medium' : 'text-muted-foreground'}`}
+                      onClick={() => filterByAccount(txn.toAccountId)}
+                    >
+                      {txn.toAccount}
+                    </button>
+                  </TableCell>
                   <TableCell className="text-right font-mono font-medium">
                     {txn.currency && txn.currency !== currency
                       ? `${formatCurrency(Number(txn.amount), txn.currency)} (~${formatCurrency(Number(txn.baseAmount), currency)})`
