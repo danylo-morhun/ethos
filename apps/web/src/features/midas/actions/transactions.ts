@@ -74,8 +74,8 @@ export async function createTransaction({
 
   const [wsRows, fromRows, toRows] = await Promise.all([
     db.select().from(workspaces).where(eq(workspaces.id, workspaceId)).limit(1),
-    db.select().from(accounts).where(eq(accounts.id, fromAccountId)).limit(1),
-    db.select().from(accounts).where(eq(accounts.id, toAccountId)).limit(1),
+    db.select().from(accounts).where(and(eq(accounts.id, fromAccountId), eq(accounts.workspaceId, workspaceId))).limit(1),
+    db.select().from(accounts).where(and(eq(accounts.id, toAccountId), eq(accounts.workspaceId, workspaceId))).limit(1),
   ]);
 
   const workspace = wsRows[0];
