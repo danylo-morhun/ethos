@@ -141,25 +141,10 @@ export default async function MidasPage({
 			getAccounts(workspace.id),
 		]);
 
-		const assets = balances
-			.filter((b) => b.type === "ASSET")
-			.reduce((acc, b) => acc + Number(b.balance), 0);
-		const liabilities = Math.abs(
-			balances.filter((b) => b.type === "LIABILITY").reduce((acc, b) => acc + Number(b.balance), 0),
-		);
-		const netWorth = assets - liabilities;
-
 		return (
 			<main className="flex flex-col pb-16 md:pb-0">
 				<MidasNavTabs activeTab="accounts" />
 				<div className="px-4 py-6 sm:px-6">
-					<div className="mb-6">
-						<p className="text-xs text-muted-foreground">Net Worth</p>
-						<p className={`text-3xl font-bold ${netWorth < 0 ? "text-destructive" : ""}`}>
-							{netWorth < 0 ? "−" : ""}
-							{formatCurrency(Math.abs(netWorth), workspace.baseCurrency)}
-						</p>
-					</div>
 					<AccountsOverview
 						balances={balances}
 						accounts={accounts}
