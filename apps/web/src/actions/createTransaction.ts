@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { auth } from '@/auth';
 import { db, transactions, transactionEntries, accounts, exchangeRates, workspaces, eq, and } from '@ethos/db';
 
 interface CreateTransactionInput {
@@ -48,6 +49,9 @@ export async function createTransaction({
   description,
   date,
 }: CreateTransactionInput) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
   const [wsRows, fromRows, toRows] = await Promise.all([
     db.select().from(workspaces).where(eq(workspaces.id, workspaceId)).limit(1),
     db.select().from(accounts).where(eq(accounts.id, fromAccountId)).limit(1),
@@ -59,6 +63,7 @@ export async function createTransaction({
   const toAccount = toRows[0];
 
   if (!workspace || !fromAccount || !toAccount) throw new Error('Account not found');
+  if (workspace.userId !== session.user.id) throw new Error('Forbidden');
 
   const baseCurrency = workspace.baseCurrency;
   const today = new Date().toISOString().slice(0, 10);
