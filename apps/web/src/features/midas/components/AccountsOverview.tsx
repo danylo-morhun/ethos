@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -17,6 +18,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Progress,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from '@ethos/ui';
 import type { AccountBalance } from '@/features/midas/actions/balances';
 import { formatCurrency } from '@/features/midas/lib/format';
@@ -71,8 +80,9 @@ function sortWithChildren(rows: AccountRow[]): AccountRow[] {
 export function AccountsOverview({ balances, currency, workspaceId, accounts, periodLabel }: Props) {
   const TYPE_LABELS = typeLabels(periodLabel);
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [editTarget, setEditTarget] = React.useState<Account | null>(null);
-  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = React.useState<{ id: string; name: string } | null>(null);
 
   const accountMap = new Map(accounts.map((a) => [a.id, a]));
   const rows: AccountRow[] = balances.map((b) => ({
@@ -85,22 +95,20 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
     return acc;
   }, {});
 
-  const handleDelete = async (accountId: string, name: string) => {
-    setDeletingId(accountId);
-    try {
-      const result = await deleteAccount(accountId);
+  function handleDeleteConfirm() {
+    if (!confirmTarget) return;
+    const { id, name } = confirmTarget;
+    startTransition(async () => {
+      const result = await deleteAccount(id);
       if ('error' in result) {
         toast.error(result.error);
       } else {
         toast.success(`"${name}" deleted`);
         router.refresh();
       }
-    } catch {
-      toast.error('Failed to delete account');
-    } finally {
-      setDeletingId(null);
-    }
-  };
+      setConfirmTarget(null);
+    });
+  }
 
   return (
     <section>
@@ -182,11 +190,10 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     className="text-red-500 focus:text-red-500"
-                                    disabled={deletingId === b.accountId}
-                                    onClick={() => handleDelete(b.accountId, b.name)}
+                                    onClick={() => setConfirmTarget({ id: b.accountId, name: b.name })}
                                   >
                                     <HugeiconsIcon icon={Delete01Icon} className="mr-2 h-4 w-4" />
-                                    {deletingId === b.accountId ? 'Deleting…' : 'Delete'}
+                                    Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -226,6 +233,27 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
           }}
         />
       )}
+
+      <AlertDialog open={!!confirmTarget} onOpenChange={(v) => { if (!v) setConfirmTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{confirmTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the account and all its transaction entries. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isPending}
+              onClick={handleDeleteConfirm}
+            >
+              {isPending ? 'Deleting…' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
