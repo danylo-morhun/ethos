@@ -15,7 +15,7 @@ const COLORS = [
 	"oklch(0.65 0.18 330)",  // pink
 ];
 
-const PIE_SIZE = 108; // explicit px — no ResponsiveContainer stretching
+const PIE_SIZE = 120; // explicit px — no ResponsiveContainer stretching
 
 interface TooltipProps { active?: boolean; payload?: any[]; currency: string }
 
@@ -38,14 +38,11 @@ interface Props { balances: AccountBalance[]; currency: string }
 export function ExpenseBreakdown({ balances, currency }: Props) {
 	const expenses = balances
 		.filter((b) => b.type === "EXPENSE")
-		.map((b, i) => ({
-			accountId: b.accountId,
-			name: b.name,
-			value: Math.abs(Number(b.balance)),
-			fill: COLORS[i % COLORS.length],
-		}))
+		.map((b) => ({ accountId: b.accountId, name: b.name, value: Math.abs(Number(b.balance)) }))
 		.filter((b) => b.value > 0)
-		.sort((a, b) => b.value - a.value);
+		.sort((a, b) => b.value - a.value)
+		// Assign color after sort: largest expense → most prominent color (red)
+		.map((b, i) => ({ ...b, fill: COLORS[i % COLORS.length] }));
 
 	const total = expenses.reduce((sum, d) => sum + d.value, 0);
 
@@ -72,8 +69,8 @@ export function ExpenseBreakdown({ balances, currency }: Props) {
 								nameKey="name"
 								cx={PIE_SIZE / 2}
 								cy={PIE_SIZE / 2}
-								innerRadius={28}
-								outerRadius={46}
+								innerRadius={33}
+								outerRadius={53}
 								strokeWidth={0}
 							>
 								{expenses.map((entry) => (
@@ -84,10 +81,10 @@ export function ExpenseBreakdown({ balances, currency }: Props) {
 										if (!viewBox || !("cx" in viewBox) || !("cy" in viewBox)) return null;
 										return (
 											<text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-												<tspan x={viewBox.cx} dy={-4} className="fill-foreground text-[10px] font-bold">
+												<tspan x={viewBox.cx} dy={-5} className="fill-foreground text-[11px] font-bold">
 													{formatCurrency(total, currency)}
 												</tspan>
-												<tspan x={viewBox.cx} dy={12} className="fill-muted-foreground text-[8px]">
+												<tspan x={viewBox.cx} dy={14} className="fill-muted-foreground text-[9px]">
 													total
 												</tspan>
 											</text>
