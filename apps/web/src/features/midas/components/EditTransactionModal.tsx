@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -27,15 +26,15 @@ import {
 import { getAccounts } from '@/features/midas/actions/accounts';
 import { updateTransaction } from '@/features/midas/actions/transactions';
 import type { RecentTransaction } from '@/features/midas/actions/transactions';
+import { AccountSelect } from '@/features/midas/components/AccountSelect';
+import { CURRENCIES, toCurrency } from '@/features/midas/lib/constants';
+import {
+  transactionFormSchema,
+  type TransactionFormValues,
+  type TxType,
+} from '@/features/midas/lib/transaction-schema';
 
-type TxType = 'expense' | 'income' | 'transfer';
-
-const CURRENCIES = ['PLN', 'EUR', 'USD', 'CHF', 'GBP'] as const;
-type Currency = (typeof CURRENCIES)[number];
-
-function toCurrency(c: string): Currency {
-  return (CURRENCIES as readonly string[]).includes(c) ? (c as Currency) : 'PLN';
-}
+type Account = Awaited<ReturnType<typeof getAccounts>>[number];
 
 function inferTxType(txn: RecentTransaction): TxType {
   if (txn.toAccountType === 'EXPENSE') return 'expense';
@@ -43,49 +42,16 @@ function inferTxType(txn: RecentTransaction): TxType {
   return 'transfer';
 }
 
-const baseFields = {
-  description: z.string().optional(),
-  amount: z.number({ error: 'Amount required' }).positive('Amount must be positive'),
-  currency: z.enum(CURRENCIES),
-  date: z.string().min(1, 'Date required'),
-};
-
-const expenseSchema = z.object({ ...baseFields, txType: z.literal('expense'), walletId: z.string().min(1), categoryId: z.string().min(1) });
-const incomeSchema  = z.object({ ...baseFields, txType: z.literal('income'),  categoryId: z.string().min(1), walletId: z.string().min(1) });
-const transferSchema = z.object({ ...baseFields, txType: z.literal('transfer'), fromWalletId: z.string().min(1), toWalletId: z.string().min(1) });
-
-const formSchema = z.discriminatedUnion('txType', [expenseSchema, incomeSchema, transferSchema]);
-type FormValues = z.infer<typeof formSchema>;
-type Account = Awaited<ReturnType<typeof getAccounts>>[number];
-
-function AccountSelect({
-  control, name, accounts, placeholder, error,
-}: {
-  control: ReturnType<typeof useForm<FormValues>>['control'];
-  name: string;
-  accounts: Account[];
-  placeholder: string;
-  error?: string;
-}) {
-  return (
-    <Controller
-      control={control as never}
-      name={name as never}
-      render={({ field }: { field: { onChange: (v: string) => void; value: string } }) => (
-        <>
-          <Select onValueChange={field.onChange} value={field.value ?? ''}>
-            <SelectTrigger><SelectValue placeholder={placeholder} /></SelectTrigger>
-            <SelectContent>
-              {accounts.map((a) => (
-                <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {error && <p className="text-destructive text-[0.8rem]">{error}</p>}
-        </>
-      )}
-    />
-  );
+function buildDefaults(type: TxType, txn: RecentTransaction): TransactionFormValues {
+  const base = {
+    description: txn.description ?? undefined,
+    amount: Math.abs(Number(txn.amount)),
+    currency: toCurrency(txn.currency),
+    date: txn.date,
+  };
+  if (type === 'expense') return { ...base, txType: 'expense', walletId: txn.fromAccountId, categoryId: txn.toAccountId };
+  if (type === 'income')  return { ...base, txType: 'income',  categoryId: txn.fromAccountId, walletId: txn.toAccountId };
+  return { ...base, txType: 'transfer', fromWalletId: txn.fromAccountId, toWalletId: txn.toAccountId };
 }
 
 interface Props {
@@ -104,21 +70,9 @@ export function EditTransactionModal({ transaction, workspaceId, open, onOpenCha
   const expenseCategories = accounts.filter((a) => a.type === 'EXPENSE');
   const incomeCategories = accounts.filter((a) => a.type === 'INCOME');
 
-  function buildDefaults(type: TxType, txn: RecentTransaction): FormValues {
-    const base = {
-      description: txn.description ?? undefined,
-      amount: Math.abs(Number(txn.amount)),
-      currency: toCurrency(txn.currency),
-      date: txn.date,
-    };
-    if (type === 'expense') return { ...base, txType: 'expense', walletId: txn.fromAccountId, categoryId: txn.toAccountId };
-    if (type === 'income')  return { ...base, txType: 'income',  categoryId: txn.fromAccountId, walletId: txn.toAccountId };
-    return { ...base, txType: 'transfer', fromWalletId: txn.fromAccountId, toWalletId: txn.toAccountId };
-  }
-
-  const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: buildDefaults(txType, transaction) as unknown as FormValues,
+  const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<TransactionFormValues>({
+    resolver: zodResolver(transactionFormSchema),
+    defaultValues: buildDefaults(txType, transaction) as unknown as TransactionFormValues,
   });
 
   React.useEffect(() => {
@@ -128,10 +82,10 @@ export function EditTransactionModal({ transaction, workspaceId, open, onOpenCha
   const handleTabChange = (val: string) => {
     const next = val as TxType;
     setTxType(next);
-    reset(buildDefaults(next, transaction) as unknown as FormValues);
+    reset(buildDefaults(next, transaction) as unknown as TransactionFormValues);
   };
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: TransactionFormValues) => {
     let fromAccountId: string;
     let toAccountId: string;
     if (values.txType === 'expense') { fromAccountId = values.walletId; toAccountId = values.categoryId; }
@@ -210,7 +164,6 @@ export function EditTransactionModal({ transaction, workspaceId, open, onOpenCha
           <div className="space-y-2">
             <Label htmlFor="edit-description">Description</Label>
             <Input id="edit-description" placeholder="e.g. Grocery run" {...register('description')} />
-            {errs.description && <p className="text-destructive text-[0.8rem]">{errs.description.message}</p>}
           </div>
 
           <div className="space-y-2">

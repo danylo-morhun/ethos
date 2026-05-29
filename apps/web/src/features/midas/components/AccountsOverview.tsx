@@ -60,6 +60,7 @@ interface Props {
 }
 
 function sortWithChildren(rows: AccountRow[]): AccountRow[] {
+  const idSet = new Set(rows.map((r) => r.accountId));
   const result: AccountRow[] = [];
   const visited = new Set<string>();
 
@@ -70,7 +71,7 @@ function sortWithChildren(rows: AccountRow[]): AccountRow[] {
     rows.filter((r) => r.parentId === row.accountId).forEach(visit);
   }
 
-  rows.filter((r) => !r.parentId || !byId.has(r.parentId)).forEach(visit);
+  rows.filter((r) => !r.parentId || !idSet.has(r.parentId)).forEach(visit);
   rows.forEach((r) => visit(r));
 
   return result;
