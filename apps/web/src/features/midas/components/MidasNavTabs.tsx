@@ -9,7 +9,7 @@ import { useSearchParams } from "next/navigation";
 export type MidasTab = "overview" | "accounts" | "transactions";
 
 const TABS: { value: MidasTab; label: string; icon: typeof Chart01Icon }[] = [
-	{ value: "overview", label: "Overview", icon: Chart01Icon },
+	{ value: "overview", label: "Expenses", icon: Chart01Icon },
 	{ value: "accounts", label: "Accounts", icon: BankIcon },
 	{ value: "transactions", label: "Transactions", icon: BanknoteIcon },
 ];

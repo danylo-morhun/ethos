@@ -7,6 +7,7 @@ import { getRecentTransactions } from "@/features/midas/actions/transactions";
 import { initializeWorkspace } from "@/features/midas/actions/workspace";
 import { AccountsOverview } from "@/features/midas/components/AccountsOverview";
 import { ExpenseBreakdown } from "@/features/midas/components/ExpenseBreakdown";
+import { ExpenseCategoryList } from "@/features/midas/components/ExpenseCategoryList";
 import { type MidasTab, MidasNavTabs } from "@/features/midas/components/MidasNavTabs";
 import { OnboardingCard } from "@/features/midas/components/OnboardingCard";
 import { TransactionTable } from "@/features/midas/components/TransactionTable";
@@ -126,6 +127,7 @@ export default async function MidasPage({
 						</div>
 
 						<ExpenseBreakdown balances={balances} currency={workspace.baseCurrency} />
+						<ExpenseCategoryList balances={balances} currency={workspace.baseCurrency} />
 					</div>
 				)}
 			</main>
