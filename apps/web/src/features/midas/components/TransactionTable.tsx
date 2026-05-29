@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { format } from 'date-fns';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -31,6 +32,14 @@ import { deleteTransaction } from '@/features/midas/actions/transactions';
 import type { RecentTransaction } from '@/features/midas/actions/transactions';
 import { EditTransactionModal } from '@/features/midas/components/EditTransactionModal';
 import { formatCurrency } from '@/features/midas/lib/format';
+import { parseLocal } from '@/features/midas/lib/dates';
+
+const thisYear = new Date().getFullYear();
+
+function fmtDate(iso: string): string {
+  const d = parseLocal(iso);
+  return d.getFullYear() === thisYear ? format(d, 'MMM d') : format(d, 'MMM d, yyyy');
+}
 
 interface Props {
   transactions: RecentTransaction[];
@@ -123,7 +132,7 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
             ) : (
               transactions.map((txn) => (
                 <TableRow key={txn.id}>
-                  <TableCell className="text-muted-foreground">{txn.date}</TableCell>
+                  <TableCell className="text-muted-foreground">{fmtDate(txn.date)}</TableCell>
                   <TableCell className="font-medium">{txn.description ?? '—'}</TableCell>
                   <TableCell>
                     <button
