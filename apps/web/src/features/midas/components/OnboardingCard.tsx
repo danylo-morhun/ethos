@@ -49,7 +49,7 @@ export function OnboardingCard({ workspaceId, baseCurrency, accountCount }: Prop
           </ol>
 
           <div className="flex justify-center gap-3">
-            {step <= 2 && <AddAccountModal workspaceId={workspaceId} />}
+            {step <= 2 && <AddAccountModal workspaceId={workspaceId} baseCurrency={baseCurrency} />}
             {step === 3 && (
               <AddTransactionModal workspaceId={workspaceId} baseCurrency={baseCurrency} />
             )}

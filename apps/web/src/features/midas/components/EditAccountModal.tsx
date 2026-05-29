@@ -21,12 +21,14 @@ import {
   SelectValue,
 } from '@ethos/ui';
 import { getAccounts, updateAccount } from '@/features/midas/actions/accounts';
+import { CURRENCIES, toCurrency } from '@/features/midas/lib/constants';
 
 const ACCOUNT_TYPES = ['ASSET', 'LIABILITY', 'INCOME', 'EXPENSE'] as const;
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name required'),
   type: z.enum(ACCOUNT_TYPES, { error: 'Select a type' }),
+  currency: z.enum(CURRENCIES),
   parentId: z.string().optional(),
   budget: z.number().positive().optional(),
 });
@@ -57,6 +59,7 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
     defaultValues: {
       name: account.name,
       type: account.type,
+      currency: toCurrency(account.currency),
       parentId: account.parentId ?? undefined,
       budget: account.budget != null ? Number(account.budget) : undefined,
     },
@@ -70,6 +73,7 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
       reset({
         name: account.name,
         type: account.type,
+        currency: toCurrency(account.currency),
         parentId: account.parentId ?? undefined,
         budget: account.budget != null ? Number(account.budget) : undefined,
       });
@@ -81,6 +85,7 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
       await updateAccount(account.id, {
         name: values.name,
         type: values.type,
+        currency: values.currency,
         parentId: values.parentId || null,
         budget: (values.type === 'EXPENSE' || values.type === 'INCOME') ? (values.budget ?? null) : null,
       });
@@ -136,6 +141,26 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
             {errors.type && (
               <p className="text-destructive text-[0.8rem]">{errors.type.message}</p>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Currency</Label>
+            <Controller
+              control={control}
+              name="currency"
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
 
           {(selectedType === 'EXPENSE' || selectedType === 'INCOME') && (

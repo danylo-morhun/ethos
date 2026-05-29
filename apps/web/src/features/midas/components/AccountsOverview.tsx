@@ -115,7 +115,7 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
     <section>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Accounts</h2>
-        <AddAccountModal workspaceId={workspaceId} />
+        <AddAccountModal workspaceId={workspaceId} baseCurrency={currency} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -163,13 +163,25 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                             </span>
 
                             <div className="flex shrink-0 items-center gap-1">
-                              <span
-                                className={`text-sm whitespace-nowrap ${
-                                  Number(b.balance) < 0 ? 'text-red-500' : 'text-muted-foreground'
-                                }`}
-                              >
-                                {formatCurrency(Math.abs(Number(b.balance)), currency)}
-                              </span>
+                              {(() => {
+                                const acctCurrency = acct?.currency ?? currency;
+                                const isMulti = acctCurrency !== currency;
+                                const baseAmt = Math.abs(Number(b.balance));
+                                const nativeAmt = Math.abs(Number(b.nativeBalance));
+                                const isNeg = Number(b.balance) < 0;
+                                return (
+                                  <span className={`text-sm whitespace-nowrap text-right ${isNeg ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                    {isMulti ? (
+                                      <>
+                                        {formatCurrency(nativeAmt, acctCurrency)}
+                                        <span className="block text-xs text-muted-foreground/60">≈ {formatCurrency(baseAmt, currency)}</span>
+                                      </>
+                                    ) : (
+                                      formatCurrency(baseAmt, currency)
+                                    )}
+                                  </span>
+                                );
+                              })()}
 
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>

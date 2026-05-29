@@ -62,6 +62,7 @@ export async function updateAccount(
     type: 'ASSET' | 'LIABILITY' | 'INCOME' | 'EXPENSE';
     parentId?: string | null;
     budget?: number | null;
+    currency?: string;
   },
 ) {
   const session = await auth();
@@ -90,6 +91,7 @@ export async function updateAccount(
       type: data.type,
       parentId: data.parentId ?? null,
       budget: data.budget != null ? String(data.budget) : null,
+      ...(data.currency ? { currency: data.currency } : {}),
       updatedAt: new Date(),
     })
     .where(eq(accounts.id, accountId))

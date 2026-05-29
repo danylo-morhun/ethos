@@ -22,12 +22,14 @@ import {
   SelectValue,
 } from '@ethos/ui';
 import { getAccounts, createAccount } from '@/features/midas/actions/accounts';
+import { CURRENCIES, toCurrency } from '@/features/midas/lib/constants';
 
 const ACCOUNT_TYPES = ['ASSET', 'LIABILITY', 'INCOME', 'EXPENSE'] as const;
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name required'),
   type: z.enum(ACCOUNT_TYPES, { error: 'Select a type' }),
+  currency: z.enum(CURRENCIES),
   parentId: z.string().optional(),
   budget: z.number().positive().optional(),
 });
@@ -35,7 +37,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 type Account = Awaited<ReturnType<typeof getAccounts>>[number];
 
-export function AddAccountModal({ workspaceId }: { workspaceId: string }) {
+export function AddAccountModal({ workspaceId, baseCurrency }: { workspaceId: string; baseCurrency?: string }) {
   const [open, setOpen] = React.useState(false);
   const [accounts, setAccounts] = React.useState<Account[]>([]);
   const router = useRouter();
@@ -49,7 +51,7 @@ export function AddAccountModal({ workspaceId }: { workspaceId: string }) {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', type: undefined, parentId: undefined, budget: undefined },
+    defaultValues: { name: '', type: undefined, currency: toCurrency(baseCurrency ?? 'USD'), parentId: undefined, budget: undefined },
   });
 
   const selectedType = watch('type');
@@ -71,6 +73,7 @@ export function AddAccountModal({ workspaceId }: { workspaceId: string }) {
         values.type,
         values.parentId || undefined,
         values.budget,
+        values.currency,
       );
       toast.success(`"${values.name}" created`);
       router.refresh();
@@ -127,6 +130,26 @@ export function AddAccountModal({ workspaceId }: { workspaceId: string }) {
             {errors.type && (
               <p className="text-destructive text-[0.8rem]">{errors.type.message}</p>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Currency</Label>
+            <Controller
+              control={control}
+              name="currency"
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
 
           {(selectedType === 'EXPENSE' || selectedType === 'INCOME') && (

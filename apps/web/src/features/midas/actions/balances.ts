@@ -9,6 +9,7 @@ export type AccountBalance = {
   type: 'ASSET' | 'LIABILITY' | 'INCOME' | 'EXPENSE';
   currency: string;
   balance: string;
+  nativeBalance: string;
 };
 
 export async function getBalances(
@@ -45,6 +46,15 @@ export async function getBalances(
             then ${transactionEntries.baseAmount}
           when ${accounts.type} in ('INCOME', 'EXPENSE') ${incomeFromClause} ${incomeToClause}
             then ${transactionEntries.baseAmount}
+          else null
+        end
+      ), 0)`,
+      nativeBalance: sql<string>`coalesce(sum(
+        case
+          when ${accounts.type} in ('ASSET', 'LIABILITY') ${assetLiabDateClause}
+            then case when ${transactionEntries.currency} = ${accounts.currency} then ${transactionEntries.amount} else null end
+          when ${accounts.type} in ('INCOME', 'EXPENSE') ${incomeFromClause} ${incomeToClause}
+            then case when ${transactionEntries.currency} = ${accounts.currency} then ${transactionEntries.amount} else null end
           else null
         end
       ), 0)`,
