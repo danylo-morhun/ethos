@@ -42,7 +42,7 @@ async function getExchangeRate(fromCurrency: string, toCurrency: string, date: s
 
   if (cached[0]) return Number(cached[0].rate);
 
-  const res = await fetch(`https://api.frankfurter.app/latest?from=${fromCurrency}&to=${toCurrency}`);
+  const res = await fetch(`https://api.frankfurter.app/${date}?from=${fromCurrency}&to=${toCurrency}`);
   if (!res.ok) throw new Error(`Exchange rate fetch failed: ${res.status}`);
   const data = (await res.json()) as { rates: Record<string, number> };
   const rate = data.rates[toCurrency];
@@ -86,13 +86,12 @@ export async function createTransaction({
   if (workspace.userId !== session.user.id) throw new Error('Forbidden');
 
   const baseCurrency = workspace.baseCurrency;
-  const today = new Date().toISOString().slice(0, 10);
 
   let baseAmount: number;
   if (currency === baseCurrency) {
     baseAmount = amount;
   } else {
-    const rate = await getExchangeRate(currency, baseCurrency, today);
+    const rate = await getExchangeRate(currency, baseCurrency, date);
     baseAmount = amount * rate;
   }
 
