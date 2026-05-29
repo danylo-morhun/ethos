@@ -2,7 +2,15 @@
 
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { format } from 'date-fns';
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+  subMonths,
+  subDays,
+} from 'date-fns';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Calendar01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { Button, Calendar, Popover, PopoverContent, PopoverTrigger } from '@ethos/ui';
@@ -16,6 +24,37 @@ interface Props {
 function fmt(d: Date) {
   return format(d, 'yyyy-MM-dd');
 }
+
+const PRESETS = [
+  {
+    label: 'This month',
+    range: () => {
+      const today = new Date();
+      return [fmt(startOfMonth(today)), fmt(endOfMonth(today))] as const;
+    },
+  },
+  {
+    label: 'Last month',
+    range: () => {
+      const last = subMonths(new Date(), 1);
+      return [fmt(startOfMonth(last)), fmt(endOfMonth(last))] as const;
+    },
+  },
+  {
+    label: 'Last 3 months',
+    range: () => {
+      const today = new Date();
+      return [fmt(startOfMonth(subMonths(today, 2))), fmt(endOfMonth(today))] as const;
+    },
+  },
+  {
+    label: 'This year',
+    range: () => {
+      const today = new Date();
+      return [fmt(startOfYear(today)), fmt(endOfYear(today))] as const;
+    },
+  },
+] as const;
 
 function DateButton({
   value,
@@ -58,6 +97,13 @@ function DateButton({
   );
 }
 
+function isPresetActive(label: string, from: string | undefined, to: string | undefined): boolean {
+  const preset = PRESETS.find((p) => p.label === label);
+  if (!preset) return false;
+  const [pFrom, pTo] = preset.range();
+  return from === pFrom && to === pTo;
+}
+
 export function DateRangePicker({ from, to }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -80,29 +126,57 @@ export function DateRangePicker({ from, to }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <DateButton
-        value={localFrom}
-        placeholder="Start date"
-        onChange={(f) => push(f, localTo)}
-      />
-      <span className="text-sm text-muted-foreground">–</span>
-      <DateButton
-        value={localTo}
-        placeholder="End date"
-        onChange={(t) => push(localFrom, t)}
-      />
-      {(localFrom || localTo) && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 shrink-0"
-          onClick={() => push(undefined, undefined)}
-          aria-label="Clear date filter"
-        >
-          <HugeiconsIcon icon={Cancel01Icon} className="h-4 w-4" />
-        </Button>
-      )}
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-1">
+        {PRESETS.map((p) => (
+          <Button
+            key={p.label}
+            variant={isPresetActive(p.label, localFrom, localTo) ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-2 text-xs"
+            onClick={() => {
+              const [f, t] = p.range();
+              push(f, t);
+            }}
+          >
+            {p.label}
+          </Button>
+        ))}
+        {(localFrom || localTo) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs text-muted-foreground"
+            onClick={() => push(undefined, undefined)}
+          >
+            All time
+          </Button>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <DateButton
+          value={localFrom}
+          placeholder="Start date"
+          onChange={(f) => push(f, localTo)}
+        />
+        <span className="text-sm text-muted-foreground">–</span>
+        <DateButton
+          value={localTo}
+          placeholder="End date"
+          onChange={(t) => push(localFrom, t)}
+        />
+        {(localFrom || localTo) && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={() => push(undefined, undefined)}
+            aria-label="Clear date filter"
+          >
+            <HugeiconsIcon icon={Cancel01Icon} className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
