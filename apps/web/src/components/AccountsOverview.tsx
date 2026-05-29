@@ -202,14 +202,14 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                           </div>
 
                           {showBudget && pct !== null && (
-                            <div className="mt-0.5">
+                            <div className="flex flex-col gap-1.5 mt-2">
                               <Progress
                                 value={pct}
                                 className="h-1.5"
                                 indicatorClassName={overBudget ? 'bg-destructive' : undefined}
                               />
-                              <p className="mt-0.5 text-xs text-muted-foreground">
-                                {formatCurrency(Math.abs(Number(b.balance)), currency)} / {formatCurrency(budget, currency)}
+                              <p className="text-xs text-muted-foreground">
+                                {formatCurrency(Math.abs(balance), currency)} / {formatCurrency(budget, currency)}
                               </p>
                             </div>
                           )}
