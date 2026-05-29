@@ -53,6 +53,8 @@ interface Props {
   total: number;
   accountFilterId?: string;
   accountFilterName?: string;
+  tagFilterId?: string;
+  tagFilterName?: string;
   searchQuery?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -60,7 +62,7 @@ interface Props {
   sortDir?: string;
 }
 
-export function TransactionTable({ transactions, currency, workspaceId, page, hasMore, total, accountFilterId, accountFilterName, searchQuery, dateFrom, dateTo, sortField = 'date', sortDir = 'desc' }: Props) {
+export function TransactionTable({ transactions, currency, workspaceId, page, hasMore, total, accountFilterId, accountFilterName, tagFilterId, tagFilterName, searchQuery, dateFrom, dateTo, sortField = 'date', sortDir = 'desc' }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -88,6 +90,20 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
   function clearAccountFilter() {
     const params = new URLSearchParams(searchParams.toString());
     params.delete('account');
+    params.delete('page');
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function filterByTag(id: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tag', id);
+    params.delete('page');
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function clearTagFilter() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('tag');
     params.delete('page');
     router.push(`${pathname}?${params.toString()}`);
   }
@@ -185,6 +201,18 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
             </button>
           </span>
         )}
+        {tagFilterId && tagFilterName && (
+          <span className="flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium">
+            🏷 {tagFilterName}
+            <button
+              type="button"
+              className="ml-1 text-muted-foreground hover:text-foreground"
+              onClick={clearTagFilter}
+            >
+              ×
+            </button>
+          </span>
+        )}
         <div className="ml-auto flex items-center gap-2">
           {selectedIds.size > 0 && (
             <Button
@@ -264,7 +292,25 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
                     />
                   </TableCell>
                   <TableCell className="text-muted-foreground">{fmtDate(txn.date)}</TableCell>
-                  <TableCell className="font-medium">{txn.description ?? '—'}</TableCell>
+                  <TableCell className="font-medium">
+                    <div>{txn.description ?? '—'}</div>
+                    {txn.tags.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {txn.tags.map((tag) => (
+                          <button
+                            key={tag.id}
+                            type="button"
+                            title={`Filter by tag: ${tag.name}`}
+                            onClick={() => filterByTag(tag.id)}
+                            className="rounded-full border px-1.5 py-px text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                            style={tag.color ? { borderColor: tag.color, color: tag.color } : undefined}
+                          >
+                            {tag.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <button
                       type="button"

@@ -4,6 +4,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -139,6 +140,7 @@ export const transactionsRelations = relations(transactions, ({ one, many }) => 
     references: [workspaces.id],
   }),
   entries: many(transactionEntries),
+  transactionTags: many(transactionTags),
 }));
 
 export const transactionEntriesRelations = relations(transactionEntries, ({ one }) => ({
@@ -150,4 +152,44 @@ export const transactionEntriesRelations = relations(transactionEntries, ({ one 
     fields: [transactionEntries.accountId],
     references: [accounts.id],
   }),
+}));
+
+export const tags = pgTable(
+  'tags',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    color: text('color'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('tags_workspace_id_idx').on(t.workspaceId),
+    uniqueIndex('tags_workspace_name_idx').on(t.workspaceId, t.name),
+  ],
+);
+
+export const transactionTags = pgTable(
+  'transaction_tags',
+  {
+    transactionId: uuid('transaction_id')
+      .notNull()
+      .references(() => transactions.id, { onDelete: 'cascade' }),
+    tagId: uuid('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.transactionId, t.tagId] })],
+);
+
+export const tagsRelations = relations(tags, ({ one, many }) => ({
+  workspace: one(workspaces, { fields: [tags.workspaceId], references: [workspaces.id] }),
+  transactionTags: many(transactionTags),
+}));
+
+export const transactionTagsRelations = relations(transactionTags, ({ one }) => ({
+  transaction: one(transactions, { fields: [transactionTags.transactionId], references: [transactions.id] }),
+  tag: one(tags, { fields: [transactionTags.tagId], references: [tags.id] }),
 }));

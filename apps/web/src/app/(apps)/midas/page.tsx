@@ -16,6 +16,7 @@ import { parseLocal } from '@/features/midas/lib/dates';
 import Link from 'next/link';
 import { getMonthlyTrends } from '@/features/midas/actions/trends';
 import { getNetWorthHistory } from '@/features/midas/actions/net-worth';
+import { getTags } from '@/features/midas/actions/tags';
 import { NetWorthChart } from '@/features/midas/components/NetWorthChart';
 import { IncomeChart } from '@/features/midas/components/IncomeChart';
 import { OnboardingCard } from '@/features/midas/components/OnboardingCard';
@@ -41,12 +42,12 @@ function buildPeriodLabel(from: string | undefined, to: string | undefined): str
 export default async function MidasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; page?: string; account?: string; q?: string; trend?: string; sort?: string; dir?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; page?: string; account?: string; q?: string; trend?: string; sort?: string; dir?: string; tag?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/');
 
-  const { from: rawFrom, to: rawTo, page: rawPage, account: rawAccount, q: rawQ, trend: rawTrend, sort: rawSort, dir: rawDir } = await searchParams;
+  const { from: rawFrom, to: rawTo, page: rawPage, account: rawAccount, q: rawQ, trend: rawTrend, sort: rawSort, dir: rawDir, tag: rawTag } = await searchParams;
   const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const rawValidFrom = rawFrom && ISO_DATE.test(rawFrom) ? rawFrom : undefined;
@@ -60,16 +61,18 @@ export default async function MidasPage({
   const trendMonths = trend === '3m' ? 3 : trend === '1y' ? 12 : 6;
   const sortField   = rawSort === 'amount' ? 'amount' : 'date';
   const sortDir     = rawDir === 'asc' ? 'asc' : 'desc';
+  const tagId       = rawTag && UUID.test(rawTag) ? rawTag : undefined;
 
   const workspace = await initializeWorkspace(session.user.id);
   const periodLabel = buildPeriodLabel(from, to);
 
-  const [balances, accounts, recentTransactions, trends, netWorthHistory] = await Promise.all([
+  const [balances, accounts, recentTransactions, trends, netWorthHistory, allTags] = await Promise.all([
     getBalances(workspace.id, from, to),
     getAccounts(workspace.id),
-    getRecentTransactions(workspace.id, from, to, page, accountId, q, sortField, sortDir),
+    getRecentTransactions(workspace.id, from, to, page, accountId, q, sortField, sortDir, tagId),
     getMonthlyTrends(workspace.id, from, to, trendMonths),
     getNetWorthHistory(workspace.id),
+    getTags(workspace.id),
   ]);
 
   return (
@@ -127,6 +130,8 @@ export default async function MidasPage({
           total={recentTransactions.total}
           accountFilterId={accountId}
           accountFilterName={accountId ? accounts.find((a) => a.id === accountId)?.name : undefined}
+          tagFilterId={tagId}
+          tagFilterName={tagId ? allTags.find((t) => t.id === tagId)?.name : undefined}
           searchQuery={q}
           dateFrom={from}
           dateTo={to}

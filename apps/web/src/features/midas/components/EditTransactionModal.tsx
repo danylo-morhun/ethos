@@ -26,7 +26,10 @@ import {
 import { getAccounts } from '@/features/midas/actions/accounts';
 import { updateTransaction } from '@/features/midas/actions/transactions';
 import type { RecentTransaction } from '@/features/midas/actions/transactions';
+import { getTags } from '@/features/midas/actions/tags';
+import type { Tag } from '@/features/midas/actions/tags';
 import { AccountSelect } from '@/features/midas/components/AccountSelect';
+import { TagSelect } from '@/features/midas/components/TagSelect';
 import { CURRENCIES, toCurrency } from '@/features/midas/lib/constants';
 import {
   transactionFormSchema,
@@ -64,6 +67,8 @@ interface Props {
 export function EditTransactionModal({ transaction, workspaceId, open, onOpenChange }: Props) {
   const router = useRouter();
   const [accounts, setAccounts] = React.useState<Account[]>([]);
+  const [workspaceTags, setWorkspaceTags] = React.useState<Tag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = React.useState<string[]>(() => transaction.tags.map((t) => t.id));
   const [txType, setTxType] = React.useState<TxType>(() => inferTxType(transaction));
 
   const wallets = accounts.filter((a) => a.type === 'ASSET' || a.type === 'LIABILITY');
@@ -76,8 +81,12 @@ export function EditTransactionModal({ transaction, workspaceId, open, onOpenCha
   });
 
   React.useEffect(() => {
-    if (open) getAccounts(workspaceId).then(setAccounts);
-  }, [open, workspaceId]);
+    if (open) {
+      getAccounts(workspaceId).then(setAccounts);
+      getTags(workspaceId).then(setWorkspaceTags);
+      setSelectedTagIds(transaction.tags.map((t) => t.id));
+    }
+  }, [open, workspaceId, transaction]);
 
   const handleTabChange = (val: string) => {
     const next = val as TxType;
@@ -100,6 +109,7 @@ export function EditTransactionModal({ transaction, workspaceId, open, onOpenCha
       currency: values.currency,
       description: values.description,
       date: values.date,
+      tagIds: selectedTagIds,
     });
 
     if ('error' in result) {
@@ -190,6 +200,17 @@ export function EditTransactionModal({ transaction, workspaceId, open, onOpenCha
             <Label htmlFor="edit-date">Date</Label>
             <Input id="edit-date" type="date" {...register('date')} />
             {errs.date && <p className="text-destructive text-[0.8rem]">{errs.date.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <TagSelect
+              workspaceId={workspaceId}
+              tags={workspaceTags}
+              selectedIds={selectedTagIds}
+              onToggle={(id) => setSelectedTagIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])}
+              onTagCreated={(tag) => { setWorkspaceTags((prev) => [...prev, tag]); setSelectedTagIds((prev) => [...prev, tag.id]); }}
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

@@ -26,7 +26,10 @@ import {
 } from '@ethos/ui';
 import { getAccounts } from '@/features/midas/actions/accounts';
 import { createTransaction } from '@/features/midas/actions/transactions';
+import { getTags } from '@/features/midas/actions/tags';
+import type { Tag } from '@/features/midas/actions/tags';
 import { AccountSelect } from '@/features/midas/components/AccountSelect';
+import { TagSelect } from '@/features/midas/components/TagSelect';
 import { CURRENCIES, toCurrency } from '@/features/midas/lib/constants';
 import {
   transactionFormSchema,
@@ -45,6 +48,8 @@ export function AddTransactionModal({
 }) {
   const [open, setOpen] = React.useState(false);
   const [accounts, setAccounts] = React.useState<Account[]>([]);
+  const [workspaceTags, setWorkspaceTags] = React.useState<Tag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = React.useState<string[]>([]);
   const [txType, setTxType] = React.useState<TxType>('expense');
   const router = useRouter();
 
@@ -70,7 +75,10 @@ export function AddTransactionModal({
   });
 
   React.useEffect(() => {
-    if (open) getAccounts(workspaceId).then(setAccounts);
+    if (open) {
+      getAccounts(workspaceId).then(setAccounts);
+      getTags(workspaceId).then(setWorkspaceTags);
+    }
   }, [open, workspaceId]);
 
   React.useEffect(() => {
@@ -99,6 +107,7 @@ export function AddTransactionModal({
         categoryId: '',
       } as unknown as TransactionFormValues);
       setTxType('expense');
+      setSelectedTagIds([]);
     }
   };
 
@@ -134,6 +143,7 @@ export function AddTransactionModal({
       currency: values.currency,
       description: values.description,
       date: values.date,
+      tagIds: selectedTagIds,
     });
 
     if ('error' in result) {
@@ -247,6 +257,17 @@ export function AddTransactionModal({
             {errs.date && (
               <p className="text-destructive text-[0.8rem]">{errs.date.message}</p>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <TagSelect
+              workspaceId={workspaceId}
+              tags={workspaceTags}
+              selectedIds={selectedTagIds}
+              onToggle={(id) => setSelectedTagIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])}
+              onTagCreated={(tag) => { setWorkspaceTags((prev) => [...prev, tag]); setSelectedTagIds((prev) => [...prev, tag.id]); }}
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

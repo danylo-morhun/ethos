@@ -7,6 +7,7 @@ import {
   db,
   transactions,
   transactionEntries,
+  transactionTags,
   accounts,
   workspaces,
   eq,
@@ -33,6 +34,7 @@ export type RecentTransaction = {
   amount: string;
   currency: string;
   baseAmount: string;
+  tags: { id: string; name: string; color: string | null }[];
 };
 
 
@@ -44,6 +46,7 @@ export async function createTransaction({
   currency,
   description,
   date,
+  tagIds,
 }: {
   workspaceId: string;
   fromAccountId: string;
@@ -52,6 +55,7 @@ export async function createTransaction({
   currency: string;
   description: string | undefined;
   date: string;
+  tagIds?: string[];
 }): Promise<{ error: string } | { success: true }> {
   try {
     const session = await auth();
@@ -98,6 +102,9 @@ export async function createTransaction({
           baseAmount: baseAmount.toFixed(4),
         },
       ]);
+      if (tagIds && tagIds.length > 0) {
+        await tx.insert(transactionTags).values(tagIds.map((tagId) => ({ transactionId: txn.id, tagId })));
+      }
     });
 
     revalidatePath('/midas');
@@ -168,6 +175,7 @@ export async function updateTransaction({
   currency,
   description,
   date,
+  tagIds,
 }: {
   transactionId: string;
   fromAccountId: string;
@@ -176,6 +184,7 @@ export async function updateTransaction({
   currency: string;
   description: string | undefined;
   date: string;
+  tagIds?: string[];
 }): Promise<{ error: string } | { success: true }> {
   const session = await auth();
   if (!session?.user?.id) return { error: 'Unauthorized' };
@@ -226,6 +235,12 @@ export async function updateTransaction({
         baseAmount: baseAmount.toFixed(4),
       },
     ]);
+    if (tagIds !== undefined) {
+      await tx.delete(transactionTags).where(eq(transactionTags.transactionId, transactionId));
+      if (tagIds.length > 0) {
+        await tx.insert(transactionTags).values(tagIds.map((tagId) => ({ transactionId, tagId })));
+      }
+    }
   });
 
   revalidatePath('/midas');
@@ -246,6 +261,7 @@ export async function getRecentTransactions(
   q?: string,
   sortField: SortField = 'date',
   sortDir: SortDir = 'desc',
+  tagId?: string,
 ): Promise<{ rows: RecentTransaction[]; hasMore: boolean; total: number }> {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
@@ -264,12 +280,19 @@ export async function getRecentTransactions(
         .where(eq(transactionEntries.accountId, accountId))
     : undefined;
 
+  const tagSubquery = tagId
+    ? db.selectDistinct({ id: transactionTags.transactionId })
+        .from(transactionTags)
+        .where(eq(transactionTags.tagId, tagId))
+    : undefined;
+
   const whereClause = and(
     eq(transactions.workspaceId, workspaceId),
     from ? gte(transactions.date, from) : undefined,
     to ? lte(transactions.date, to) : undefined,
     q ? ilike(transactions.description, `%${q}%`) : undefined,
     accountSubquery ? inArray(transactions.id, accountSubquery) : undefined,
+    tagSubquery ? inArray(transactions.id, tagSubquery) : undefined,
   );
 
   const orderDate = sortDir === 'asc' ? asc(transactions.date) : desc(transactions.date);
@@ -281,7 +304,7 @@ export async function getRecentTransactions(
       orderBy: sortField === 'date' ? [orderDate, orderCreated] : [orderCreated],
       limit: TRANSACTIONS_PAGE_SIZE + 1,
       offset: page * TRANSACTIONS_PAGE_SIZE,
-      with: { entries: { with: { account: true } } },
+      with: { entries: { with: { account: true } }, transactionTags: { with: { tag: true } } },
     }),
     db.select({ total: count() }).from(transactions).where(whereClause),
   ]);
@@ -308,6 +331,7 @@ export async function getRecentTransactions(
         amount: toEntry?.amount ?? '0',
         currency: toEntry?.currency ?? '',
         baseAmount: toEntry?.baseAmount ?? '0',
+        tags: txn.transactionTags.map((tt) => ({ id: tt.tag.id, name: tt.tag.name, color: tt.tag.color })),
       };
     }),
   };
