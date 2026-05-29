@@ -60,7 +60,6 @@ interface Props {
 }
 
 function sortWithChildren(rows: AccountRow[]): AccountRow[] {
-  const byId = new Map(rows.map((r) => [r.accountId, r]));
   const result: AccountRow[] = [];
   const visited = new Set<string>();
 
