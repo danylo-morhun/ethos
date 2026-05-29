@@ -139,7 +139,11 @@ export function DateRangePicker() {
 					)}
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-auto p-0" align="end">
+			<PopoverContent
+				className="w-[min(420px,calc(100vw-1rem))] p-0"
+				align="end"
+				collisionPadding={{ top: 8, bottom: 8, left: 8, right: 0 }}
+			>
 				<div className="flex">
 					<div className="flex flex-col gap-1 border-r p-3 min-w-[140px]">
 						<p className="mb-1 px-2 text-xs font-medium text-muted-foreground">Presets</p>
