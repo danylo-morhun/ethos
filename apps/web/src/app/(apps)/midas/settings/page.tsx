@@ -8,6 +8,9 @@ import { WorkspaceSettingsForm } from '@/features/midas/components/WorkspaceSett
 import { AccountsOverview } from '@/features/midas/components/AccountsOverview';
 import { AddAccountModal } from '@/features/midas/components/AddAccountModal';
 import { ArchivedAccountsList } from '@/features/midas/components/ArchivedAccountsList';
+import { AddRecurringModal } from '@/features/midas/components/AddRecurringModal';
+import { RecurringTransactionsList } from '@/features/midas/components/RecurringTransactionsList';
+import { getRecurringTransactions } from '@/features/midas/actions/recurring';
 import { Separator } from '@ethos/ui';
 
 export default async function MidasSettingsPage() {
@@ -15,10 +18,11 @@ export default async function MidasSettingsPage() {
   if (!session?.user?.id) redirect('/');
 
   const workspace = await initializeWorkspace(session.user.id);
-  const [accounts, archivedAccounts, balances] = await Promise.all([
+  const [accounts, archivedAccounts, balances, recurringItems] = await Promise.all([
     getAccounts(workspace.id),
     getAccounts(workspace.id, { includeArchived: true }).then((all) => all.filter((a) => a.archivedAt !== null)),
     getBalances(workspace.id, undefined, undefined),
+    getRecurringTransactions(workspace.id),
   ]);
 
   return (
@@ -59,6 +63,19 @@ export default async function MidasSettingsPage() {
           periodLabel="All time"
         />
         <ArchivedAccountsList accounts={archivedAccounts} />
+      </section>
+
+      <Separator className="my-8" />
+
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold">Recurring Transactions</h2>
+            <p className="text-sm text-muted-foreground">Automatically recorded on their scheduled dates when you visit.</p>
+          </div>
+          <AddRecurringModal workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
+        </div>
+        <RecurringTransactionsList items={recurringItems} currency={workspace.baseCurrency} />
       </section>
     </main>
   );

@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { getMonthlyTrends } from '@/features/midas/actions/trends';
 import { getNetWorthHistory } from '@/features/midas/actions/net-worth';
 import { getTags } from '@/features/midas/actions/tags';
+import { generateDueRecurring } from '@/features/midas/actions/recurring';
 import { NetWorthChart } from '@/features/midas/components/NetWorthChart';
 import { IncomeChart } from '@/features/midas/components/IncomeChart';
 import { OnboardingCard } from '@/features/midas/components/OnboardingCard';
@@ -64,6 +65,7 @@ export default async function MidasPage({
   const tagId       = rawTag && UUID.test(rawTag) ? rawTag : undefined;
 
   const workspace = await initializeWorkspace(session.user.id);
+  await generateDueRecurring(workspace.id);
   const periodLabel = buildPeriodLabel(from, to);
 
   const [balances, accounts, recentTransactions, trends, netWorthHistory, allTags] = await Promise.all([

@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   index,
   numeric,
@@ -13,6 +14,8 @@ import {
 import { relations } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { authUsers } from './auth';
+
+export const frequencyEnum = pgEnum('frequency', ['daily', 'weekly', 'monthly', 'yearly']);
 
 export const accountTypeEnum = pgEnum('account_type', [
   'ASSET',
@@ -132,6 +135,8 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
   }),
   children: many(accounts, { relationName: 'account_children' }),
   transactionEntries: many(transactionEntries),
+  recurringFrom: many(recurringTransactions, { relationName: 'recurring_from' }),
+  recurringTo: many(recurringTransactions, { relationName: 'recurring_to' }),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one, many }) => ({
@@ -183,6 +188,38 @@ export const transactionTags = pgTable(
   },
   (t) => [primaryKey({ columns: [t.transactionId, t.tagId] })],
 );
+
+export const recurringTransactions = pgTable(
+  'recurring_transactions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    fromAccountId: uuid('from_account_id')
+      .notNull()
+      .references(() => accounts.id),
+    toAccountId: uuid('to_account_id')
+      .notNull()
+      .references(() => accounts.id),
+    amount: numeric('amount', { precision: 19, scale: 4 }).notNull(),
+    currency: text('currency').notNull(),
+    description: text('description'),
+    frequency: frequencyEnum('frequency').notNull(),
+    nextDate: date('next_date').notNull(),
+    endDate: date('end_date'),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('recurring_transactions_workspace_id_idx').on(t.workspaceId)],
+);
+
+export const recurringTransactionsRelations = relations(recurringTransactions, ({ one }) => ({
+  workspace: one(workspaces, { fields: [recurringTransactions.workspaceId], references: [workspaces.id] }),
+  fromAccount: one(accounts, { fields: [recurringTransactions.fromAccountId], references: [accounts.id], relationName: 'recurring_from' }),
+  toAccount: one(accounts, { fields: [recurringTransactions.toAccountId], references: [accounts.id], relationName: 'recurring_to' }),
+}));
 
 export const tagsRelations = relations(tags, ({ one, many }) => ({
   workspace: one(workspaces, { fields: [tags.workspaceId], references: [workspaces.id] }),
