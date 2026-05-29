@@ -14,6 +14,9 @@ import { TransactionTable } from '@/features/midas/components/TransactionTable';
 import { DateRangePicker } from '@/features/midas/components/DateRangePicker';
 import { parseLocal } from '@/features/midas/lib/dates';
 import { getMonthlyTrends } from '@/features/midas/actions/trends';
+import { getNetWorthHistory } from '@/features/midas/actions/net-worth';
+import { NetWorthChart } from '@/features/midas/components/NetWorthChart';
+import { IncomeChart } from '@/features/midas/components/IncomeChart';
 
 function buildPeriodLabel(from: string | undefined, to: string | undefined): string {
   if (!from && !to) return 'All time';
@@ -57,11 +60,12 @@ export default async function MidasPage({
   const workspace = await initializeWorkspace(session.user.id);
   const periodLabel = buildPeriodLabel(from, to);
 
-  const [balances, accounts, recentTransactions, trends] = await Promise.all([
+  const [balances, accounts, recentTransactions, trends, netWorthHistory] = await Promise.all([
     getBalances(workspace.id, from, to),
     getAccounts(workspace.id),
     getRecentTransactions(workspace.id, from, to, page, accountId, q),
     getMonthlyTrends(workspace.id, from, to, trendMonths),
+    getNetWorthHistory(workspace.id),
   ]);
 
   return (
@@ -89,6 +93,12 @@ export default async function MidasPage({
           <ExpenseChart balances={balances} currency={workspace.baseCurrency} />
           <div className="lg:col-span-2">
             <TrendChart data={trends} currency={workspace.baseCurrency} trendParam={trend} hasDateFilter={!!(from || to)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <IncomeChart balances={balances} currency={workspace.baseCurrency} />
+          <div className="lg:col-span-2">
+            <NetWorthChart data={netWorthHistory} currency={workspace.baseCurrency} />
           </div>
         </div>
         <TransactionTable
