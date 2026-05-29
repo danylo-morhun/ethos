@@ -14,6 +14,8 @@ import {
 	ilike,
 	inArray,
 	lte,
+	sql,
+	tags,
 	transactionEntries,
 	transactionTags,
 	transactions,
@@ -39,6 +41,19 @@ export type RecentTransaction = {
 };
 
 type EntrySpec = { accountId: string; debit: boolean; amount: number };
+
+async function assertTagsInWorkspace(
+	tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+	tagIds: string[],
+	workspaceId: string,
+) {
+	if (tagIds.length === 0) return;
+	const valid = await tx
+		.select({ id: tags.id })
+		.from(tags)
+		.where(and(inArray(tags.id, tagIds), eq(tags.workspaceId, workspaceId)));
+	if (valid.length !== tagIds.length) throw new Error("Tag not found");
+}
 
 function buildEntrySpecs(
 	fromAccountId?: string,
@@ -134,6 +149,7 @@ export async function createTransaction({
 			);
 
 			if (tagIds && tagIds.length > 0) {
+				await assertTagsInWorkspace(tx, tagIds, workspaceId);
 				await tx
 					.insert(transactionTags)
 					.values(tagIds.map((tagId) => ({ transactionId: txn.id, tagId })));
@@ -282,6 +298,7 @@ export async function updateTransaction({
 		if (tagIds !== undefined) {
 			await tx.delete(transactionTags).where(eq(transactionTags.transactionId, transactionId));
 			if (tagIds.length > 0) {
+				await assertTagsInWorkspace(tx, tagIds, workspace.id);
 				await tx.insert(transactionTags).values(tagIds.map((tagId) => ({ transactionId, tagId })));
 			}
 		}
