@@ -208,12 +208,13 @@ export async function deleteTransactions(
 
 	if (!ws || ws.userId !== session.user.id) return { error: "Forbidden" };
 
-	await db
+	const deleted = await db
 		.delete(transactions)
-		.where(and(inArray(transactions.id, ids), eq(transactions.workspaceId, workspaceId)));
+		.where(and(inArray(transactions.id, ids), eq(transactions.workspaceId, workspaceId)))
+		.returning({ id: transactions.id });
 
 	revalidatePath("/midas");
-	return { success: true, deleted: ids.length };
+	return { success: true, deleted: deleted.length };
 }
 
 export async function updateTransaction({
