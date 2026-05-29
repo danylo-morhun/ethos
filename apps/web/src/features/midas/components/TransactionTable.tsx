@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { MoreHorizontalIcon, Delete01Icon } from '@hugeicons/core-free-icons';
@@ -33,12 +33,26 @@ import { formatCurrency } from '@/features/midas/lib/format';
 interface Props {
   transactions: RecentTransaction[];
   currency: string;
+  page: number;
+  hasMore: boolean;
 }
 
-export function TransactionTable({ transactions, currency }: Props) {
+export function TransactionTable({ transactions, currency, page, hasMore }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
+
+  function navigate(newPage: number) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newPage === 0) {
+      params.delete('page');
+    } else {
+      params.set('page', String(newPage));
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  }
 
   function handleDelete(id: string) {
     startTransition(async () => {
@@ -135,6 +149,27 @@ export function TransactionTable({ transactions, currency }: Props) {
           </TableBody>
         </Table>
       </div>
+      {(page > 0 || hasMore) && (
+        <div className="mt-4 flex items-center justify-between">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 0}
+            onClick={() => navigate(page - 1)}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">Page {page + 1}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!hasMore}
+            onClick={() => navigate(page + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </section>
   );
 }

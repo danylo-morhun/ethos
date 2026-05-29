@@ -34,15 +34,16 @@ function buildPeriodLabel(from: string | undefined, to: string | undefined): str
 export default async function MidasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; page?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/');
 
-  const { from: rawFrom, to: rawTo } = await searchParams;
+  const { from: rawFrom, to: rawTo, page: rawPage } = await searchParams;
   const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
   const from = rawFrom && ISO_DATE.test(rawFrom) ? rawFrom : undefined;
   const to   = rawTo   && ISO_DATE.test(rawTo)   ? rawTo   : undefined;
+  const page = rawPage && /^\d+$/.test(rawPage) ? Math.max(0, parseInt(rawPage, 10)) : 0;
 
   const workspace = await initializeWorkspace(session.user.id);
   const periodLabel = buildPeriodLabel(from, to);
@@ -50,7 +51,7 @@ export default async function MidasPage({
   const [balances, accounts, recentTransactions] = await Promise.all([
     getBalances(workspace.id, from, to),
     getAccounts(workspace.id),
-    getRecentTransactions(workspace.id, from, to),
+    getRecentTransactions(workspace.id, from, to, page),
   ]);
 
   return (
@@ -78,7 +79,12 @@ export default async function MidasPage({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <ExpenseChart balances={balances} currency={workspace.baseCurrency} />
           <div className="lg:col-span-2">
-            <TransactionTable transactions={recentTransactions} currency={workspace.baseCurrency} />
+            <TransactionTable
+              transactions={recentTransactions.rows}
+              currency={workspace.baseCurrency}
+              page={page}
+              hasMore={recentTransactions.hasMore}
+            />
           </div>
         </div>
       </div>

@@ -164,11 +164,14 @@ export async function deleteTransaction(
   return { success: true };
 }
 
+export const TRANSACTIONS_PAGE_SIZE = 10;
+
 export async function getRecentTransactions(
   workspaceId: string,
   from: string | undefined,
   to: string | undefined,
-): Promise<RecentTransaction[]> {
+  page = 0,
+): Promise<{ rows: RecentTransaction[]; hasMore: boolean }> {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
 
@@ -187,7 +190,8 @@ export async function getRecentTransactions(
       to ? lte(transactions.date, to) : undefined,
     ),
     orderBy: [desc(transactions.date), desc(transactions.createdAt)],
-    limit: 10,
+    limit: TRANSACTIONS_PAGE_SIZE + 1,
+    offset: page * TRANSACTIONS_PAGE_SIZE,
     with: {
       entries: {
         with: { account: true },
@@ -195,18 +199,24 @@ export async function getRecentTransactions(
     },
   });
 
-  return rows.map((txn) => {
-    const fromEntry = txn.entries.find((e) => Number(e.baseAmount) < 0);
-    const toEntry = txn.entries.find((e) => Number(e.baseAmount) > 0);
-    return {
-      id: txn.id,
-      date: txn.date,
-      description: txn.description,
-      fromAccount: fromEntry?.account?.name ?? '—',
-      toAccount: toEntry?.account?.name ?? '—',
-      amount: toEntry?.amount ?? '0',
-      currency: toEntry?.currency ?? '',
-      baseAmount: toEntry?.baseAmount ?? '0',
-    };
-  });
+  const hasMore = rows.length > TRANSACTIONS_PAGE_SIZE;
+  const page_rows = hasMore ? rows.slice(0, TRANSACTIONS_PAGE_SIZE) : rows;
+
+  return {
+    hasMore,
+    rows: page_rows.map((txn) => {
+      const fromEntry = txn.entries.find((e) => Number(e.baseAmount) < 0);
+      const toEntry = txn.entries.find((e) => Number(e.baseAmount) > 0);
+      return {
+        id: txn.id,
+        date: txn.date,
+        description: txn.description,
+        fromAccount: fromEntry?.account?.name ?? '—',
+        toAccount: toEntry?.account?.name ?? '—',
+        amount: toEntry?.amount ?? '0',
+        currency: toEntry?.currency ?? '',
+        baseAmount: toEntry?.baseAmount ?? '0',
+      };
+    }),
+  };
 }
