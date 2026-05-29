@@ -44,8 +44,10 @@ export default async function MidasPage({
   const { from: rawFrom, to: rawTo, page: rawPage, account: rawAccount } = await searchParams;
   const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  const from      = rawFrom    && ISO_DATE.test(rawFrom)    ? rawFrom    : undefined;
-  const to        = rawTo      && ISO_DATE.test(rawTo)      ? rawTo      : undefined;
+  const rawValidFrom = rawFrom && ISO_DATE.test(rawFrom) ? rawFrom : undefined;
+  const rawValidTo   = rawTo   && ISO_DATE.test(rawTo)   ? rawTo   : undefined;
+  const from      = rawValidFrom && rawValidTo && rawValidFrom > rawValidTo ? rawValidTo   : rawValidFrom;
+  const to        = rawValidFrom && rawValidTo && rawValidFrom > rawValidTo ? rawValidFrom : rawValidTo;
   const page      = rawPage    && /^\d+$/.test(rawPage)     ? Math.max(0, parseInt(rawPage, 10)) : 0;
   const accountId = rawAccount && UUID.test(rawAccount)     ? rawAccount : undefined;
 
@@ -56,7 +58,7 @@ export default async function MidasPage({
     getBalances(workspace.id, from, to),
     getAccounts(workspace.id),
     getRecentTransactions(workspace.id, from, to, page, accountId),
-    getMonthlyTrends(workspace.id),
+    getMonthlyTrends(workspace.id, from, to),
   ]);
 
   return (

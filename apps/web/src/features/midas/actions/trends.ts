@@ -1,7 +1,7 @@
 'use server';
 
 import { auth } from '@/auth';
-import { db, accounts, transactionEntries, transactions, workspaces, eq, and, sql, gte, inArray } from '@ethos/db';
+import { db, accounts, transactionEntries, transactions, workspaces, eq, and, sql, gte, lte, inArray } from '@ethos/db';
 
 export type MonthlyTrend = {
   month: string; // YYYY-MM
@@ -11,6 +11,8 @@ export type MonthlyTrend = {
 
 export async function getMonthlyTrends(
   workspaceId: string,
+  from?: string,
+  to?: string,
   months = 6,
 ): Promise<MonthlyTrend[]> {
   const session = await auth();
@@ -24,10 +26,15 @@ export async function getMonthlyTrends(
 
   if (!ws || ws.userId !== session.user.id) throw new Error('Forbidden');
 
-  const cutoff = new Date();
-  cutoff.setDate(1);
-  cutoff.setMonth(cutoff.getMonth() - (months - 1));
-  const cutoffDate = cutoff.toISOString().slice(0, 10);
+  let cutoffDate: string;
+  if (from) {
+    cutoffDate = from.slice(0, 7) + '-01';
+  } else {
+    const cutoff = new Date();
+    cutoff.setDate(1);
+    cutoff.setMonth(cutoff.getMonth() - (months - 1));
+    cutoffDate = cutoff.toISOString().slice(0, 10);
+  }
 
   const rows = await db
     .select({
@@ -43,6 +50,7 @@ export async function getMonthlyTrends(
         eq(accounts.workspaceId, workspaceId),
         inArray(accounts.type, ['INCOME', 'EXPENSE']),
         gte(transactions.date, cutoffDate),
+        to ? lte(transactions.date, to) : undefined,
       ),
     )
     .groupBy(sql`to_char(${transactions.date}, 'YYYY-MM')`, accounts.type)
