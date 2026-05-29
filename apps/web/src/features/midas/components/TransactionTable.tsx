@@ -200,10 +200,15 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
                       {txn.toAccount}
                     </button>
                   </TableCell>
-                  <TableCell className="text-right font-mono font-medium">
-                    {txn.currency && txn.currency !== currency
-                      ? `${formatCurrency(Number(txn.amount), txn.currency)} (~${formatCurrency(Number(txn.baseAmount), currency)})`
-                      : formatCurrency(Number(txn.baseAmount), currency)}
+                  <TableCell className="text-right">
+                    {txn.currency && txn.currency !== currency ? (
+                      <div>
+                        <p className="font-mono font-medium">{formatCurrency(Number(txn.amount), txn.currency)}</p>
+                        <p className="text-xs text-muted-foreground tabular-nums">≈ {formatCurrency(Number(txn.baseAmount), currency)}</p>
+                      </div>
+                    ) : (
+                      <span className="font-mono font-medium">{formatCurrency(Number(txn.baseAmount), currency)}</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <AlertDialog
