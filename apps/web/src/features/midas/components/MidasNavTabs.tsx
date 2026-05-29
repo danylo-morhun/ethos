@@ -43,24 +43,6 @@ export function MidasNavTabs({ activeTab }: Props) {
 
 	return (
 		<>
-			{/* Desktop — top tab strip */}
-			<nav className="hidden border-b md:flex">
-				{TABS.map(({ value, label }) => (
-					<Link
-						key={value}
-						href={tabHref(value)}
-						className={cn(
-							"relative px-4 py-2.5 text-sm font-medium transition-colors",
-							activeTab === value
-								? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
-								: "text-muted-foreground hover:text-foreground",
-						)}
-					>
-						{label}
-					</Link>
-				))}
-			</nav>
-
 			{/* Mobile — fixed bottom nav */}
 			<nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background md:hidden">
 				<div className="flex">
