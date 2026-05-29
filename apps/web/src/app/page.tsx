@@ -1,4 +1,5 @@
-import { signIn } from '@/auth';
+import { redirect } from 'next/navigation';
+import { auth, signIn } from '@/auth';
 import { Button } from '@ethos/ui/button';
 import {
   Card,
@@ -9,7 +10,10 @@ import {
   CardTitle,
 } from '@ethos/ui/card';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await auth();
+  if (session) redirect('/dashboard');
+
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
