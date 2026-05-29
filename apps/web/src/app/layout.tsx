@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Toaster } from "sonner";
+import { TooltipProvider } from "@ethos/ui";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -10,7 +11,7 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   title: "ethos",
-  description: "Personal finance app",
+  description: "Your personal suite of tools",
 };
 
 export default function RootLayout({
@@ -21,7 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${geistSans.variable}`}>
       <body className="antialiased">
-        {children}
+        <TooltipProvider delayDuration={0}>
+          {children}
+        </TooltipProvider>
         <Toaster richColors position="bottom-right" />
       </body>
     </html>
