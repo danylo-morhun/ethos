@@ -66,7 +66,6 @@ export default async function MidasPage({
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{workspace.name}</h1>
-          <p className="text-sm text-muted-foreground">{session.user.email}</p>
         </div>
         <div className="flex items-center gap-3">
           <DateRangePicker from={from} to={to} />
