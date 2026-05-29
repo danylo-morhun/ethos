@@ -56,7 +56,7 @@ Status: ✅ done | 🔜 todo | ⏭ skipped (intentional)
 | U12 | ✅ | Transaction table | Hover hint + `title` attribute on account filter buttons |
 | U13 | ✅ | Accounts | Budget/target support for INCOME accounts (green when exceeded) |
 | U14 | ✅ | Header | Removed redundant email, kept workspace name + Settings link |
-| U15 | 🔜 | Mobile | DateRangePicker cramped on mobile — needs combined range picker |
+| U15 | ✅ | Mobile | DateRangePicker cramped on mobile — needs combined range picker |
 | U16 | ✅ | Transaction table | Multi-currency: original amount + `≈ base` on separate muted line |
 | U17 | ✅ | AccountsOverview | Account names are now links to detail page |
 
@@ -78,16 +78,16 @@ Status: ✅ done | 🔜 todo | ⏭ skipped (intentional)
 
 ---
 
-## Features P2 — Phase 6 (TODO)
+## Features P2 — Phase 6
 
 | # | Status | Feature | Notes |
 |---|--------|---------|-------|
-| F9  | 🔜 | **Recurring transactions** | New `recurringTransactions` table. `frequency` enum (daily/weekly/monthly/yearly), `nextDate`, `endDate`. Cron or on-demand generation. |
-| F10 | 🔜 | **Transaction tags** | New `transactionTags` table + `tagsOnTransactions` join. Filter by tag in table (`?tag=`). |
-| F11 | ✅ | **Multi-currency accounts** | Currency picker in Add/EditAccountModal; native + base balance display in AccountsOverview. |
-| F12 | ✅ | **Bulk operations** | Checkbox column + `deleteTransactions(ids[])` action + bulk delete confirmation. |
-| F13 | ✅ | **Account archiving** | `archivedAt` column, archive/unarchive actions, Archive in dropdown, Restore in settings. |
-| F14 | 🔜 | **Transaction split** | One transaction → multiple category entries. Requires AddTransactionModal rework: "add split" button that adds extra category rows. Backend: still double-entry, just more entries. |
+| F9  | ✅ | **Recurring transactions** | `frequency` enum (daily/weekly/monthly/yearly), `nextDate`, `endDate`, `isActive`. On-demand generation on page load. Manage in settings (Add/pause/delete). |
+| F10 | ✅ | **Transaction tags** | `tags` + `transaction_tags` tables. Tags on Add/EditTransactionModal (inline create). Tag chips on table rows. Filter by `?tag=` URL param. |
+| F11 | ✅ | **Multi-currency accounts** | Currency picker in Add/EditAccountModal; native + `≈ base` balance display in AccountsOverview. `nativeBalance` added to `getBalances`. |
+| F12 | ✅ | **Bulk delete** | Checkbox column (shadcn `Checkbox`) + `deleteTransactions(ids[])` action + bulk delete confirmation. |
+| F13 | ✅ | **Account archiving** | `archivedAt` column, archive/unarchive actions, Archive in dropdown, Restore in Settings page. Hidden from pickers + overview; balances still count in SummaryCards. |
+| F14 | ✅ | **Transaction split** | One transaction → multiple category entries. Requires AddTransactionModal rework: "add split" button that adds extra category rows. Backend: still double-entry, just more entries per side. |
 | F15 | ✅ | **Keyboard shortcut** | `N` key opens AddTransactionModal when focus not in input/textarea. |
 
 ---
@@ -97,12 +97,14 @@ Status: ✅ done | 🔜 todo | ⏭ skipped (intentional)
 Current state:
 - Workspace name editable via `updateWorkspace` action
 - Base currency shown read-only (change not yet supported — would require recalculating all `baseAmount` values)
-- Accounts section reuses `AccountsOverview` with all edit/delete/add functionality
+- Accounts section: full `AccountsOverview` with edit/delete/archive/add + currency picker
+- Archived accounts section: restore button for each
+- Recurring transactions section: list with pause/resume/delete + AddRecurringModal
 
 Still TODO:
 - Account reorder (needs `sortOrder` column + migration)
-- Account archiving (needs `archivedAt` column + migration — F13)
 - Display preferences (date format, week start) — needs `userSettings` table
+- Danger zone: delete + archive buttons on Account Detail page (currently only via AccountsOverview dropdown)
 
 ---
 
@@ -118,11 +120,6 @@ What's there:
 - Full `TransactionTable` filtered to this account (with search, sort, pagination, export)
 - Back link to dashboard
 
-Clicking account name in `AccountsOverview` navigates here.
-
-Still TODO:
-- Danger zone: delete + archive buttons (currently only via AccountsOverview dropdown)
-
 ---
 
 ## Onboarding / Empty State ✅ implemented
@@ -133,10 +130,10 @@ Step indicator auto-advances based on account count.
 
 ---
 
-## Period Comparison 🔜 not started
+## Period Comparison ✅ implemented
 
-Show `+12%` / `−8%` delta badge on SummaryCards vs previous equivalent period.
-Requires calling `getBalances` twice (current + previous period) in `page.tsx`.
+`↑ +12%` / `↓ −8%` delta badge on Net Worth and Cashflow SummaryCards vs previous equivalent period.
+`getBalances` called twice in `page.tsx` (current + prev). Prev period = same duration, ending day before `from`.
 
 ---
 
@@ -148,19 +145,12 @@ Phase 2 — UX quick wins        ✅ 3 commits
 Phase 3 — Features P1          ✅ 7 commits
 Phase 4 — Settings & pages     ✅ 1 commit
 Phase 5 — UX depth             ✅ 6 commits
+Phase 6 — Features P2          ✅ 10 commits (F15/F11/F13/F12/F10/F9 + Checkbox UI)
+Phase 7 — Final polish         ✅ 3 commits (F14 split, U15 mobile, period comparison)
                                ──────────
-Total                          26 commits, HEAD: 614c466
+Total                          39+ commits, HEAD: 6f2ec54
 
-Phase 6 — Features P2          🔜 in progress (31 commits, HEAD: 8d58bc5)
-  Done:    F15 (keyboard shortcut)
-           F11 (multi-currency accounts)
-           F13 (account archiving)
-           F12 (bulk delete)
-  Remaining: F10 (transaction tags, needs migration)
-             F9  (recurring transactions, needs migration, most complex)
-             F14 (transaction split, largest UI change)
-             U15 (mobile DateRangePicker, CSS/UX only)
-             Period comparison on SummaryCards
+Remaining: nothing — all items complete ✅
 ```
 
 ---
@@ -191,15 +181,47 @@ apps/web/src/app/(apps)/midas/
   accounts/[id]/page.tsx      — /midas/accounts/[id] RSC
 ```
 
+## New Files Created (Phase 6)
+
+```
+apps/web/src/features/midas/
+  actions/
+    tags.ts       — getTags, createTag, deleteTag, setTransactionTags
+    recurring.ts  — getRecurringTransactions, createRecurringTransaction,
+                    toggleRecurring, deleteRecurringTransaction, generateDueRecurring
+  components/
+    TagSelect.tsx                  — inline tag picker with create-on-type
+    ArchivedAccountsList.tsx       — restore archived accounts (settings)
+    AddRecurringModal.tsx          — create recurring transaction
+    RecurringTransactionsList.tsx  — manage recurring (pause/resume/delete)
+
+packages/ui/src/components/
+  checkbox.tsx  — shadcn Checkbox (Radix UI, inline SVG checkmark)
+```
+
+## DB Schema Changes (Phase 6)
+
+```
+accounts         + archivedAt timestamptz (nullable)
+tags             id, workspaceId FK, name, color, createdAt
+                 UNIQUE(workspaceId, name)
+transaction_tags transactionId FK + tagId FK (composite PK, cascade delete)
+recurring_transactions
+                 id, workspaceId FK, fromAccountId FK, toAccountId FK,
+                 amount, currency, description, frequency enum, nextDate date,
+                 endDate date (nullable), isActive bool default true,
+                 createdAt, updatedAt
+```
+
 ---
 
 ## Handoff — For Next Chat
 
-**Current branch:** `main`, HEAD `614c466`
+**Current branch:** `main`, HEAD `3f77912`
 
 **Stack reminders:**
 - Monorepo: Turborepo + pnpm. Dev: `pnpm dev` from root
-- DB migrations: `pnpm -F @ethos/db generate` then `pnpm -F @ethos/db migrate`
+- DB: `pnpm -F @ethos/db db:push` (project uses push, not generate+migrate)
 - Lint: `pnpm biome check --apply .` (Biome only, no ESLint/Prettier)
 - Typecheck: run from `apps/web/`: `pnpm tsc --noEmit`
 - Commit style: Conventional Commits, atomic, subject-only, more commits = better
@@ -211,14 +233,38 @@ apps/web/src/app/(apps)/midas/
 - Auth check in every server action: session + `workspace.userId === session.user.id`
 - `createAccount` currency defaults to `workspace.baseCurrency` if not passed
 - Exchange rates: Frankfurter `/YYYY-MM-DD` endpoint, cached in `exchangeRates` table
+- `tags` unique on `(workspaceId, name)` — createTag can return `{ error: 'Tag name already exists' }`
+- Recurring generation: on-demand in `page.tsx` via `generateDueRecurring(workspace.id)`, capped at 365 iterations per rule
+- `inline style={{ backgroundColor }}` in ExpenseChart/IncomeChart legends is intentional (dynamic colors)
 
-**Phase 6 start point — recommended order:**
-1. **F15** (keyboard shortcut `N`) — ~20 lines, no DB change
-2. **F11** (multi-currency accounts) — schema already has `currency` col on `accounts`, `createAccount` already accepts currency param; just need UI in Add/EditAccountModal + AccountsOverview display
-3. **F13** (account archiving) — needs `archivedAt timestamptz` column migration on `accounts`; hide from pickers, show in settings with restore option
-4. **F12** (bulk delete) — checkbox col in TransactionTable, new `deleteTransactions(ids[])` action
-5. **F10** (transaction tags) — needs `tags` + `transaction_tags` tables migration
-6. **F9** (recurring transactions) — needs `recurring_transactions` table, most complex
-7. **F14** (transaction split) — largest UI change, rework AddTransactionModal
-8. **U15** (mobile DateRangePicker) — CSS/UX only, no DB
-9. **Period comparison** — call `getBalances` twice in page.tsx, compute delta in RSC
+**Remaining work (priority order):**
+1. **F14** (transaction split) — largest UI change; rework AddTransactionModal to allow multiple "To" entries per transaction. Backend: still double-entry, just N expense entries summing to the same debit amount. UI: "Split" tab or "Add split" button that adds extra category+amount rows.
+2. **U15** (mobile DateRangePicker) — the dual calendar is cramped on mobile; replace with a single range-capable picker or a bottom sheet on small screens.
+3. **Period comparison** — show `+12%` / `−8%` delta badge on SummaryCards. Requires calling `getBalances` twice in `page.tsx` (current period + previous equivalent period), compute delta in RSC, pass to `SummaryCards`.
+
+---
+
+## Prompt for New Chat
+
+```
+Продовжуємо полировку Midas (finance tracker) в проекті ethos.
+
+Контекст:
+- Прочитай docs/midas-polish.md — там повний план, статус по фазах і handoff
+- Прочитай CLAUDE.md — стек, паттерни, інваріанти
+- Поточна гілка: main, HEAD: 3f77912 (36+ комітів з початку роботи)
+- Фази 1–6 (крім F14) завершені
+
+Залишилося (пріоритетний порядок з docs/midas-polish.md):
+1. F14 — transaction split (найбільша UI-зміна: рефакторинг AddTransactionModal)
+2. U15 — mobile DateRangePicker (CSS/UX, no DB)
+3. Period comparison на SummaryCards
+
+Правила:
+- Коміть після кожного фіксу/фічі (Conventional Commits, subject only)
+- Typecheck перед кожним комітом: запускати з apps/web/ через `pnpm tsc --noEmit`
+- Drizzle для DB (не raw SQL), при нових таблицях: `pnpm -F @ethos/db db:push`
+- auth check у кожному server action
+- URL params + useTransition для state (no Zustand/TanStack Query)
+- shadcn компоненти з @ethos/ui скрізь де можливо
+```
