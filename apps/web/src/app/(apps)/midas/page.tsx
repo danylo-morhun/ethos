@@ -99,6 +99,8 @@ export default async function MidasPage({
           accountFilterId={accountId}
           accountFilterName={accountId ? accounts.find((a) => a.id === accountId)?.name : undefined}
           searchQuery={q}
+          dateFrom={from}
+          dateTo={to}
         />
       </div>
     </main>

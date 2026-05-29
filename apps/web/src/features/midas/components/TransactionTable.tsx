@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { MoreHorizontalIcon, Delete01Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
+import { MoreHorizontalIcon, Delete01Icon, PencilEdit01Icon, Download01Icon } from '@hugeicons/core-free-icons';
 import {
   Table,
   TableBody,
@@ -30,6 +30,7 @@ import {
   Input,
 } from '@ethos/ui';
 import { deleteTransaction } from '@/features/midas/actions/transactions';
+import { exportTransactionsCsv } from '@/features/midas/actions/export';
 import type { RecentTransaction } from '@/features/midas/actions/transactions';
 import { EditTransactionModal } from '@/features/midas/components/EditTransactionModal';
 import { formatCurrency } from '@/features/midas/lib/format';
@@ -52,9 +53,11 @@ interface Props {
   accountFilterId?: string;
   accountFilterName?: string;
   searchQuery?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
-export function TransactionTable({ transactions, currency, workspaceId, page, hasMore, total, accountFilterId, accountFilterName, searchQuery }: Props) {
+export function TransactionTable({ transactions, currency, workspaceId, page, hasMore, total, accountFilterId, accountFilterName, searchQuery, dateFrom, dateTo }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -91,6 +94,18 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
     router.push(`${pathname}?${params.toString()}`);
   }
 
+  async function handleExport() {
+    const result = await exportTransactionsCsv(workspaceId, dateFrom, dateTo, accountFilterId, searchQuery);
+    if ('error' in result) { toast.error(result.error); return; }
+    const blob = new Blob([result.csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `transactions-${dateFrom ?? 'all'}-${dateTo ?? 'all'}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function handleDelete(id: string) {
     startTransition(async () => {
       const result = await deleteTransaction(id);
@@ -122,7 +137,7 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
             </button>
           </span>
         )}
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
           <Input
             placeholder="Search transactions…"
             className="h-8 w-52 text-sm"
@@ -131,6 +146,9 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
             onKeyDown={(e) => { if (e.key === 'Enter') submitSearch(localQuery); }}
             onBlur={() => submitSearch(localQuery)}
           />
+          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={handleExport} title="Export CSV">
+            <HugeiconsIcon icon={Download01Icon} className="h-4 w-4" />
+          </Button>
         </div>
       </div>
       <div className="rounded-lg border">
