@@ -82,6 +82,7 @@ export default async function MidasPage({
             <TransactionTable
               transactions={recentTransactions.rows}
               currency={workspace.baseCurrency}
+              workspaceId={workspace.id}
               page={page}
               hasMore={recentTransactions.hasMore}
             />

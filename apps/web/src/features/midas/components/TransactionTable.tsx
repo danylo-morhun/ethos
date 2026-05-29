@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { MoreHorizontalIcon, Delete01Icon } from '@hugeicons/core-free-icons';
+import { MoreHorizontalIcon, Delete01Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
 import {
   Table,
   TableBody,
@@ -15,6 +15,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
   AlertDialog,
   AlertDialogAction,
@@ -28,21 +29,24 @@ import {
 } from '@ethos/ui';
 import { deleteTransaction } from '@/features/midas/actions/transactions';
 import type { RecentTransaction } from '@/features/midas/actions/transactions';
+import { EditTransactionModal } from '@/features/midas/components/EditTransactionModal';
 import { formatCurrency } from '@/features/midas/lib/format';
 
 interface Props {
   transactions: RecentTransaction[];
   currency: string;
+  workspaceId: string;
   page: number;
   hasMore: boolean;
 }
 
-export function TransactionTable({ transactions, currency, page, hasMore }: Props) {
+export function TransactionTable({ transactions, currency, workspaceId, page, hasMore }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<RecentTransaction | null>(null);
 
   function navigate(newPage: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -114,6 +118,11 @@ export function TransactionTable({ transactions, currency, page, hasMore }: Prop
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onSelect={() => setEditTarget(txn)}>
+                            <HugeiconsIcon icon={PencilEdit01Icon} className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
                             onSelect={() => setPendingId(txn.id)}
@@ -169,6 +178,15 @@ export function TransactionTable({ transactions, currency, page, hasMore }: Prop
             Next
           </Button>
         </div>
+      )}
+
+      {editTarget && (
+        <EditTransactionModal
+          transaction={editTarget}
+          workspaceId={workspaceId}
+          open={!!editTarget}
+          onOpenChange={(v) => { if (!v) setEditTarget(null); }}
+        />
       )}
     </section>
   );
