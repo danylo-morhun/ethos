@@ -82,7 +82,7 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
         name: values.name,
         type: values.type,
         parentId: values.parentId || null,
-        budget: values.type === 'EXPENSE' ? (values.budget ?? null) : null,
+        budget: (values.type === 'EXPENSE' || values.type === 'INCOME') ? (values.budget ?? null) : null,
       });
       toast.success('Account updated');
       router.refresh();
@@ -138,9 +138,11 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
             )}
           </div>
 
-          {selectedType === 'EXPENSE' && (
+          {(selectedType === 'EXPENSE' || selectedType === 'INCOME') && (
             <div className="space-y-2">
-              <Label htmlFor="edit-acc-budget">Monthly Budget (Optional)</Label>
+              <Label htmlFor="edit-acc-budget">
+                {selectedType === 'INCOME' ? 'Monthly Target (Optional)' : 'Monthly Budget (Optional)'}
+              </Label>
               <Input
                 id="edit-acc-budget"
                 type="number"

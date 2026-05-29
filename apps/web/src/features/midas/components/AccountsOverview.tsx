@@ -143,9 +143,11 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                       const acct = accountMap.get(b.accountId);
                       const budget = acct?.budget != null ? Number(acct.budget) : null;
                       const balance = Number(b.balance);
-                      const showBudget = b.type === 'EXPENSE' && budget != null && budget > 0;
-                      const pct = showBudget ? Math.min((balance / budget) * 100, 100) : null;
-                      const overBudget = showBudget && balance > budget;
+                      const absBalance = Math.abs(balance);
+                      const showBudget = (b.type === 'EXPENSE' || b.type === 'INCOME') && budget != null && budget > 0;
+                      const pct = showBudget ? Math.min((absBalance / budget) * 100, 100) : null;
+                      const overBudget = showBudget && absBalance > budget;
+                      const isIncome = b.type === 'INCOME';
 
                       return (
                         <div
@@ -206,10 +208,15 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                               <Progress
                                 value={pct}
                                 className="h-1.5"
-                                indicatorClassName={overBudget ? 'bg-destructive' : undefined}
+                                indicatorClassName={
+                                  isIncome
+                                    ? overBudget ? 'bg-green-500' : undefined
+                                    : overBudget ? 'bg-destructive' : undefined
+                                }
                               />
                               <p className="text-xs text-muted-foreground">
-                                {formatCurrency(Math.abs(balance), currency)} / {formatCurrency(budget, currency)}
+                                {formatCurrency(absBalance, currency)} / {formatCurrency(budget!, currency)}
+                                {isIncome && overBudget && ' · target reached'}
                               </p>
                             </div>
                           )}

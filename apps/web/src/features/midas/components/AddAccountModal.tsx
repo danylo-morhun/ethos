@@ -129,9 +129,11 @@ export function AddAccountModal({ workspaceId }: { workspaceId: string }) {
             )}
           </div>
 
-          {selectedType === 'EXPENSE' && (
+          {(selectedType === 'EXPENSE' || selectedType === 'INCOME') && (
             <div className="space-y-2">
-              <Label htmlFor="acc-budget">Monthly Budget (Optional)</Label>
+              <Label htmlFor="acc-budget">
+                {selectedType === 'INCOME' ? 'Monthly Target (Optional)' : 'Monthly Budget (Optional)'}
+              </Label>
               <Input
                 id="acc-budget"
                 type="number"
