@@ -12,6 +12,7 @@ import {
   eq,
   and,
   desc,
+  asc,
   gte,
   lte,
   inArray,
@@ -208,6 +209,9 @@ export async function updateTransaction({
 
 const TRANSACTIONS_PAGE_SIZE = 10;
 
+export type SortField = 'date' | 'amount';
+export type SortDir = 'asc' | 'desc';
+
 export async function getRecentTransactions(
   workspaceId: string,
   from: string | undefined,
@@ -215,6 +219,8 @@ export async function getRecentTransactions(
   page = 0,
   accountId?: string,
   q?: string,
+  sortField: SortField = 'date',
+  sortDir: SortDir = 'desc',
 ): Promise<{ rows: RecentTransaction[]; hasMore: boolean; total: number }> {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
@@ -241,10 +247,13 @@ export async function getRecentTransactions(
     accountSubquery ? inArray(transactions.id, accountSubquery) : undefined,
   );
 
+  const orderDate = sortDir === 'asc' ? asc(transactions.date) : desc(transactions.date);
+  const orderCreated = sortDir === 'asc' ? asc(transactions.createdAt) : desc(transactions.createdAt);
+
   const [rows, [{ total }]] = await Promise.all([
     db.query.transactions.findMany({
       where: whereClause,
-      orderBy: [desc(transactions.date), desc(transactions.createdAt)],
+      orderBy: sortField === 'date' ? [orderDate, orderCreated] : [orderCreated],
       limit: TRANSACTIONS_PAGE_SIZE + 1,
       offset: page * TRANSACTIONS_PAGE_SIZE,
       with: { entries: { with: { account: true } } },

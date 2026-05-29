@@ -55,9 +55,11 @@ interface Props {
   searchQuery?: string;
   dateFrom?: string;
   dateTo?: string;
+  sortField?: string;
+  sortDir?: string;
 }
 
-export function TransactionTable({ transactions, currency, workspaceId, page, hasMore, total, accountFilterId, accountFilterName, searchQuery, dateFrom, dateTo }: Props) {
+export function TransactionTable({ transactions, currency, workspaceId, page, hasMore, total, accountFilterId, accountFilterName, searchQuery, dateFrom, dateTo, sortField = 'date', sortDir = 'desc' }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -90,6 +92,18 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
   function submitSearch(value: string) {
     const params = new URLSearchParams(searchParams.toString());
     if (value.trim()) params.set('q', value.trim()); else params.delete('q');
+    params.delete('page');
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function sortBy(field: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (sortField === field) {
+      params.set('dir', sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      params.set('sort', field);
+      params.delete('dir');
+    }
     params.delete('page');
     router.push(`${pathname}?${params.toString()}`);
   }
@@ -155,7 +169,18 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
+              <TableHead>
+                <button
+                  type="button"
+                  className="flex items-center gap-1 hover:text-foreground"
+                  onClick={() => sortBy('date')}
+                >
+                  Date
+                  <span className="text-muted-foreground/60">
+                    {sortField === 'date' ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
+                  </span>
+                </button>
+              </TableHead>
               <TableHead>Description</TableHead>
               <TableHead>From</TableHead>
               <TableHead>To</TableHead>

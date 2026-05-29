@@ -41,12 +41,12 @@ function buildPeriodLabel(from: string | undefined, to: string | undefined): str
 export default async function MidasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; page?: string; account?: string; q?: string; trend?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; page?: string; account?: string; q?: string; trend?: string; sort?: string; dir?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/');
 
-  const { from: rawFrom, to: rawTo, page: rawPage, account: rawAccount, q: rawQ, trend: rawTrend } = await searchParams;
+  const { from: rawFrom, to: rawTo, page: rawPage, account: rawAccount, q: rawQ, trend: rawTrend, sort: rawSort, dir: rawDir } = await searchParams;
   const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const rawValidFrom = rawFrom && ISO_DATE.test(rawFrom) ? rawFrom : undefined;
@@ -56,8 +56,10 @@ export default async function MidasPage({
   const page      = rawPage    && /^\d+$/.test(rawPage)     ? Math.max(0, parseInt(rawPage, 10)) : 0;
   const accountId = rawAccount && UUID.test(rawAccount)     ? rawAccount : undefined;
   const q         = rawQ && rawQ.trim().length > 0          ? rawQ.trim() : undefined;
-  const trend     = rawTrend === '3m' || rawTrend === '1y'  ? rawTrend    : '6m';
+  const trend       = rawTrend === '3m' || rawTrend === '1y'  ? rawTrend    : '6m';
   const trendMonths = trend === '3m' ? 3 : trend === '1y' ? 12 : 6;
+  const sortField   = rawSort === 'amount' ? 'amount' : 'date';
+  const sortDir     = rawDir === 'asc' ? 'asc' : 'desc';
 
   const workspace = await initializeWorkspace(session.user.id);
   const periodLabel = buildPeriodLabel(from, to);
@@ -65,7 +67,7 @@ export default async function MidasPage({
   const [balances, accounts, recentTransactions, trends, netWorthHistory] = await Promise.all([
     getBalances(workspace.id, from, to),
     getAccounts(workspace.id),
-    getRecentTransactions(workspace.id, from, to, page, accountId, q),
+    getRecentTransactions(workspace.id, from, to, page, accountId, q, sortField, sortDir),
     getMonthlyTrends(workspace.id, from, to, trendMonths),
     getNetWorthHistory(workspace.id),
   ]);
@@ -128,6 +130,8 @@ export default async function MidasPage({
           searchQuery={q}
           dateFrom={from}
           dateTo={to}
+          sortField={sortField}
+          sortDir={sortDir}
         />
       </div>
     </main>
