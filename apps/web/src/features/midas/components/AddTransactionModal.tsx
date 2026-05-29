@@ -36,6 +36,8 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import type { Control } from "react-hook-form";
 import { toast } from "sonner";
@@ -304,7 +306,10 @@ export function AddTransactionModal({
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogTrigger asChild>
-				<Button>New Transaction</Button>
+				<Button className="gap-2">
+					<HugeiconsIcon icon={Add01Icon} className="h-4 w-4 shrink-0" />
+					<span className="hidden md:inline">New Transaction</span>
+				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
