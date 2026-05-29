@@ -21,7 +21,11 @@ export type RecentTransaction = {
   date: string;
   description: string | null;
   fromAccount: string;
+  fromAccountId: string;
+  fromAccountType: string;
   toAccount: string;
+  toAccountId: string;
+  toAccountType: string;
   amount: string;
   currency: string;
   baseAmount: string;
@@ -164,6 +168,78 @@ export async function deleteTransaction(
   return { success: true };
 }
 
+export async function updateTransaction({
+  transactionId,
+  fromAccountId,
+  toAccountId,
+  amount,
+  currency,
+  description,
+  date,
+}: {
+  transactionId: string;
+  fromAccountId: string;
+  toAccountId: string;
+  amount: number;
+  currency: string;
+  description: string;
+  date: string;
+}): Promise<{ error: string } | { success: true }> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Unauthorized' };
+
+  const [txnRow] = await db
+    .select({ workspaceId: transactions.workspaceId })
+    .from(transactions)
+    .where(eq(transactions.id, transactionId))
+    .limit(1);
+
+  if (!txnRow) return { error: 'Transaction not found' };
+
+  const [wsRows, fromRows, toRows] = await Promise.all([
+    db.select().from(workspaces).where(eq(workspaces.id, txnRow.workspaceId)).limit(1),
+    db.select().from(accounts).where(and(eq(accounts.id, fromAccountId), eq(accounts.workspaceId, txnRow.workspaceId))).limit(1),
+    db.select().from(accounts).where(and(eq(accounts.id, toAccountId), eq(accounts.workspaceId, txnRow.workspaceId))).limit(1),
+  ]);
+
+  const workspace = wsRows[0];
+  if (!workspace || workspace.userId !== session.user.id) return { error: 'Forbidden' };
+  if (!fromRows[0] || !toRows[0]) return { error: 'Account not found' };
+
+  const baseCurrency = workspace.baseCurrency;
+  let baseAmount: number;
+  if (currency === baseCurrency) {
+    baseAmount = amount;
+  } else {
+    const rate = await getExchangeRate(currency, baseCurrency, date);
+    baseAmount = amount * rate;
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.update(transactions).set({ date, description }).where(eq(transactions.id, transactionId));
+    await tx.delete(transactionEntries).where(eq(transactionEntries.transactionId, transactionId));
+    await tx.insert(transactionEntries).values([
+      {
+        transactionId,
+        accountId: fromAccountId,
+        amount: String(-amount),
+        currency,
+        baseAmount: (-baseAmount).toFixed(4),
+      },
+      {
+        transactionId,
+        accountId: toAccountId,
+        amount: String(amount),
+        currency,
+        baseAmount: baseAmount.toFixed(4),
+      },
+    ]);
+  });
+
+  revalidatePath('/midas');
+  return { success: true };
+}
+
 export const TRANSACTIONS_PAGE_SIZE = 10;
 
 export async function getRecentTransactions(
@@ -212,7 +288,11 @@ export async function getRecentTransactions(
         date: txn.date,
         description: txn.description,
         fromAccount: fromEntry?.account?.name ?? '—',
+        fromAccountId: fromEntry?.accountId ?? '',
+        fromAccountType: fromEntry?.account?.type ?? '',
         toAccount: toEntry?.account?.name ?? '—',
+        toAccountId: toEntry?.accountId ?? '',
+        toAccountType: toEntry?.account?.type ?? '',
         amount: toEntry?.amount ?? '0',
         currency: toEntry?.currency ?? '',
         baseAmount: toEntry?.baseAmount ?? '0',
