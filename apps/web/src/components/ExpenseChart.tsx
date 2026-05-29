@@ -82,14 +82,14 @@ export function ExpenseChart({ balances, currency }: Props) {
                       >
                         <tspan
                           x={viewBox.cx}
-                          y={(viewBox.cy ?? 0) - 6}
+                          dy={-5}
                           className="fill-foreground text-lg font-bold"
                         >
                           {formatCurrency(total, currency)}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
-                          y={(viewBox.cy ?? 0) + 14}
+                          dy={20}
                           className="fill-muted-foreground text-xs"
                         >
                           Total
