@@ -14,6 +14,7 @@ import {
   desc,
   gte,
   lte,
+  inArray,
 } from '@ethos/db';
 
 export type RecentTransaction = {
@@ -247,6 +248,7 @@ export async function getRecentTransactions(
   from: string | undefined,
   to: string | undefined,
   page = 0,
+  accountId?: string,
 ): Promise<{ rows: RecentTransaction[]; hasMore: boolean }> {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
@@ -259,11 +261,18 @@ export async function getRecentTransactions(
 
   if (!ws || ws.userId !== session.user.id) throw new Error('Forbidden');
 
+  const accountSubquery = accountId
+    ? db.selectDistinct({ id: transactionEntries.transactionId })
+        .from(transactionEntries)
+        .where(eq(transactionEntries.accountId, accountId))
+    : undefined;
+
   const rows = await db.query.transactions.findMany({
     where: and(
       eq(transactions.workspaceId, workspaceId),
       from ? gte(transactions.date, from) : undefined,
       to ? lte(transactions.date, to) : undefined,
+      accountSubquery ? inArray(transactions.id, accountSubquery) : undefined,
     ),
     orderBy: [desc(transactions.date), desc(transactions.createdAt)],
     limit: TRANSACTIONS_PAGE_SIZE + 1,
