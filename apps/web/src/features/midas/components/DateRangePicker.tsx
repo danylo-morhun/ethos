@@ -144,8 +144,8 @@ export function DateRangePicker() {
 				align="end"
 				collisionPadding={{ top: 8, bottom: 8, left: 8, right: 0 }}
 			>
-				<div className="flex">
-					<div className="flex flex-col gap-1 border-r p-3 min-w-[140px]">
+				<div className="flex flex-col sm:flex-row">
+					<div className="flex flex-col gap-1 border-b sm:border-b-0 sm:border-r p-3 min-w-[140px]">
 						<p className="mb-1 px-2 text-xs font-medium text-muted-foreground">Presets</p>
 						{PRESETS.map((p) => {
 							const [pf, pt] = p.range();
