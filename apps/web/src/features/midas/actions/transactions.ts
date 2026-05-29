@@ -361,11 +361,14 @@ export async function getRecentTransactions(
 	const orderDate = sortDir === "asc" ? asc(transactions.date) : desc(transactions.date);
 	const orderCreated =
 		sortDir === "asc" ? asc(transactions.createdAt) : desc(transactions.createdAt);
+	const amountExpr = sql`(select coalesce(sum(abs(te.base_amount)), 0) from transaction_entries te where te.transaction_id = ${transactions.id} and cast(te.base_amount as numeric) > 0)`;
+	const orderAmount = sortDir === "asc" ? asc(amountExpr) : desc(amountExpr);
 
 	const [rows, [{ total }]] = await Promise.all([
 		db.query.transactions.findMany({
 			where: whereClause,
-			orderBy: sortField === "date" ? [orderDate, orderCreated] : [orderCreated],
+			orderBy:
+				sortField === "date" ? [orderDate, orderCreated] : [orderAmount, orderDate],
 			limit: TRANSACTIONS_PAGE_SIZE + 1,
 			offset: page * TRANSACTIONS_PAGE_SIZE,
 			with: { entries: { with: { account: true } }, transactionTags: { with: { tag: true } } },
