@@ -30,7 +30,7 @@ export function SummaryCards({ balances, currency, periodLabel }: Props) {
       positive: netWorth >= 0,
     },
     {
-      label: `${periodLabel} Cashflow`,
+      label: periodLabel === 'All time' ? 'All-time P&L' : `${periodLabel} Cashflow`,
       value: cashflow,
       sub: `${formatCurrency(income, currency)} income − ${formatCurrency(expenses, currency)} expenses`,
       positive: cashflow >= 0,
