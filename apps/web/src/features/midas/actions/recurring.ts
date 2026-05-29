@@ -226,29 +226,62 @@ export async function generateDueRecurring(workspaceId: string): Promise<{ gener
 		);
 
 	let generated = 0;
+	const MAX_ITERATIONS = 365;
 
 	for (const rt of due) {
-		let currentDate = rt.nextDate;
-		let iterations = 0;
-		const MAX_ITERATIONS = 365;
-
-		while (currentDate <= today && iterations < MAX_ITERATIONS) {
-			if (rt.endDate && currentDate > rt.endDate) break;
-
-			const amount = Number(rt.amount);
-			let baseAmount: number;
-			if (rt.currency === ws.baseCurrency) {
-				baseAmount = amount;
-			} else {
+		// Pre-fetch all exchange rates needed for this RT outside the DB transaction
+		// to avoid holding a connection open during network I/O.
+		const rateCache = new Map<string, number>();
+		if (rt.currency !== ws.baseCurrency) {
+			let d = rt.nextDate;
+			let iters = 0;
+			while (d <= today && iters < MAX_ITERATIONS) {
+				if (rt.endDate && d > rt.endDate) break;
 				try {
-					const rate = await getExchangeRate(rt.currency, ws.baseCurrency, currentDate);
-					baseAmount = amount * rate;
+					rateCache.set(d, await getExchangeRate(rt.currency, ws.baseCurrency, d));
 				} catch {
 					break;
 				}
+				d = advanceDate(d, rt.frequency as Frequency);
+				iters++;
 			}
+		}
 
-			await db.transaction(async (tx) => {
+		let rtGenerated = 0;
+
+		await db.transaction(async (tx) => {
+			// SELECT FOR UPDATE serializes concurrent calls: the second concurrent
+			// request will wait here, then see nextDate already advanced and bail.
+			const [locked] = await tx
+				.select({ id: recurringTransactions.id })
+				.from(recurringTransactions)
+				.where(
+					and(
+						eq(recurringTransactions.id, rt.id),
+						eq(recurringTransactions.nextDate, rt.nextDate),
+					),
+				)
+				.for("update")
+				.limit(1);
+
+			if (!locked) return;
+
+			let currentDate = rt.nextDate;
+			let iterations = 0;
+
+			while (currentDate <= today && iterations < MAX_ITERATIONS) {
+				if (rt.endDate && currentDate > rt.endDate) break;
+
+				const amount = Number(rt.amount);
+				let baseAmount: number;
+				if (rt.currency === ws.baseCurrency) {
+					baseAmount = amount;
+				} else {
+					const rate = rateCache.get(currentDate);
+					if (rate === undefined) break;
+					baseAmount = amount * rate;
+				}
+
 				const [txn] = await tx
 					.insert(transactions)
 					.values({ workspaceId, date: currentDate, description: rt.description })
@@ -270,17 +303,22 @@ export async function generateDueRecurring(workspaceId: string): Promise<{ gener
 						baseAmount: baseAmount.toFixed(4),
 					},
 				]);
-			});
 
-			generated++;
-			currentDate = advanceDate(currentDate, rt.frequency as Frequency);
-			iterations++;
-		}
+				rtGenerated++;
+				currentDate = advanceDate(currentDate, rt.frequency as Frequency);
+				iterations++;
+			}
 
-		await db
-			.update(recurringTransactions)
-			.set({ nextDate: currentDate, updatedAt: new Date() })
-			.where(eq(recurringTransactions.id, rt.id));
+			// Only advance nextDate when we actually processed at least one period.
+			if (rtGenerated > 0) {
+				await tx
+					.update(recurringTransactions)
+					.set({ nextDate: currentDate, updatedAt: new Date() })
+					.where(eq(recurringTransactions.id, rt.id));
+			}
+		});
+
+		generated += rtGenerated;
 	}
 
 	if (generated > 0) revalidatePath("/midas");
