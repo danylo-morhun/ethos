@@ -1,5 +1,7 @@
 "use client";
 
+import { AddTransactionModal } from "@/features/midas/components/AddTransactionModal";
+import { DateRangePicker } from "@/features/midas/components/DateRangePicker";
 import { getAppForPath } from "@/lib/app-themes";
 import {
 	Breadcrumb,
@@ -16,7 +18,12 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export function AppHeader() {
+interface Props {
+	workspaceId?: string;
+	baseCurrency?: string;
+}
+
+export function AppHeader({ workspaceId, baseCurrency }: Props) {
 	const pathname = usePathname();
 	const app = getAppForPath(pathname);
 
@@ -41,8 +48,15 @@ export function AppHeader() {
 					)}
 				</BreadcrumbList>
 			</Breadcrumb>
+
 			{app && (
-				<div className="ml-auto">
+				<div className="ml-auto flex items-center gap-1.5">
+					{workspaceId && baseCurrency && (
+						<>
+							<DateRangePicker />
+							<AddTransactionModal workspaceId={workspaceId} baseCurrency={baseCurrency} />
+						</>
+					)}
 					<Button variant="ghost" size="icon" className="h-7 w-7" asChild>
 						<Link href={`${app.href}/settings`} aria-label="Settings">
 							<HugeiconsIcon icon={Settings01Icon} className="h-4 w-4" />

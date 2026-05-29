@@ -1,19 +1,24 @@
-import { cookies } from 'next/headers';
-import { auth } from '@/auth';
-import { getWorkspace } from '@/features/midas/actions/workspace';
-import { AppShell } from '@/components/AppShell';
+import { auth } from "@/auth";
+import { AppShell } from "@/components/AppShell";
+import { getWorkspace } from "@/features/midas/actions/workspace";
+import { cookies } from "next/headers";
 
 export default async function AppsLayout({ children }: { children: React.ReactNode }) {
-  const [cookieStore, session] = await Promise.all([cookies(), auth()]);
+	const [cookieStore, session] = await Promise.all([cookies(), auth()]);
 
-  const sidebarCookie = cookieStore.get('sidebar_state');
-  const defaultOpen = sidebarCookie ? sidebarCookie.value === 'true' : true;
+	const sidebarCookie = cookieStore.get("sidebar_state");
+	const defaultOpen = sidebarCookie ? sidebarCookie.value === "true" : true;
 
-  const workspace = session?.user?.id ? await getWorkspace(session.user.id) : null;
+	const workspace = session?.user?.id ? await getWorkspace(session.user.id) : null;
 
-  return (
-    <AppShell workspaceName={workspace?.name ?? 'My Workspace'} sidebarDefaultOpen={defaultOpen}>
-      {children}
-    </AppShell>
-  );
+	return (
+		<AppShell
+			workspaceName={workspace?.name ?? "My Workspace"}
+			workspaceId={workspace?.id}
+			baseCurrency={workspace?.baseCurrency}
+			sidebarDefaultOpen={defaultOpen}
+		>
+			{children}
+		</AppShell>
+	);
 }
