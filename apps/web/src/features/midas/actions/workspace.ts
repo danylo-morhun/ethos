@@ -2,6 +2,15 @@
 
 import { db, workspaces, accounts, eq } from '@ethos/db';
 
+export async function getWorkspace(userId: string) {
+  const [workspace] = await db
+    .select()
+    .from(workspaces)
+    .where(eq(workspaces.userId, userId))
+    .limit(1);
+  return workspace ?? null;
+}
+
 export async function initializeWorkspace(userId: string) {
   const existing = await db
     .select()

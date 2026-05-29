@@ -15,9 +15,6 @@ export async function getBalances(
   from: string | undefined,
   to: string | undefined,
 ): Promise<AccountBalance[]> {
-  // Build date clauses conditionally — passing null parameters causes Postgres
-  // "could not determine data type of parameter $N" when there is no type context.
-  // Omitting the clause entirely is both correct and avoids the ambiguity.
   const assetLiabDateClause = to
     ? sql`and (${transactions.date} is null or ${transactions.date} <= ${to})`
     : sql``;
