@@ -205,6 +205,7 @@ export function DateRangePicker() {
 							</span>
 						</div>
 						<Calendar
+							className="mx-auto"
 							mode="range"
 							selected={{
 								from: localFrom ? parseLocal(localFrom) : undefined,
