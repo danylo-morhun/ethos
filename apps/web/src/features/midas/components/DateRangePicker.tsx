@@ -121,7 +121,7 @@ export function DateRangePicker() {
 	return (
 		<Popover open={open} onOpenChange={handleOpenChange}>
 			<PopoverTrigger asChild>
-				<Button variant="outline" size="icon" className="md:w-auto md:px-3 md:gap-2 font-normal">
+				<Button variant="outline" size="icon" className="h-8 w-8 md:w-auto md:px-3 md:gap-2 font-normal">
 					<HugeiconsIcon icon={Calendar01Icon} className="h-4 w-4 shrink-0 opacity-70" />
 					<span className="hidden md:inline">{label}</span>
 					{hasFilter && (

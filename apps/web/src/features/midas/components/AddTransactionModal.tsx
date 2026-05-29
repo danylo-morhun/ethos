@@ -306,7 +306,7 @@ export function AddTransactionModal({
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogTrigger asChild>
-				<Button size="icon" className="md:w-auto md:px-3 md:gap-2">
+				<Button size="icon" className="h-8 w-8 md:w-auto md:px-3 md:gap-2">
 					<HugeiconsIcon icon={Add01Icon} className="h-4 w-4 shrink-0" />
 					<span className="hidden md:inline">New Transaction</span>
 				</Button>
