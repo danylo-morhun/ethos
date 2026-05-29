@@ -25,6 +25,7 @@ export async function createAccount(
   type: 'ASSET' | 'LIABILITY' | 'INCOME' | 'EXPENSE',
   parentId?: string,
   budget?: number,
+  currency?: string,
 ) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
@@ -44,7 +45,7 @@ export async function createAccount(
       workspaceId,
       name,
       type,
-      currency: workspace.baseCurrency,
+      currency: currency ?? workspace.baseCurrency,
       parentId: parentId ?? null,
       budget: budget != null ? String(budget) : null,
     })
