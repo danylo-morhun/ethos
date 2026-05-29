@@ -134,3 +134,4 @@ export {
   DropdownMenuSubTrigger,
   DropdownMenuRadioGroup,
 } from "./components/dropdown-menu";
+export { Checkbox } from './components/checkbox';

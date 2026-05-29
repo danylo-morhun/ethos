@@ -84,11 +84,11 @@ Status: ✅ done | 🔜 todo | ⏭ skipped (intentional)
 |---|--------|---------|-------|
 | F9  | 🔜 | **Recurring transactions** | New `recurringTransactions` table. `frequency` enum (daily/weekly/monthly/yearly), `nextDate`, `endDate`. Cron or on-demand generation. |
 | F10 | 🔜 | **Transaction tags** | New `transactionTags` table + `tagsOnTransactions` join. Filter by tag in table (`?tag=`). |
-| F11 | 🔜 | **Multi-currency accounts** | Account has own currency (schema already supports it, `createAccount` now accepts currency param). Show native balance + base equivalent in AccountsOverview. |
-| F12 | 🔜 | **Bulk operations** | Checkbox column in TransactionTable → bulk delete + bulk recategorize. New `deleteTransactions(ids[])` action. |
-| F13 | 🔜 | **Account archiving** | Add `archivedAt` column to `accounts`. Archived accounts hidden from pickers, balances still count. Archive/unarchive in settings and account detail. |
+| F11 | ✅ | **Multi-currency accounts** | Currency picker in Add/EditAccountModal; native + base balance display in AccountsOverview. |
+| F12 | ✅ | **Bulk operations** | Checkbox column + `deleteTransactions(ids[])` action + bulk delete confirmation. |
+| F13 | ✅ | **Account archiving** | `archivedAt` column, archive/unarchive actions, Archive in dropdown, Restore in settings. |
 | F14 | 🔜 | **Transaction split** | One transaction → multiple category entries. Requires AddTransactionModal rework: "add split" button that adds extra category rows. Backend: still double-entry, just more entries. |
-| F15 | 🔜 | **Keyboard shortcut** | `N` key opens AddTransactionModal when focus not in input/textarea. Simple `keydown` listener in a client layout wrapper. |
+| F15 | ✅ | **Keyboard shortcut** | `N` key opens AddTransactionModal when focus not in input/textarea. |
 
 ---
 
@@ -151,16 +151,16 @@ Phase 5 — UX depth             ✅ 6 commits
                                ──────────
 Total                          26 commits, HEAD: 614c466
 
-Phase 6 — Features P2          🔜 next
-  Priority order: F15 (keyboard shortcut, trivial)
-                  F11 (multi-currency accounts, schema ready)
-                  F13 (account archiving, needs migration)
-                  F12 (bulk operations)
-                  F10 (transaction tags, needs migration)
-                  F9  (recurring transactions, needs migration)
-                  F14 (transaction split, largest UI change)
-  Also remaining: U15 (mobile DateRangePicker)
-                  Period comparison on SummaryCards
+Phase 6 — Features P2          🔜 in progress (31 commits, HEAD: 8d58bc5)
+  Done:    F15 (keyboard shortcut)
+           F11 (multi-currency accounts)
+           F13 (account archiving)
+           F12 (bulk delete)
+  Remaining: F10 (transaction tags, needs migration)
+             F9  (recurring transactions, needs migration, most complex)
+             F14 (transaction split, largest UI change)
+             U15 (mobile DateRangePicker, CSS/UX only)
+             Period comparison on SummaryCards
 ```
 
 ---

@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
   Button,
   Input,
+  Checkbox,
 } from '@ethos/ui';
 import { deleteTransaction, deleteTransactions } from '@/features/midas/actions/transactions';
 import { exportTransactionsCsv } from '@/features/midas/actions/export';
@@ -213,11 +214,9 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
           <TableHeader>
             <TableRow>
               <TableHead className="w-10">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-muted-foreground/30 accent-primary cursor-pointer"
+                <Checkbox
                   checked={transactions.length > 0 && selectedIds.size === transactions.length}
-                  onChange={toggleSelectAll}
+                  onCheckedChange={toggleSelectAll}
                   aria-label="Select all"
                 />
               </TableHead>
@@ -258,11 +257,9 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
               transactions.map((txn) => (
                 <TableRow key={txn.id} className={selectedIds.has(txn.id) ? 'bg-muted/40' : ''}>
                   <TableCell>
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 rounded border-muted-foreground/30 accent-primary cursor-pointer"
+                    <Checkbox
                       checked={selectedIds.has(txn.id)}
-                      onChange={() => toggleSelect(txn.id)}
+                      onCheckedChange={() => toggleSelect(txn.id)}
                       aria-label="Select row"
                     />
                   </TableCell>
