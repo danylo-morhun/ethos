@@ -241,7 +241,7 @@ export async function updateTransaction({
   return { success: true };
 }
 
-export const TRANSACTIONS_PAGE_SIZE = 10;
+const TRANSACTIONS_PAGE_SIZE = 10;
 
 export async function getRecentTransactions(
   workspaceId: string,
