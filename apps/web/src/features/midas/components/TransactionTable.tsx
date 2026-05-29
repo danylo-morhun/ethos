@@ -29,7 +29,7 @@ import {
   Button,
   Input,
 } from '@ethos/ui';
-import { deleteTransaction } from '@/features/midas/actions/transactions';
+import { deleteTransaction, deleteTransactions } from '@/features/midas/actions/transactions';
 import { exportTransactionsCsv } from '@/features/midas/actions/export';
 import type { RecentTransaction } from '@/features/midas/actions/transactions';
 import { EditTransactionModal } from '@/features/midas/components/EditTransactionModal';
@@ -67,6 +67,8 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<RecentTransaction | null>(null);
   const [localQuery, setLocalQuery] = useState(searchQuery ?? '');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   function navigate(newPage: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -133,6 +135,37 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
     });
   }
 
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === transactions.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(transactions.map((t) => t.id)));
+    }
+  }
+
+  function handleBulkDelete() {
+    const ids = Array.from(selectedIds);
+    startTransition(async () => {
+      const result = await deleteTransactions(ids, workspaceId);
+      if ('error' in result) {
+        toast.error(result.error);
+      } else {
+        toast.success(`${result.deleted} transaction${result.deleted !== 1 ? 's' : ''} deleted.`);
+        setSelectedIds(new Set());
+        router.refresh();
+      }
+      setBulkDeleteOpen(false);
+    });
+  }
+
   const totalPages = Math.ceil(total / 10);
 
   return (
@@ -152,6 +185,16 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
           </span>
         )}
         <div className="ml-auto flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-8"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
+              Delete {selectedIds.size} selected
+            </Button>
+          )}
           <Input
             placeholder="Search transactions…"
             className="h-8 w-52 text-sm"
@@ -169,6 +212,15 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-muted-foreground/30 accent-primary cursor-pointer"
+                  checked={transactions.length > 0 && selectedIds.size === transactions.length}
+                  onChange={toggleSelectAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>
                 <button
                   type="button"
@@ -191,7 +243,7 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-12 text-center">
+                <TableCell colSpan={7} className="py-12 text-center">
                   <p className="text-sm font-medium text-muted-foreground">
                     {searchQuery ? `No transactions matching "${searchQuery}"` : 'No transactions yet'}
                   </p>
@@ -204,7 +256,16 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
               </TableRow>
             ) : (
               transactions.map((txn) => (
-                <TableRow key={txn.id}>
+                <TableRow key={txn.id} className={selectedIds.has(txn.id) ? 'bg-muted/40' : ''}>
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-muted-foreground/30 accent-primary cursor-pointer"
+                      checked={selectedIds.has(txn.id)}
+                      onChange={() => toggleSelect(txn.id)}
+                      aria-label="Select row"
+                    />
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{fmtDate(txn.date)}</TableCell>
                   <TableCell className="font-medium">{txn.description ?? '—'}</TableCell>
                   <TableCell>
@@ -305,6 +366,27 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
           </Button>
         </div>
       )}
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} transaction{selectedIds.size !== 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the selected transactions and recalculate your account balances. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isPending}
+              onClick={handleBulkDelete}
+            >
+              {isPending ? 'Deleting…' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {editTarget && (
         <EditTransactionModal

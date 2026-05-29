@@ -135,6 +135,31 @@ export async function deleteTransaction(
   return { success: true };
 }
 
+export async function deleteTransactions(
+  ids: string[],
+  workspaceId: string,
+): Promise<{ error: string } | { success: true; deleted: number }> {
+  if (ids.length === 0) return { success: true, deleted: 0 };
+
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Unauthorized' };
+
+  const [ws] = await db
+    .select({ userId: workspaces.userId })
+    .from(workspaces)
+    .where(eq(workspaces.id, workspaceId))
+    .limit(1);
+
+  if (!ws || ws.userId !== session.user.id) return { error: 'Forbidden' };
+
+  await db
+    .delete(transactions)
+    .where(and(inArray(transactions.id, ids), eq(transactions.workspaceId, workspaceId)));
+
+  revalidatePath('/midas');
+  return { success: true, deleted: ids.length };
+}
+
 export async function updateTransaction({
   transactionId,
   fromAccountId,
