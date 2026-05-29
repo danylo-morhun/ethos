@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { and, db, eq, tags, transactionTags, workspaces } from "@ethos/db";
+import { and, db, eq, tags, transactionTags, transactions, workspaces } from "@ethos/db";
 import { revalidatePath } from "next/cache";
 
 export type Tag = { id: string; name: string; color: string | null };
@@ -92,6 +92,14 @@ export async function setTransactionTags(
 		.limit(1);
 
 	if (!ws || ws.userId !== session.user.id) return { error: "Forbidden" };
+
+	const [txnRow] = await db
+		.select({ workspaceId: transactions.workspaceId })
+		.from(transactions)
+		.where(eq(transactions.id, transactionId))
+		.limit(1);
+
+	if (!txnRow || txnRow.workspaceId !== workspaceId) return { error: "Transaction not found" };
 
 	await db.transaction(async (tx) => {
 		await tx.delete(transactionTags).where(eq(transactionTags.transactionId, transactionId));
