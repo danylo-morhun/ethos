@@ -36,12 +36,12 @@ function buildPeriodLabel(from: string | undefined, to: string | undefined): str
 export default async function MidasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; page?: string; account?: string; q?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; page?: string; account?: string; q?: string; trend?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/');
 
-  const { from: rawFrom, to: rawTo, page: rawPage, account: rawAccount, q: rawQ } = await searchParams;
+  const { from: rawFrom, to: rawTo, page: rawPage, account: rawAccount, q: rawQ, trend: rawTrend } = await searchParams;
   const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const rawValidFrom = rawFrom && ISO_DATE.test(rawFrom) ? rawFrom : undefined;
@@ -51,6 +51,8 @@ export default async function MidasPage({
   const page      = rawPage    && /^\d+$/.test(rawPage)     ? Math.max(0, parseInt(rawPage, 10)) : 0;
   const accountId = rawAccount && UUID.test(rawAccount)     ? rawAccount : undefined;
   const q         = rawQ && rawQ.trim().length > 0          ? rawQ.trim() : undefined;
+  const trend     = rawTrend === '3m' || rawTrend === '1y'  ? rawTrend    : '6m';
+  const trendMonths = trend === '3m' ? 3 : trend === '1y' ? 12 : 6;
 
   const workspace = await initializeWorkspace(session.user.id);
   const periodLabel = buildPeriodLabel(from, to);
@@ -59,7 +61,7 @@ export default async function MidasPage({
     getBalances(workspace.id, from, to),
     getAccounts(workspace.id),
     getRecentTransactions(workspace.id, from, to, page, accountId, q),
-    getMonthlyTrends(workspace.id, from, to),
+    getMonthlyTrends(workspace.id, from, to, trendMonths),
   ]);
 
   return (
@@ -86,7 +88,7 @@ export default async function MidasPage({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <ExpenseChart balances={balances} currency={workspace.baseCurrency} />
           <div className="lg:col-span-2">
-            <TrendChart data={trends} currency={workspace.baseCurrency} />
+            <TrendChart data={trends} currency={workspace.baseCurrency} trendParam={trend} hasDateFilter={!!(from || to)} />
           </div>
         </div>
         <TransactionTable

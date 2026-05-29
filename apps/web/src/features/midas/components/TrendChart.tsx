@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
   ChartContainer,
@@ -10,6 +11,7 @@ import {
   type ChartConfig,
 } from '@ethos/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@ethos/ui';
+import { Button } from '@ethos/ui';
 import type { MonthlyTrend } from '@/features/midas/actions/trends';
 
 const chartConfig: ChartConfig = {
@@ -17,21 +19,52 @@ const chartConfig: ChartConfig = {
   expenses: { label: 'Expenses', color: 'var(--chart-1)' },
 };
 
+const PERIODS = [
+  { label: '3M', value: '3m' },
+  { label: '6M', value: '6m' },
+  { label: '1Y', value: '1y' },
+] as const;
+
 interface Props {
   data: MonthlyTrend[];
   currency: string;
+  trendParam: string;
+  hasDateFilter: boolean;
 }
 
-export function TrendChart({ data, currency }: Props) {
-  const formatted = data.map((d) => ({
-    ...d,
-    label: d.month.slice(0, 7),
-  }));
+export function TrendChart({ data, currency, trendParam, hasDateFilter }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  function setTrend(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === '6m') params.delete('trend'); else params.set('trend', value);
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname);
+  }
+
+  const formatted = data.map((d) => ({ ...d, label: d.month.slice(0, 7) }));
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base">Income vs Expenses</CardTitle>
+        {!hasDateFilter && (
+          <div className="flex items-center gap-1">
+            {PERIODS.map((p) => (
+              <Button
+                key={p.value}
+                variant={trendParam === p.value ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={() => setTrend(p.value)}
+              >
+                {p.label}
+              </Button>
+            ))}
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         {formatted.length === 0 ? (
@@ -42,12 +75,7 @@ export function TrendChart({ data, currency }: Props) {
           <ChartContainer config={chartConfig} className="h-[220px] w-full">
             <BarChart data={formatted} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis
-                dataKey="label"
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 11 }}
-              />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
               <YAxis
                 tickLine={false}
                 axisLine={false}
