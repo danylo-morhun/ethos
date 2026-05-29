@@ -62,9 +62,9 @@ export function ExpenseBreakdown({ balances, currency }: Props) {
 					<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 						Expenses
 					</p>
-					<div className="grid flex-1 place-items-center">
+					<div className="flex flex-1 items-center justify-center">
 						{/* Fixed-size PieChart — no ResponsiveContainer, no layout surprises */}
-						<PieChart width={PIE_SIZE} height={PIE_SIZE}>
+						<PieChart width={PIE_SIZE} height={PIE_SIZE} style={{ outline: "none" }}>
 							<Tooltip content={(props) => <PieTooltip {...props} currency={currency} />} />
 							<Pie
 								data={expenses}
