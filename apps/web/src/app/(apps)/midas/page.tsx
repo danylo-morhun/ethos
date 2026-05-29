@@ -4,16 +4,12 @@ import { getBalances } from "@/features/midas/actions/balances";
 import { generateDueRecurring } from "@/features/midas/actions/recurring";
 import { getTags } from "@/features/midas/actions/tags";
 import { getRecentTransactions } from "@/features/midas/actions/transactions";
-import { getMonthlyTrends } from "@/features/midas/actions/trends";
 import { initializeWorkspace } from "@/features/midas/actions/workspace";
 import { AccountsOverview } from "@/features/midas/components/AccountsOverview";
-import { AddTransactionModal } from "@/features/midas/components/AddTransactionModal";
-import { DateRangePicker } from "@/features/midas/components/DateRangePicker";
-import { ExpenseCategoryList } from "@/features/midas/components/ExpenseCategoryList";
+import { ExpenseBreakdown } from "@/features/midas/components/ExpenseBreakdown";
 import { type MidasTab, MidasNavTabs } from "@/features/midas/components/MidasNavTabs";
 import { OnboardingCard } from "@/features/midas/components/OnboardingCard";
 import { TransactionTable } from "@/features/midas/components/TransactionTable";
-import { TrendChart } from "@/features/midas/components/TrendChart";
 import { formatCurrency } from "@/features/midas/lib/format";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { redirect } from "next/navigation";
@@ -83,20 +79,9 @@ export default async function MidasPage({
 	const workspace = await initializeWorkspace(session.user.id);
 	await generateDueRecurring(workspace.id);
 
-	// Shared header — same across all tabs
-	const header = (
-		<div className="flex items-center justify-end gap-3 border-b px-4 py-3 sm:px-6">
-			<DateRangePicker from={from} to={to} isAllTime={isAllTime} />
-			<AddTransactionModal workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
-		</div>
-	);
-
 	// ── Overview ────────────────────────────────────────────────────────────────
 	if (tab === "overview") {
-		const [balances, trends] = await Promise.all([
-			getBalances(workspace.id, from, to),
-			getMonthlyTrends(workspace.id, from, to, 12),
-		]);
+		const balances = await getBalances(workspace.id, from, to);
 
 		const income = Math.abs(
 			balances.filter((b) => b.type === "INCOME").reduce((acc, b) => acc + Number(b.balance), 0),
@@ -109,7 +94,6 @@ export default async function MidasPage({
 
 		return (
 			<main className="flex flex-col pb-16 md:pb-0">
-				{header}
 				<MidasNavTabs activeTab="overview" />
 
 				{balances.length === 0 ? (
@@ -121,20 +105,11 @@ export default async function MidasPage({
 						/>
 					</div>
 				) : (
-					<div className="space-y-8 px-4 py-6 sm:px-6">
-						<TrendChart
-							data={trends}
-							currency={workspace.baseCurrency}
-							trendParam="1y"
-							hasDateFilter={!!(from || to) || isAllTime}
-						/>
-
+					<div className="space-y-6 px-4 py-6 sm:px-6">
 						<div className="flex items-center gap-6">
 							<div>
 								<p className="text-xs text-muted-foreground">Cashflow</p>
-								<p
-									className={`text-2xl font-bold ${cashflow < 0 ? "text-destructive" : ""}`}
-								>
+								<p className={`text-2xl font-bold ${cashflow < 0 ? "text-destructive" : ""}`}>
 									{cashflow < 0 ? "−" : ""}
 									{formatCurrency(Math.abs(cashflow), workspace.baseCurrency)}
 								</p>
@@ -142,9 +117,7 @@ export default async function MidasPage({
 							<div className="h-8 w-px bg-border" />
 							<div>
 								<p className="text-xs text-muted-foreground">Savings rate</p>
-								<p
-									className={`text-2xl font-bold ${savingsRate !== null && savingsRate < 0 ? "text-destructive" : ""}`}
-								>
+								<p className={`text-2xl font-bold ${savingsRate !== null && savingsRate < 0 ? "text-destructive" : ""}`}>
 									{savingsRate === null
 										? "—"
 										: `${savingsRate < 0 ? "−" : ""}${Math.abs(savingsRate).toFixed(1)}%`}
@@ -152,7 +125,7 @@ export default async function MidasPage({
 							</div>
 						</div>
 
-						<ExpenseCategoryList balances={balances} currency={workspace.baseCurrency} />
+						<ExpenseBreakdown balances={balances} currency={workspace.baseCurrency} />
 					</div>
 				)}
 			</main>
@@ -176,7 +149,6 @@ export default async function MidasPage({
 
 		return (
 			<main className="flex flex-col pb-16 md:pb-0">
-				{header}
 				<MidasNavTabs activeTab="accounts" />
 				<div className="px-4 py-6 sm:px-6">
 					<div className="mb-6">
@@ -207,7 +179,6 @@ export default async function MidasPage({
 
 	return (
 		<main className="flex flex-col pb-16 md:pb-0">
-			{header}
 			<MidasNavTabs activeTab="transactions" />
 			<div className="px-4 py-6 sm:px-6">
 				<TransactionTable
