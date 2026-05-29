@@ -210,19 +210,23 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
                   <TableCell>
                     <button
                       type="button"
-                      className={`text-sm hover:underline ${accountFilterId === txn.fromAccountId ? 'text-foreground font-medium' : 'text-muted-foreground'}`}
+                      title="Filter by this account"
+                      className={`group flex items-center gap-1 text-sm hover:underline underline-offset-2 ${accountFilterId === txn.fromAccountId ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'}`}
                       onClick={() => filterByAccount(txn.fromAccountId)}
                     >
                       {txn.fromAccount}
+                      <span className="opacity-0 group-hover:opacity-40 text-xs">⌦</span>
                     </button>
                   </TableCell>
                   <TableCell>
                     <button
                       type="button"
-                      className={`text-sm hover:underline ${accountFilterId === txn.toAccountId ? 'text-foreground font-medium' : 'text-muted-foreground'}`}
+                      title="Filter by this account"
+                      className={`group flex items-center gap-1 text-sm hover:underline underline-offset-2 ${accountFilterId === txn.toAccountId ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'}`}
                       onClick={() => filterByAccount(txn.toAccountId)}
                     >
                       {txn.toAccount}
+                      <span className="opacity-0 group-hover:opacity-40 text-xs">⌦</span>
                     </button>
                   </TableCell>
                   <TableCell className="text-right">
