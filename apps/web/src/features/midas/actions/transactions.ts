@@ -42,7 +42,19 @@ async function getExchangeRate(fromCurrency: string, toCurrency: string, date: s
 
   if (cached[0]) return Number(cached[0].rate);
 
-  const res = await fetch(`https://api.frankfurter.app/${date}?from=${fromCurrency}&to=${toCurrency}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://api.frankfurter.app/${date}?from=${fromCurrency}&to=${toCurrency}`,
+      { signal: controller.signal },
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
+
   if (!res.ok) throw new Error(`Exchange rate fetch failed: ${res.status}`);
   const data = (await res.json()) as { rates: Record<string, number> };
   const rate = data.rates[toCurrency];
