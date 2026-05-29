@@ -158,6 +158,17 @@ export async function getRecentTransactions(
   from: string | undefined,
   to: string | undefined,
 ): Promise<RecentTransaction[]> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
+  const [ws] = await db
+    .select({ userId: workspaces.userId })
+    .from(workspaces)
+    .where(eq(workspaces.id, workspaceId))
+    .limit(1);
+
+  if (!ws || ws.userId !== session.user.id) throw new Error('Forbidden');
+
   const rows = await db.query.transactions.findMany({
     where: and(
       eq(transactions.workspaceId, workspaceId),

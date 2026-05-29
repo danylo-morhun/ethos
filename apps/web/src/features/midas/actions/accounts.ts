@@ -5,6 +5,17 @@ import { auth } from '@/auth';
 import { db, accounts, workspaces, transactionEntries, eq } from '@ethos/db';
 
 export async function getAccounts(workspaceId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
+  const [ws] = await db
+    .select({ userId: workspaces.userId })
+    .from(workspaces)
+    .where(eq(workspaces.id, workspaceId))
+    .limit(1);
+
+  if (!ws || ws.userId !== session.user.id) throw new Error('Forbidden');
+
   return db.select().from(accounts).where(eq(accounts.workspaceId, workspaceId));
 }
 
