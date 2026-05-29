@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { db, accounts, eq } from '@ethos/db';
+import { auth } from '@/auth';
+import { db, accounts, workspaces, eq } from '@ethos/db';
 
 export async function updateAccount(
   accountId: string,
@@ -12,6 +13,23 @@ export async function updateAccount(
     budget?: number | null;
   },
 ) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
+  const [existing] = await db.select({ workspaceId: accounts.workspaceId })
+    .from(accounts)
+    .where(eq(accounts.id, accountId))
+    .limit(1);
+
+  if (!existing) throw new Error('Account not found');
+
+  const [ws] = await db.select({ userId: workspaces.userId })
+    .from(workspaces)
+    .where(eq(workspaces.id, existing.workspaceId))
+    .limit(1);
+
+  if (!ws || ws.userId !== session.user.id) throw new Error('Forbidden');
+
   const [account] = await db
     .update(accounts)
     .set({
