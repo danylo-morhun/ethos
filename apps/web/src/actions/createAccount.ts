@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { auth } from '@/auth';
 import { db, accounts, workspaces, eq } from '@ethos/db';
 
 export async function createAccount(
@@ -10,13 +11,17 @@ export async function createAccount(
   parentId?: string,
   budget?: number,
 ) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
   const [workspace] = await db
-    .select({ baseCurrency: workspaces.baseCurrency })
+    .select({ baseCurrency: workspaces.baseCurrency, userId: workspaces.userId })
     .from(workspaces)
     .where(eq(workspaces.id, workspaceId))
     .limit(1);
 
   if (!workspace) throw new Error('Workspace not found');
+  if (workspace.userId !== session.user.id) throw new Error('Forbidden');
 
   const [account] = await db
     .insert(accounts)
