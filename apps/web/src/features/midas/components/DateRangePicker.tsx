@@ -15,15 +15,11 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 
-interface Props {
-	from: string | undefined;
-	to: string | undefined;
-	isAllTime?: boolean;
-}
-
 function fmt(d: Date) {
 	return format(d, "yyyy-MM-dd");
 }
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 const PRESETS = [
 	{
@@ -56,17 +52,23 @@ const PRESETS = [
 	},
 ] as const;
 
-export function DateRangePicker({ from, to, isAllTime = false }: Props) {
+export function DateRangePicker() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+
+	const rawFrom = searchParams.get("from") ?? undefined;
+	const rawTo = searchParams.get("to") ?? undefined;
+	const isAllTime = searchParams.get("all") === "1";
+	const committedFrom = rawFrom && ISO_DATE.test(rawFrom) ? rawFrom : undefined;
+	const committedTo = rawTo && ISO_DATE.test(rawTo) ? rawTo : undefined;
+
 	const [open, setOpen] = React.useState(false);
-	const [localFrom, setLocalFrom] = React.useState(from);
-	const [localTo, setLocalTo] = React.useState(to);
-	// Two-click logic: first click sets "from", second click sets "to"
+	const [localFrom, setLocalFrom] = React.useState(committedFrom);
+	const [localTo, setLocalTo] = React.useState(committedTo);
 	const [picking, setPicking] = React.useState<"from" | "to">("from");
 
-	React.useEffect(() => { setLocalFrom(from); }, [from]);
-	React.useEffect(() => { setLocalTo(to); }, [to]);
+	React.useEffect(() => { setLocalFrom(committedFrom); }, [committedFrom]);
+	React.useEffect(() => { setLocalTo(committedTo); }, [committedTo]);
 
 	function push(f: string | undefined, t: string | undefined, allTime = false) {
 		const [safeFrom, safeTo] = f && t && f > t ? [t, f] : [f, t];
@@ -91,8 +93,8 @@ export function DateRangePicker({ from, to, isAllTime = false }: Props) {
 
 	function handleOpenChange(v: boolean) {
 		if (!v) {
-			setLocalFrom(from);
-			setLocalTo(to);
+			setLocalFrom(committedFrom);
+			setLocalTo(committedTo);
 			setPicking("from");
 		}
 		setOpen(v);
@@ -113,20 +115,20 @@ export function DateRangePicker({ from, to, isAllTime = false }: Props) {
 		}
 	}
 
-	const label = buildPeriodLabel(localFrom, localTo, isAllTime);
-	const hasFilter = localFrom || localTo || isAllTime;
+	const label = buildPeriodLabel(committedFrom, committedTo, isAllTime);
+	const hasFilter = committedFrom || committedTo || isAllTime;
 
 	return (
 		<Popover open={open} onOpenChange={handleOpenChange}>
 			<PopoverTrigger asChild>
-				<Button variant="outline" className="gap-2 font-normal">
-					<HugeiconsIcon icon={Calendar01Icon} className="h-4 w-4 shrink-0 opacity-50" />
-					{label}
+				<Button variant="outline" size="icon" className="md:w-auto md:px-3 md:gap-2 font-normal">
+					<HugeiconsIcon icon={Calendar01Icon} className="h-4 w-4 shrink-0 opacity-70" />
+					<span className="hidden md:inline">{label}</span>
 					{hasFilter && (
 						<span
 							role="button"
 							aria-label="Clear date filter"
-							className="ml-1 rounded opacity-50 hover:opacity-100"
+							className="hidden md:inline ml-0.5 rounded opacity-50 hover:opacity-100"
 							onClick={(e) => {
 								e.stopPropagation();
 								push(undefined, undefined);
@@ -139,22 +141,18 @@ export function DateRangePicker({ from, to, isAllTime = false }: Props) {
 			</PopoverTrigger>
 			<PopoverContent className="w-auto p-0" align="end">
 				<div className="flex">
-					{/* Presets column */}
 					<div className="flex flex-col gap-1 border-r p-3 min-w-[140px]">
 						<p className="mb-1 px-2 text-xs font-medium text-muted-foreground">Presets</p>
 						{PRESETS.map((p) => {
 							const [pf, pt] = p.range();
-							const active = !isAllTime && localFrom === pf && localTo === pt;
+							const active = !isAllTime && committedFrom === pf && committedTo === pt;
 							return (
 								<Button
 									key={p.label}
 									variant={active ? "secondary" : "ghost"}
 									size="sm"
 									className="justify-start"
-									onClick={() => {
-										push(pf, pt);
-										setOpen(false);
-									}}
+									onClick={() => { push(pf, pt); setOpen(false); }}
 								>
 									{p.label}
 								</Button>
@@ -165,19 +163,14 @@ export function DateRangePicker({ from, to, isAllTime = false }: Props) {
 							variant={isAllTime ? "secondary" : "ghost"}
 							size="sm"
 							className="justify-start"
-							onClick={() => {
-								push(undefined, undefined, true);
-								setOpen(false);
-							}}
+							onClick={() => { push(undefined, undefined, true); setOpen(false); }}
 						>
 							All time
 						</Button>
 					</div>
 
-					{/* Custom range column */}
 					<div className="flex flex-col p-3">
 						<p className="mb-2 text-xs font-medium text-muted-foreground">Custom range</p>
-						{/* Date chips — active one has a ring to indicate it's being picked */}
 						<div className="mb-3 flex items-center gap-2">
 							<span
 								className={cn(
@@ -207,7 +200,6 @@ export function DateRangePicker({ from, to, isAllTime = false }: Props) {
 								{localTo ? format(parseLocal(localTo), "MMM d, yyyy") : "End date"}
 							</span>
 						</div>
-						{/* mode="range" keeps range highlight CSS; onDayClick overrides selection logic */}
 						<Calendar
 							mode="range"
 							selected={{
