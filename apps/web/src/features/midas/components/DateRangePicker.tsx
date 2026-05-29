@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Calendar01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
@@ -60,6 +60,7 @@ function DateButton({
 
 export function DateRangePicker({ from, to }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [localFrom, setLocalFrom] = React.useState(from);
   const [localTo, setLocalTo] = React.useState(to);
 
@@ -70,9 +71,10 @@ export function DateRangePicker({ from, to }: Props) {
     const [safeFrom, safeTo] = f && t && f > t ? [t, f] : [f, t];
     setLocalFrom(safeFrom);
     setLocalTo(safeTo);
-    const params = new URLSearchParams();
-    if (safeFrom) params.set('from', safeFrom);
-    if (safeTo) params.set('to', safeTo);
+    const params = new URLSearchParams(searchParams.toString());
+    if (safeFrom) params.set('from', safeFrom); else params.delete('from');
+    if (safeTo) params.set('to', safeTo); else params.delete('to');
+    params.delete('page');
     const qs = params.toString();
     router.push(qs ? `?${qs}` : '?');
   }
