@@ -15,7 +15,7 @@ const COLORS = [
 	"oklch(0.65 0.18 330)",  // pink
 ];
 
-const PIE_SIZE = 120; // explicit px — no ResponsiveContainer stretching
+const PIE_SIZE = 128; // explicit px — no ResponsiveContainer stretching
 
 interface TooltipProps { active?: boolean; payload?: any[]; currency: string }
 
@@ -69,8 +69,8 @@ export function ExpenseBreakdown({ balances, currency }: Props) {
 								nameKey="name"
 								cx={PIE_SIZE / 2}
 								cy={PIE_SIZE / 2}
-								innerRadius={33}
-								outerRadius={53}
+								innerRadius={36}
+								outerRadius={56}
 								strokeWidth={0}
 							>
 								{expenses.map((entry) => (
@@ -81,11 +81,8 @@ export function ExpenseBreakdown({ balances, currency }: Props) {
 										if (!viewBox || !("cx" in viewBox) || !("cy" in viewBox)) return null;
 										return (
 											<text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-												<tspan x={viewBox.cx} dy={-5} className="fill-foreground text-[11px] font-bold">
-													{formatCurrency(total, currency)}
-												</tspan>
-												<tspan x={viewBox.cx} dy={14} className="fill-muted-foreground text-[9px]">
-													total
+												<tspan x={viewBox.cx} className="fill-foreground text-[12px] font-bold">
+													{new Intl.NumberFormat("en", { notation: "compact", style: "currency", currency, maximumFractionDigits: 2 }).format(total)}
 												</tspan>
 											</text>
 										);
