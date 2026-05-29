@@ -53,31 +53,46 @@ export function IncomeChart({ balances, currency }: Props) {
             No income in this period
           </div>
         ) : (
-          <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
-            <PieChart>
-              <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel nameKey="name" />} />
-              <Pie data={data} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90} strokeWidth={2}>
-                {data.map((entry, i) => (
-                  <Cell key={`cell-${i}`} fill={entry.fill} />
-                ))}
-                <Label
-                  content={({ viewBox }) => {
-                    if (!viewBox || !('cx' in viewBox) || !('cy' in viewBox)) return null;
-                    return (
-                      <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-                        <tspan x={viewBox.cx} dy={-5} className="fill-foreground text-lg font-bold">
-                          {formatCurrency(total, currency)}
-                        </tspan>
-                        <tspan x={viewBox.cx} dy={20} className="fill-muted-foreground text-xs">
-                          Total
-                        </tspan>
-                      </text>
-                    );
-                  }}
-                />
-              </Pie>
-            </PieChart>
-          </ChartContainer>
+          <>
+            <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[220px]">
+              <PieChart>
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel nameKey="name" />} />
+                <Pie data={data} dataKey="value" nameKey="name" innerRadius={55} outerRadius={80} strokeWidth={2}>
+                  {data.map((entry) => (
+                    <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                  ))}
+                  <Label
+                    content={({ viewBox }) => {
+                      if (!viewBox || !('cx' in viewBox) || !('cy' in viewBox)) return null;
+                      return (
+                        <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                          <tspan x={viewBox.cx} dy={-5} className="fill-foreground text-lg font-bold">
+                            {formatCurrency(total, currency)}
+                          </tspan>
+                          <tspan x={viewBox.cx} dy={20} className="fill-muted-foreground text-xs">
+                            Total
+                          </tspan>
+                        </text>
+                      );
+                    }}
+                  />
+                </Pie>
+              </PieChart>
+            </ChartContainer>
+            <ul className="mt-3 space-y-1.5 pb-2">
+              {data.map((d) => (
+                <li key={d.name} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: d.fill }} />
+                    <span className="truncate text-muted-foreground">{d.name}</span>
+                  </span>
+                  <span className="shrink-0 font-medium tabular-nums">
+                    {((d.value / total) * 100).toFixed(1)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </CardContent>
     </Card>
