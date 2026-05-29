@@ -73,6 +73,20 @@ export function AddTransactionModal({
     if (open) getAccounts(workspaceId).then(setAccounts);
   }, [open, workspaceId]);
 
+  React.useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (open) return;
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        setOpen(true);
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open]);
+
   const onOpenChange = (val: boolean) => {
     setOpen(val);
     if (!val) {
