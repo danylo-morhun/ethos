@@ -57,16 +57,14 @@ export function ExpenseBreakdown({ balances, currency }: Props) {
 			<div className="flex gap-3 min-w-max md:min-w-0 md:flex-wrap">
 
 				{/* Pie card — square */}
-				<Card className="w-44 h-44 shrink-0 flex flex-col">
-					<div className="px-4 pt-3">
-						<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-							Expenses
-						</p>
-					</div>
+				<Card className="w-44 h-44 shrink-0 p-3 flex flex-col">
+					<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+						Expenses
+					</p>
 					<div className="flex flex-1 items-center justify-center">
-						<ChartContainer config={chartConfig} className="h-[110px] w-[110px]">
-							<PieChart>
-								<ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel nameKey="name" />} />
+						<ChartContainer config={chartConfig} className="size-[118px]">
+							<PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+								<ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel nameKey="name" indicator="dot" />} />
 								<Pie
 									data={expenses}
 									dataKey="value"
