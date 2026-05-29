@@ -227,11 +227,14 @@ export function AccountsOverview({
 		return (
 			<React.Fragment key={row.accountId}>
 				<div className={`flex flex-col ${isChild ? "bg-muted/30" : ""}`}>
-					<div className={`flex items-center gap-2 px-3 py-2.5 ${isChild ? "pl-8" : ""}`}>
+					<div
+						className={`flex items-center gap-2 px-3 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors ${isChild ? "pl-8" : ""}`}
+						onClick={() => router.push(`/midas/accounts/${row.accountId}`)}
+					>
 						{hasChildren ? (
 							<button
 								type="button"
-								onClick={() => toggleExpand(row.accountId)}
+								onClick={(e) => { e.stopPropagation(); toggleExpand(row.accountId); }}
 								className="shrink-0 text-muted-foreground/60 hover:text-foreground transition-colors"
 								aria-label={isExpanded ? "Collapse" : "Expand"}
 							>
@@ -244,14 +247,11 @@ export function AccountsOverview({
 							<span className="w-3.5 shrink-0" />
 						)}
 
-						<Link
-							href={`/midas/accounts/${row.accountId}`}
-							className="flex-1 min-w-0 text-sm font-medium truncate hover:underline underline-offset-2"
-						>
+						<span className="flex-1 min-w-0 text-sm font-medium truncate">
 							{row.name}
-						</Link>
+						</span>
 
-						<div className="flex shrink-0 items-center gap-1">
+						<div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
 							<BalanceDisplay row={row} acct={acct} currency={currency} />
 							{!listMode && (
 								<AccountActions
