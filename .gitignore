@@ -18,3 +18,4 @@ dist
 *.tsbuildinfo
 *.pem
 next-env.d.ts
+docs/
