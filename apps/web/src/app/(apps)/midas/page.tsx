@@ -17,9 +17,8 @@ import { OnboardingCard } from "@/features/midas/components/OnboardingCard";
 import { SummaryCards } from "@/features/midas/components/SummaryCards";
 import { TransactionTable } from "@/features/midas/components/TransactionTable";
 import { TrendChart } from "@/features/midas/components/TrendChart";
-import { parseLocal } from "@/features/midas/lib/dates";
-import { differenceInDays, endOfMonth, format, isSameDay, startOfMonth, subDays } from "date-fns";
-import Link from "next/link";
+import { buildPeriodLabel, parseLocal } from "@/features/midas/lib/dates";
+import { differenceInDays, endOfMonth, format, startOfMonth, subDays } from "date-fns";
 import { redirect } from "next/navigation";
 
 function getPrevPeriod(from: string, to: string): { prevFrom: string; prevTo: string } {
@@ -41,30 +40,13 @@ function computeMetrics(b: import("@/features/midas/actions/balances").AccountBa
 	};
 }
 
-function buildPeriodLabel(from: string | undefined, to: string | undefined): string {
-	if (!from && !to) return "All time";
-	if (!from || !to) return "Custom range";
-	const f = parseLocal(from);
-	const t = parseLocal(to);
-	const isMonthStart = isSameDay(f, startOfMonth(f));
-	const isMonthEnd = isSameDay(t, endOfMonth(t));
-	const singleMonth = f.getFullYear() === t.getFullYear() && f.getMonth() === t.getMonth();
-
-	if (isMonthStart && isMonthEnd && singleMonth) return format(f, "MMMM yyyy");
-	if (isMonthStart && isMonthEnd) {
-		return f.getFullYear() === t.getFullYear()
-			? `${format(f, "MMM")} – ${format(t, "MMM yyyy")}`
-			: `${format(f, "MMM yyyy")} – ${format(t, "MMM yyyy")}`;
-	}
-	return `${format(f, "MMM d")} – ${format(t, "MMM d, yyyy")}`;
-}
-
 export default async function MidasPage({
 	searchParams,
 }: {
 	searchParams: Promise<{
 		from?: string;
 		to?: string;
+		all?: string;
 		page?: string;
 		account?: string;
 		q?: string;
@@ -80,6 +62,7 @@ export default async function MidasPage({
 	const {
 		from: rawFrom,
 		to: rawTo,
+		all: rawAll,
 		page: rawPage,
 		account: rawAccount,
 		q: rawQ,
@@ -90,10 +73,15 @@ export default async function MidasPage({
 	} = await searchParams;
 	const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 	const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+	const isAllTime = rawAll === "1";
 	const rawValidFrom = rawFrom && ISO_DATE.test(rawFrom) ? rawFrom : undefined;
 	const rawValidTo = rawTo && ISO_DATE.test(rawTo) ? rawTo : undefined;
-	const from = rawValidFrom && rawValidTo && rawValidFrom > rawValidTo ? rawValidTo : rawValidFrom;
-	const to = rawValidFrom && rawValidTo && rawValidFrom > rawValidTo ? rawValidFrom : rawValidTo;
+	const today = new Date();
+	const defaultFrom = format(startOfMonth(today), "yyyy-MM-dd");
+	const defaultTo = format(endOfMonth(today), "yyyy-MM-dd");
+	const swapped = rawValidFrom && rawValidTo && rawValidFrom > rawValidTo;
+	const from = isAllTime ? undefined : (swapped ? rawValidTo : rawValidFrom) ?? defaultFrom;
+	const to = isAllTime ? undefined : (swapped ? rawValidFrom : rawValidTo) ?? defaultTo;
 	const page = rawPage && /^\d+$/.test(rawPage) ? Math.max(0, Number.parseInt(rawPage, 10)) : 0;
 	const accountId = rawAccount && UUID.test(rawAccount) ? rawAccount : undefined;
 	const q = rawQ && rawQ.trim().length > 0 ? rawQ.trim() : undefined;
@@ -105,7 +93,7 @@ export default async function MidasPage({
 
 	const workspace = await initializeWorkspace(session.user.id);
 	await generateDueRecurring(workspace.id);
-	const periodLabel = buildPeriodLabel(from, to);
+	const periodLabel = buildPeriodLabel(from, to, isAllTime);
 	const prevPeriod = from && to ? getPrevPeriod(from, to) : null;
 
 	const [balances, accounts, recentTransactions, trends, netWorthHistory, allTags, prevBalances] =
@@ -138,20 +126,9 @@ export default async function MidasPage({
 
 	return (
 		<main className="px-4 py-6 sm:px-6">
-			<div className="mb-8 flex items-center justify-between">
-				<div className="flex items-center gap-3">
-					<h1 className="text-2xl font-bold">{workspace.name}</h1>
-					<Link
-						href="/midas/settings"
-						className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-					>
-						Settings
-					</Link>
-				</div>
-				<div className="flex items-center gap-3">
-					<DateRangePicker from={from} to={to} />
-					<AddTransactionModal workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
-				</div>
+			<div className="mb-8 flex items-center justify-end gap-3">
+				<DateRangePicker from={from} to={to} isAllTime={isAllTime} />
+				<AddTransactionModal workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
 			</div>
 
 			<div className="space-y-8">

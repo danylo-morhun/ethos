@@ -62,6 +62,8 @@ export function DateRangePicker({ from, to, isAllTime = false }: Props) {
 	const [open, setOpen] = React.useState(false);
 	const [localFrom, setLocalFrom] = React.useState(from);
 	const [localTo, setLocalTo] = React.useState(to);
+	// Two-click logic: first click sets "from", second click sets "to"
+	const [picking, setPicking] = React.useState<"from" | "to">("from");
 
 	React.useEffect(() => { setLocalFrom(from); }, [from]);
 	React.useEffect(() => { setLocalTo(to); }, [to]);
@@ -89,11 +91,26 @@ export function DateRangePicker({ from, to, isAllTime = false }: Props) {
 
 	function handleOpenChange(v: boolean) {
 		if (!v) {
-			// Abandon partial selection — reset to committed URL state
 			setLocalFrom(from);
 			setLocalTo(to);
+			setPicking("from");
 		}
 		setOpen(v);
+	}
+
+	function handleDayClick(day: Date) {
+		const val = fmt(day);
+		if (picking === "from") {
+			setLocalFrom(val);
+			setLocalTo(undefined);
+			setPicking("to");
+		} else {
+			const base = localFrom ?? val;
+			const [f, t] = base > val ? [val, base] : [base, val];
+			push(f, t);
+			setOpen(false);
+			setPicking("from");
+		}
 	}
 
 	const label = buildPeriodLabel(localFrom, localTo, isAllTime);
@@ -160,25 +177,37 @@ export function DateRangePicker({ from, to, isAllTime = false }: Props) {
 					{/* Custom range column */}
 					<div className="flex flex-col p-3">
 						<p className="mb-2 text-xs font-medium text-muted-foreground">Custom range</p>
+						{/* Date chips — active one has a ring to indicate it's being picked */}
 						<div className="mb-3 flex items-center gap-2">
 							<span
 								className={cn(
-									"rounded px-2 py-1 text-sm",
-									localFrom ? "bg-muted text-foreground" : "text-muted-foreground",
+									"cursor-pointer rounded-md border px-2 py-1 text-sm transition-colors",
+									picking === "from"
+										? "border-primary bg-primary/10 text-foreground"
+										: localFrom
+											? "border-transparent bg-muted text-foreground"
+											: "border-transparent text-muted-foreground",
 								)}
+								onClick={() => setPicking("from")}
 							>
 								{localFrom ? format(parseLocal(localFrom), "MMM d, yyyy") : "Start date"}
 							</span>
 							<span className="text-xs text-muted-foreground">–</span>
 							<span
 								className={cn(
-									"rounded px-2 py-1 text-sm",
-									localTo ? "bg-muted text-foreground" : "text-muted-foreground",
+									"cursor-pointer rounded-md border px-2 py-1 text-sm transition-colors",
+									picking === "to"
+										? "border-primary bg-primary/10 text-foreground"
+										: localTo
+											? "border-transparent bg-muted text-foreground"
+											: "border-transparent text-muted-foreground",
 								)}
+								onClick={() => setPicking("to")}
 							>
 								{localTo ? format(parseLocal(localTo), "MMM d, yyyy") : "End date"}
 							</span>
 						</div>
+						{/* mode="range" keeps range highlight CSS; onDayClick overrides selection logic */}
 						<Calendar
 							mode="range"
 							selected={{
@@ -186,17 +215,8 @@ export function DateRangePicker({ from, to, isAllTime = false }: Props) {
 								to: localTo ? parseLocal(localTo) : undefined,
 							}}
 							defaultMonth={localFrom ? parseLocal(localFrom) : undefined}
-							onSelect={(range) => {
-								if (!range) return;
-								const f = range.from ? fmt(range.from) : undefined;
-								const t = range.to ? fmt(range.to) : undefined;
-								setLocalFrom(f);
-								setLocalTo(t);
-								if (f && t) {
-									push(f, t);
-									setOpen(false);
-								}
-							}}
+							onSelect={() => {}}
+							onDayClick={handleDayClick}
 							initialFocus
 						/>
 					</div>
