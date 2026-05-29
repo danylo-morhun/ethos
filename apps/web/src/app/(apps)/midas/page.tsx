@@ -8,6 +8,7 @@ import { getRecentTransactions } from '@/features/midas/actions/transactions';
 import { AddTransactionModal } from '@/features/midas/components/AddTransactionModal';
 import { AccountsOverview } from '@/features/midas/components/AccountsOverview';
 import { ExpenseChart } from '@/features/midas/components/ExpenseChart';
+import { SummaryCards } from '@/features/midas/components/SummaryCards';
 import { TransactionTable } from '@/features/midas/components/TransactionTable';
 import { DateRangePicker } from '@/features/midas/components/DateRangePicker';
 import { parseLocal } from '@/features/midas/lib/dates';
@@ -66,6 +67,7 @@ export default async function MidasPage({
       </div>
 
       <div className="space-y-8">
+        <SummaryCards balances={balances} currency={workspace.baseCurrency} periodLabel={periodLabel} />
         <AccountsOverview
           balances={balances}
           accounts={accounts}
