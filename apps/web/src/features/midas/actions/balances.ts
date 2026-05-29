@@ -1,46 +1,55 @@
-'use server';
+"use server";
 
-import { auth } from '@/auth';
-import { db, accounts, transactionEntries, transactions, workspaces, eq, and, sql } from '@ethos/db';
+import { auth } from "@/auth";
+import {
+	accounts,
+	and,
+	db,
+	eq,
+	sql,
+	transactionEntries,
+	transactions,
+	workspaces,
+} from "@ethos/db";
 
 export type AccountBalance = {
-  accountId: string;
-  name: string;
-  type: 'ASSET' | 'LIABILITY' | 'INCOME' | 'EXPENSE';
-  currency: string;
-  balance: string;
-  nativeBalance: string;
+	accountId: string;
+	name: string;
+	type: "ASSET" | "LIABILITY" | "INCOME" | "EXPENSE";
+	currency: string;
+	balance: string;
+	nativeBalance: string;
 };
 
 export async function getBalances(
-  workspaceId: string,
-  from: string | undefined,
-  to: string | undefined,
+	workspaceId: string,
+	from: string | undefined,
+	to: string | undefined,
 ): Promise<AccountBalance[]> {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error('Unauthorized');
+	const session = await auth();
+	if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const [ws] = await db
-    .select({ userId: workspaces.userId })
-    .from(workspaces)
-    .where(eq(workspaces.id, workspaceId))
-    .limit(1);
+	const [ws] = await db
+		.select({ userId: workspaces.userId })
+		.from(workspaces)
+		.where(eq(workspaces.id, workspaceId))
+		.limit(1);
 
-  if (!ws || ws.userId !== session.user.id) throw new Error('Forbidden');
+	if (!ws || ws.userId !== session.user.id) throw new Error("Forbidden");
 
-  const assetLiabDateClause = to
-    ? sql`and (${transactions.date} is null or ${transactions.date} <= ${to})`
-    : sql``;
-  const incomeFromClause = from ? sql`and ${transactions.date} >= ${from}` : sql``;
-  const incomeToClause   = to   ? sql`and ${transactions.date} <= ${to}`   : sql``;
+	const assetLiabDateClause = to
+		? sql`and (${transactions.date} is null or ${transactions.date} <= ${to})`
+		: sql``;
+	const incomeFromClause = from ? sql`and ${transactions.date} >= ${from}` : sql``;
+	const incomeToClause = to ? sql`and ${transactions.date} <= ${to}` : sql``;
 
-  const rows = await db
-    .select({
-      accountId: accounts.id,
-      name: accounts.name,
-      type: accounts.type,
-      currency: accounts.currency,
-      balance: sql<string>`coalesce(sum(
+	const rows = await db
+		.select({
+			accountId: accounts.id,
+			name: accounts.name,
+			type: accounts.type,
+			currency: accounts.currency,
+			balance: sql<string>`coalesce(sum(
         case
           when ${accounts.type} in ('ASSET', 'LIABILITY') ${assetLiabDateClause}
             then ${transactionEntries.baseAmount}
@@ -49,7 +58,7 @@ export async function getBalances(
           else null
         end
       ), 0)`,
-      nativeBalance: sql<string>`coalesce(sum(
+			nativeBalance: sql<string>`coalesce(sum(
         case
           when ${accounts.type} in ('ASSET', 'LIABILITY') ${assetLiabDateClause}
             then case when ${transactionEntries.currency} = ${accounts.currency} then ${transactionEntries.amount} else null end
@@ -58,12 +67,12 @@ export async function getBalances(
           else null
         end
       ), 0)`,
-    })
-    .from(accounts)
-    .leftJoin(transactionEntries, eq(transactionEntries.accountId, accounts.id))
-    .leftJoin(transactions, and(eq(transactions.id, transactionEntries.transactionId)))
-    .where(eq(accounts.workspaceId, workspaceId))
-    .groupBy(accounts.id, accounts.name, accounts.type, accounts.currency);
+		})
+		.from(accounts)
+		.leftJoin(transactionEntries, eq(transactionEntries.accountId, accounts.id))
+		.leftJoin(transactions, and(eq(transactions.id, transactionEntries.transactionId)))
+		.where(eq(accounts.workspaceId, workspaceId))
+		.groupBy(accounts.id, accounts.name, accounts.type, accounts.currency);
 
-  return rows;
+	return rows;
 }
