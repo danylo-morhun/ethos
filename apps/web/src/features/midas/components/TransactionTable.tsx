@@ -166,8 +166,15 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                  No transactions yet. Add one above.
+                <TableCell colSpan={6} className="py-12 text-center">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {searchQuery ? `No transactions matching "${searchQuery}"` : 'No transactions yet'}
+                  </p>
+                  {!searchQuery && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Use the New Transaction button to record your first entry.
+                    </p>
+                  )}
                 </TableCell>
               </TableRow>
             ) : (
