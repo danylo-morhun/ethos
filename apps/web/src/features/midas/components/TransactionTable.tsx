@@ -219,33 +219,35 @@ export function TransactionTable({
 
 	return (
 		<section>
-			<div className="mb-4 flex flex-wrap items-center gap-3">
-				<h2 className="text-lg font-semibold">Transactions</h2>
-				{accountFilterId && accountFilterName && (
-					<span className="flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium">
-						{accountFilterName}
-						<button
-							type="button"
-							className="ml-1 text-muted-foreground hover:text-foreground"
-							onClick={clearAccountFilter}
-						>
-							×
-						</button>
-					</span>
-				)}
-				{tagFilterId && tagFilterName && (
-					<span className="flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium">
-						🏷 {tagFilterName}
-						<button
-							type="button"
-							className="ml-1 text-muted-foreground hover:text-foreground"
-							onClick={clearTagFilter}
-						>
-							×
-						</button>
-					</span>
-				)}
-				<div className="ml-auto flex items-center gap-2">
+			<div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+				<div className="flex flex-wrap items-center gap-2">
+					<h2 className="text-lg font-semibold">Transactions</h2>
+					{accountFilterId && accountFilterName && (
+						<span className="flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium">
+							{accountFilterName}
+							<button
+								type="button"
+								className="ml-1 text-muted-foreground hover:text-foreground"
+								onClick={clearAccountFilter}
+							>
+								×
+							</button>
+						</span>
+					)}
+					{tagFilterId && tagFilterName && (
+						<span className="flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium">
+							🏷 {tagFilterName}
+							<button
+								type="button"
+								className="ml-1 text-muted-foreground hover:text-foreground"
+								onClick={clearTagFilter}
+							>
+								×
+							</button>
+						</span>
+					)}
+				</div>
+				<div className="flex items-center gap-2 sm:ml-auto">
 					{selectedIds.size > 0 && (
 						<Button
 							variant="destructive"
@@ -258,7 +260,7 @@ export function TransactionTable({
 					)}
 					<Input
 						placeholder="Search transactions…"
-						className="h-8 w-52 text-sm"
+						className="h-8 flex-1 text-sm sm:w-52 sm:flex-none"
 						value={localQuery}
 						onChange={(e) => setLocalQuery(e.target.value)}
 						onKeyDown={(e) => {
