@@ -98,9 +98,9 @@ export default async function MidasPage({
 			getMonthlyTrends(workspace.id, from, to, 12),
 		]);
 
-		const income = balances
-			.filter((b) => b.type === "INCOME")
-			.reduce((acc, b) => acc + Number(b.balance), 0);
+		const income = Math.abs(
+			balances.filter((b) => b.type === "INCOME").reduce((acc, b) => acc + Number(b.balance), 0),
+		);
 		const expenses = Math.abs(
 			balances.filter((b) => b.type === "EXPENSE").reduce((acc, b) => acc + Number(b.balance), 0),
 		);

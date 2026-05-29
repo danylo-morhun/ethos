@@ -29,7 +29,7 @@ export function SummaryCards({ balances, currency, periodLabel, deltas }: Props)
 
 	const assets = sum("ASSET");
 	const liabilities = Math.abs(sum("LIABILITY"));
-	const income = sum("INCOME");
+	const income = Math.abs(sum("INCOME"));
 	const expenses = Math.abs(sum("EXPENSE"));
 
 	const netWorth = assets - liabilities;
