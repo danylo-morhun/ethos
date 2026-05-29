@@ -1,11 +1,9 @@
 import {
   date,
   index,
-  integer,
   numeric,
   pgEnum,
   pgTable,
-  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -13,8 +11,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
-
-// ─── Enums ───────────────────────────────────────────────────────────────────
+import { authUsers } from './auth';
 
 export const accountTypeEnum = pgEnum('account_type', [
   'ASSET',
@@ -23,65 +20,18 @@ export const accountTypeEnum = pgEnum('account_type', [
   'EXPENSE',
 ]);
 
-// ─── Auth.js tables ──────────────────────────────────────────────────────────
-
-export const authUsers = pgTable('auth_users', {
-  id: text('id').primaryKey(),
-  name: text('name'),
-  email: text('email').notNull().unique(),
-  emailVerified: timestamp('email_verified', { mode: 'date' }),
-  image: text('image'),
-});
-
-export const authAccounts = pgTable(
-  'auth_accounts',
+export const workspaces = pgTable(
+  'workspaces',
   {
-    userId: text('user_id')
-      .notNull()
-      .references(() => authUsers.id, { onDelete: 'cascade' }),
-    type: text('type').notNull(),
-    provider: text('provider').notNull(),
-    providerAccountId: text('provider_account_id').notNull(),
-    refresh_token: text('refresh_token'),
-    access_token: text('access_token'),
-    expires_at: integer('expires_at'),
-    token_type: text('token_type'),
-    scope: text('scope'),
-    id_token: text('id_token'),
-    session_state: text('session_state'),
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').notNull(),
+    name: text('name').notNull(),
+    baseCurrency: text('base_currency').notNull().default('USD'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.provider, t.providerAccountId] })],
+  (t) => [uniqueIndex('workspaces_user_id_idx').on(t.userId)],
 );
-
-export const authSessions = pgTable('auth_sessions', {
-  sessionToken: text('session_token').primaryKey(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => authUsers.id, { onDelete: 'cascade' }),
-  expires: timestamp('expires', { mode: 'date' }).notNull(),
-});
-
-export const verificationTokens = pgTable(
-  'verification_tokens',
-  {
-    identifier: text('identifier').notNull(),
-    token: text('token').notNull(),
-    expires: timestamp('expires', { mode: 'date' }).notNull(),
-  },
-  (t) => [primaryKey({ columns: [t.identifier, t.token] })],
-);
-
-// ─── Tables ──────────────────────────────────────────────────────────────────
-
-export const workspaces = pgTable('workspaces', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  // Auth user id — plain text ref, no DB FK (auth is external; avoids cascade issues)
-  userId: text('user_id').notNull(),
-  name: text('name').notNull(),
-  baseCurrency: text('base_currency').notNull().default('USD'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-});
 
 export const accounts = pgTable(
   'accounts',
@@ -129,7 +79,6 @@ export const transactionEntries = pgTable(
       .references(() => accounts.id),
     amount: numeric('amount', { precision: 19, scale: 4 }).notNull(),
     currency: text('currency').notNull(),
-    // Amount converted to workspace base currency; sum per transaction must = 0
     baseAmount: numeric('base_amount', { precision: 19, scale: 4 }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -139,7 +88,6 @@ export const transactionEntries = pgTable(
   ],
 );
 
-// Cached historical exchange rates — fetched once per (date, pair) and reused
 export const exchangeRates = pgTable(
   'exchange_rates',
   {
@@ -147,7 +95,6 @@ export const exchangeRates = pgTable(
     date: date('date').notNull(),
     fromCurrency: text('from_currency').notNull(),
     toCurrency: text('to_currency').notNull(),
-    // scale 8 preserves precision for minor currency pairs (e.g., JPY/BTC)
     rate: numeric('rate', { precision: 19, scale: 8 }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
