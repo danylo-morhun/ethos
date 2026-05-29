@@ -2,9 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
-import { db, accounts, workspaces, transactionEntries, eq } from '@ethos/db';
+import { db, accounts, workspaces, transactionEntries, eq, and, isNull } from '@ethos/db';
 
-export async function getAccounts(workspaceId: string) {
+export async function getAccounts(workspaceId: string, opts?: { includeArchived?: boolean }) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
 
@@ -16,7 +16,10 @@ export async function getAccounts(workspaceId: string) {
 
   if (!ws || ws.userId !== session.user.id) throw new Error('Forbidden');
 
-  return db.select().from(accounts).where(eq(accounts.workspaceId, workspaceId));
+  const filter = opts?.includeArchived
+    ? eq(accounts.workspaceId, workspaceId)
+    : and(eq(accounts.workspaceId, workspaceId), isNull(accounts.archivedAt));
+  return db.select().from(accounts).where(filter);
 }
 
 export async function createAccount(
@@ -135,5 +138,61 @@ export async function deleteAccount(
 
   await db.delete(accounts).where(eq(accounts.id, accountId));
   revalidatePath('/midas');
+  return { success: true };
+}
+
+export async function archiveAccount(
+  accountId: string,
+): Promise<{ error: string } | { success: true }> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Unauthorized' };
+
+  const [account] = await db
+    .select({ workspaceId: accounts.workspaceId })
+    .from(accounts)
+    .where(eq(accounts.id, accountId))
+    .limit(1);
+
+  if (!account) return { error: 'Account not found' };
+
+  const [ws] = await db
+    .select({ userId: workspaces.userId })
+    .from(workspaces)
+    .where(eq(workspaces.id, account.workspaceId))
+    .limit(1);
+
+  if (!ws || ws.userId !== session.user.id) return { error: 'Forbidden' };
+
+  await db.update(accounts).set({ archivedAt: new Date() }).where(eq(accounts.id, accountId));
+  revalidatePath('/midas');
+  revalidatePath('/midas/settings');
+  return { success: true };
+}
+
+export async function unarchiveAccount(
+  accountId: string,
+): Promise<{ error: string } | { success: true }> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Unauthorized' };
+
+  const [account] = await db
+    .select({ workspaceId: accounts.workspaceId })
+    .from(accounts)
+    .where(eq(accounts.id, accountId))
+    .limit(1);
+
+  if (!account) return { error: 'Account not found' };
+
+  const [ws] = await db
+    .select({ userId: workspaces.userId })
+    .from(workspaces)
+    .where(eq(workspaces.id, account.workspaceId))
+    .limit(1);
+
+  if (!ws || ws.userId !== session.user.id) return { error: 'Forbidden' };
+
+  await db.update(accounts).set({ archivedAt: null }).where(eq(accounts.id, accountId));
+  revalidatePath('/midas');
+  revalidatePath('/midas/settings');
   return { success: true };
 }

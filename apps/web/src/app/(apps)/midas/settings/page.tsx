@@ -7,6 +7,7 @@ import { getBalances } from '@/features/midas/actions/balances';
 import { WorkspaceSettingsForm } from '@/features/midas/components/WorkspaceSettingsForm';
 import { AccountsOverview } from '@/features/midas/components/AccountsOverview';
 import { AddAccountModal } from '@/features/midas/components/AddAccountModal';
+import { ArchivedAccountsList } from '@/features/midas/components/ArchivedAccountsList';
 import { Separator } from '@ethos/ui';
 
 export default async function MidasSettingsPage() {
@@ -14,8 +15,9 @@ export default async function MidasSettingsPage() {
   if (!session?.user?.id) redirect('/');
 
   const workspace = await initializeWorkspace(session.user.id);
-  const [accounts, balances] = await Promise.all([
+  const [accounts, archivedAccounts, balances] = await Promise.all([
     getAccounts(workspace.id),
+    getAccounts(workspace.id, { includeArchived: true }).then((all) => all.filter((a) => a.archivedAt !== null)),
     getBalances(workspace.id, undefined, undefined),
   ]);
 
@@ -47,7 +49,7 @@ export default async function MidasSettingsPage() {
             <h2 className="text-base font-semibold">Accounts</h2>
             <p className="text-sm text-muted-foreground">Manage your asset, liability, income and expense accounts.</p>
           </div>
-          <AddAccountModal workspaceId={workspace.id} />
+          <AddAccountModal workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
         </div>
         <AccountsOverview
           balances={balances}
@@ -56,6 +58,7 @@ export default async function MidasSettingsPage() {
           workspaceId={workspace.id}
           periodLabel="All time"
         />
+        <ArchivedAccountsList accounts={archivedAccounts} />
       </section>
     </main>
   );

@@ -47,6 +47,7 @@ export const accounts = pgTable(
     type: accountTypeEnum('type').notNull(),
     currency: text('currency').notNull(),
     budget: numeric('budget', { precision: 19, scale: 4 }),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

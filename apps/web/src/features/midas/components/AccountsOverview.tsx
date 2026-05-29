@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { MoreHorizontalIcon, PencilEdit01Icon, Delete01Icon } from '@hugeicons/core-free-icons';
+import { MoreHorizontalIcon, PencilEdit01Icon, Delete01Icon, Archive01Icon } from '@hugeicons/core-free-icons';
 import {
   Card,
   CardContent,
@@ -30,7 +30,7 @@ import {
 } from '@ethos/ui';
 import type { AccountBalance } from '@/features/midas/actions/balances';
 import { formatCurrency } from '@/features/midas/lib/format';
-import { deleteAccount } from '@/features/midas/actions/accounts';
+import { deleteAccount, archiveAccount } from '@/features/midas/actions/accounts';
 import { AddAccountModal } from '@/features/midas/components/AddAccountModal';
 import { EditAccountModal } from '@/features/midas/components/EditAccountModal';
 import { getAccounts } from '@/features/midas/actions/accounts';
@@ -84,12 +84,15 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
   const [isPending, startTransition] = useTransition();
   const [editTarget, setEditTarget] = React.useState<Account | null>(null);
   const [confirmTarget, setConfirmTarget] = React.useState<{ id: string; name: string } | null>(null);
+  const [archiveTarget, setArchiveTarget] = React.useState<{ id: string; name: string } | null>(null);
 
   const accountMap = new Map(accounts.map((a) => [a.id, a]));
-  const rows: AccountRow[] = balances.map((b) => ({
-    ...b,
-    parentId: accountMap.get(b.accountId)?.parentId ?? null,
-  }));
+  const rows: AccountRow[] = balances
+    .filter((b) => accountMap.has(b.accountId))
+    .map((b) => ({
+      ...b,
+      parentId: accountMap.get(b.accountId)?.parentId ?? null,
+    }));
 
   const grouped = TYPE_ORDER.reduce<Record<string, AccountRow[]>>((acc, type) => {
     acc[type] = rows.filter((b) => b.type === type);
@@ -108,6 +111,21 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
         router.refresh();
       }
       setConfirmTarget(null);
+    });
+  }
+
+  function handleArchiveConfirm() {
+    if (!archiveTarget) return;
+    const { id, name } = archiveTarget;
+    startTransition(async () => {
+      const result = await archiveAccount(id);
+      if ('error' in result) {
+        toast.error(result.error);
+      } else {
+        toast.success(`"${name}" archived`);
+        router.refresh();
+      }
+      setArchiveTarget(null);
     });
   }
 
@@ -202,6 +220,12 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                                     <HugeiconsIcon icon={PencilEdit01Icon} className="mr-2 h-4 w-4" />
                                     Edit
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => setArchiveTarget({ id: b.accountId, name: b.name })}
+                                  >
+                                    <HugeiconsIcon icon={Archive01Icon} className="mr-2 h-4 w-4" />
+                                    Archive
+                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     className="text-red-500 focus:text-red-500"
@@ -253,6 +277,23 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
           }}
         />
       )}
+
+      <AlertDialog open={!!archiveTarget} onOpenChange={(v) => { if (!v) setArchiveTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive "{archiveTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The account will be hidden from pickers and the dashboard. Its balance history is preserved and still counts toward totals. You can restore it from Settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={isPending} onClick={handleArchiveConfirm}>
+              {isPending ? 'Archiving…' : 'Archive'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!confirmTarget} onOpenChange={(v) => { if (!v) setConfirmTarget(null); }}>
         <AlertDialogContent>
