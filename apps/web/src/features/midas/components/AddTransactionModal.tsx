@@ -5,6 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import {
   Button,
   Dialog,
@@ -37,7 +38,7 @@ function toCurrency(c: string): Currency {
 }
 
 const baseFields = {
-  description: z.string().min(1, 'Description required'),
+  description: z.string().optional(),
   amount: z.number({ error: 'Amount required' }).positive('Amount must be positive'),
   currency: z.enum(CURRENCIES),
   date: z.string().min(1, 'Date required'),
@@ -130,7 +131,6 @@ export function AddTransactionModal({
 }) {
   const [open, setOpen] = React.useState(false);
   const [accounts, setAccounts] = React.useState<Account[]>([]);
-  const [success, setSuccess] = React.useState(false);
   const [txType, setTxType] = React.useState<TxType>('expense');
   const router = useRouter();
 
@@ -161,7 +161,6 @@ export function AddTransactionModal({
 
   const onOpenChange = (val: boolean) => {
     setOpen(val);
-    setSuccess(false);
     if (!val) {
       reset({
         txType: 'expense',
@@ -223,7 +222,7 @@ export function AddTransactionModal({
       toAccountId = values.toWalletId;
     }
 
-    await createTransaction({
+    const result = await createTransaction({
       workspaceId,
       fromAccountId,
       toAccountId,
@@ -232,9 +231,15 @@ export function AddTransactionModal({
       description: values.description,
       date: values.date,
     });
-    setSuccess(true);
+
+    if ('error' in result) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success('Transaction recorded.');
     router.refresh();
-    setTimeout(() => setOpen(false), 1200);
+    setOpen(false);
   };
 
   const wallets = accounts.filter(isWallet);
@@ -252,13 +257,7 @@ export function AddTransactionModal({
           <DialogTitle>New Transaction</DialogTitle>
         </DialogHeader>
 
-        {success ? (
-          <div className="flex flex-col items-center gap-2 py-6">
-            <span className="text-4xl">✓</span>
-            <p className="text-sm font-medium">Transaction recorded!</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Tabs value={txType} onValueChange={handleTabChange} className="w-full">
               <TabsList className="w-full">
                 <TabsTrigger value="expense" className="flex-1">Expense</TabsTrigger>
@@ -394,7 +393,6 @@ export function AddTransactionModal({
               </Button>
             </div>
           </form>
-        )}
       </DialogContent>
     </Dialog>
   );

@@ -83,63 +83,62 @@ export async function createTransaction({
   toAccountId: string;
   amount: number;
   currency: string;
-  description: string;
+  description: string | undefined;
   date: string;
-}) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error('Unauthorized');
+}): Promise<{ error: string } | { success: true }> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { error: 'Unauthorized' };
 
-  const [wsRows, fromRows, toRows] = await Promise.all([
-    db.select().from(workspaces).where(eq(workspaces.id, workspaceId)).limit(1),
-    db.select().from(accounts).where(and(eq(accounts.id, fromAccountId), eq(accounts.workspaceId, workspaceId))).limit(1),
-    db.select().from(accounts).where(and(eq(accounts.id, toAccountId), eq(accounts.workspaceId, workspaceId))).limit(1),
-  ]);
-
-  const workspace = wsRows[0];
-  const fromAccount = fromRows[0];
-  const toAccount = toRows[0];
-
-  if (!workspace || !fromAccount || !toAccount) throw new Error('Account not found');
-  if (workspace.userId !== session.user.id) throw new Error('Forbidden');
-
-  const baseCurrency = workspace.baseCurrency;
-
-  let baseAmount: number;
-  if (currency === baseCurrency) {
-    baseAmount = amount;
-  } else {
-    const rate = await getExchangeRate(currency, baseCurrency, date);
-    baseAmount = amount * rate;
-  }
-
-  const result = await db.transaction(async (tx) => {
-    const [txn] = await tx
-      .insert(transactions)
-      .values({ workspaceId, date, description })
-      .returning();
-
-    await tx.insert(transactionEntries).values([
-      {
-        transactionId: txn.id,
-        accountId: fromAccountId,
-        amount: String(-amount),
-        currency,
-        baseAmount: (-baseAmount).toFixed(4),
-      },
-      {
-        transactionId: txn.id,
-        accountId: toAccountId,
-        amount: String(amount),
-        currency,
-        baseAmount: baseAmount.toFixed(4),
-      },
+    const [wsRows, fromRows, toRows] = await Promise.all([
+      db.select().from(workspaces).where(eq(workspaces.id, workspaceId)).limit(1),
+      db.select().from(accounts).where(and(eq(accounts.id, fromAccountId), eq(accounts.workspaceId, workspaceId))).limit(1),
+      db.select().from(accounts).where(and(eq(accounts.id, toAccountId), eq(accounts.workspaceId, workspaceId))).limit(1),
     ]);
 
-    return txn;
-  });
+    const workspace = wsRows[0];
+    if (!workspace || !fromRows[0] || !toRows[0]) return { error: 'Account not found' };
+    if (workspace.userId !== session.user.id) return { error: 'Forbidden' };
 
-  revalidatePath('/midas');
-  return result;
+    const baseCurrency = workspace.baseCurrency;
+    let baseAmount: number;
+    if (currency === baseCurrency) {
+      baseAmount = amount;
+    } else {
+      const rate = await getExchangeRate(currency, baseCurrency, date);
+      baseAmount = amount * rate;
+    }
+
+    await db.transaction(async (tx) => {
+      const [txn] = await tx
+        .insert(transactions)
+        .values({ workspaceId, date, description: description ?? null })
+        .returning();
+
+      await tx.insert(transactionEntries).values([
+        {
+          transactionId: txn.id,
+          accountId: fromAccountId,
+          amount: String(-amount),
+          currency,
+          baseAmount: (-baseAmount).toFixed(4),
+        },
+        {
+          transactionId: txn.id,
+          accountId: toAccountId,
+          amount: String(amount),
+          currency,
+          baseAmount: baseAmount.toFixed(4),
+        },
+      ]);
+    });
+
+    revalidatePath('/midas');
+    return { success: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    return { error: msg };
+  }
 }
 
 export async function deleteTransaction(
@@ -183,7 +182,7 @@ export async function updateTransaction({
   toAccountId: string;
   amount: number;
   currency: string;
-  description: string;
+  description: string | undefined;
   date: string;
 }): Promise<{ error: string } | { success: true }> {
   const session = await auth();
@@ -217,7 +216,7 @@ export async function updateTransaction({
   }
 
   await db.transaction(async (tx) => {
-    await tx.update(transactions).set({ date, description }).where(eq(transactions.id, transactionId));
+    await tx.update(transactions).set({ date, description: description ?? null }).where(eq(transactions.id, transactionId));
     await tx.delete(transactionEntries).where(eq(transactionEntries.transactionId, transactionId));
     await tx.insert(transactionEntries).values([
       {

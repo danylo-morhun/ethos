@@ -44,7 +44,7 @@ function inferTxType(txn: RecentTransaction): TxType {
 }
 
 const baseFields = {
-  description: z.string().min(1, 'Description required'),
+  description: z.string().optional(),
   amount: z.number({ error: 'Amount required' }).positive('Amount must be positive'),
   currency: z.enum(CURRENCIES),
   date: z.string().min(1, 'Date required'),
@@ -106,7 +106,7 @@ export function EditTransactionModal({ transaction, workspaceId, open, onOpenCha
 
   function buildDefaults(type: TxType, txn: RecentTransaction): FormValues {
     const base = {
-      description: txn.description ?? '',
+      description: txn.description ?? undefined,
       amount: Math.abs(Number(txn.amount)),
       currency: toCurrency(txn.currency),
       date: txn.date,
