@@ -1,10 +1,15 @@
 import { and, db, eq, exchangeRates } from "@ethos/db";
 
+const CURRENCY_RE = /^[A-Z]{3}$/;
+
 export async function getExchangeRate(
 	fromCurrency: string,
 	toCurrency: string,
 	date: string,
 ): Promise<number> {
+	if (!CURRENCY_RE.test(fromCurrency) || !CURRENCY_RE.test(toCurrency)) {
+		throw new Error(`Invalid currency code: ${fromCurrency} / ${toCurrency}`);
+	}
 	const cached = await db
 		.select()
 		.from(exchangeRates)
@@ -34,7 +39,7 @@ export async function getExchangeRate(
 	if (!res.ok) throw new Error(`Exchange rate fetch failed: ${res.status}`);
 	const data = (await res.json()) as { rates: Record<string, number> };
 	const rate = data.rates[toCurrency];
-	if (!rate) throw new Error(`No rate for ${fromCurrency}→${toCurrency}`);
+	if (rate == null) throw new Error(`No rate for ${fromCurrency}→${toCurrency}`);
 
 	await db
 		.insert(exchangeRates)
