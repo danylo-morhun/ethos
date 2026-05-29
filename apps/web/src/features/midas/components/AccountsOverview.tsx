@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -156,7 +157,7 @@ export function AccountsOverview({ balances, currency, workspaceId, accounts, pe
                               {isChild && (
                                 <span className="shrink-0 text-muted-foreground/50">↳</span>
                               )}
-                              <span className="text-sm font-medium pr-2 truncate">{b.name}</span>
+                              <Link href={`/midas/accounts/${b.accountId}`} className="text-sm font-medium pr-2 truncate hover:underline underline-offset-2">{b.name}</Link>
                             </span>
 
                             <div className="flex shrink-0 items-center gap-1">

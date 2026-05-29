@@ -1,5 +1,7 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
+import { auth } from '@/auth';
 import { db, workspaces, accounts, eq } from '@ethos/db';
 
 export async function getWorkspace(userId: string) {
@@ -33,4 +35,27 @@ export async function initializeWorkspace(userId: string) {
     .where(eq(workspaces.userId, userId))
     .limit(1);
   return existing;
+}
+
+export async function updateWorkspace(
+  workspaceId: string,
+  data: { name: string },
+): Promise<{ error: string } | { success: true }> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Unauthorized' };
+
+  const [ws] = await db.select().from(workspaces).where(eq(workspaces.id, workspaceId)).limit(1);
+  if (!ws || ws.userId !== session.user.id) return { error: 'Forbidden' };
+
+  const name = data.name.trim();
+  if (!name) return { error: 'Name is required' };
+
+  await db
+    .update(workspaces)
+    .set({ name, updatedAt: new Date() })
+    .where(eq(workspaces.id, workspaceId));
+
+  revalidatePath('/midas');
+  revalidatePath('/midas/settings');
+  return { success: true };
 }

@@ -13,10 +13,12 @@ import { TrendChart } from '@/features/midas/components/TrendChart';
 import { TransactionTable } from '@/features/midas/components/TransactionTable';
 import { DateRangePicker } from '@/features/midas/components/DateRangePicker';
 import { parseLocal } from '@/features/midas/lib/dates';
+import Link from 'next/link';
 import { getMonthlyTrends } from '@/features/midas/actions/trends';
 import { getNetWorthHistory } from '@/features/midas/actions/net-worth';
 import { NetWorthChart } from '@/features/midas/components/NetWorthChart';
 import { IncomeChart } from '@/features/midas/components/IncomeChart';
+import { OnboardingCard } from '@/features/midas/components/OnboardingCard';
 
 function buildPeriodLabel(from: string | undefined, to: string | undefined): string {
   if (!from && !to) return 'All time';
@@ -71,8 +73,11 @@ export default async function MidasPage({
   return (
     <main className="px-4 py-6 sm:px-6">
       <div className="mb-8 flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">{workspace.name}</h1>
+          <Link href="/midas/settings" className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
+            Settings
+          </Link>
         </div>
         <div className="flex items-center gap-3">
           <DateRangePicker from={from} to={to} />
@@ -81,26 +86,36 @@ export default async function MidasPage({
       </div>
 
       <div className="space-y-8">
-        <SummaryCards balances={balances} currency={workspace.baseCurrency} periodLabel={periodLabel} />
-        <AccountsOverview
-          balances={balances}
-          accounts={accounts}
-          currency={workspace.baseCurrency}
-          workspaceId={workspace.id}
-          periodLabel={periodLabel}
-        />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <ExpenseChart balances={balances} currency={workspace.baseCurrency} />
-          <div className="lg:col-span-2">
-            <TrendChart data={trends} currency={workspace.baseCurrency} trendParam={trend} hasDateFilter={!!(from || to)} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <IncomeChart balances={balances} currency={workspace.baseCurrency} />
-          <div className="lg:col-span-2">
-            <NetWorthChart data={netWorthHistory} currency={workspace.baseCurrency} />
-          </div>
-        </div>
+        {accounts.length === 0 ? (
+          <OnboardingCard
+            workspaceId={workspace.id}
+            baseCurrency={workspace.baseCurrency}
+            accountCount={accounts.length}
+          />
+        ) : (
+          <>
+            <SummaryCards balances={balances} currency={workspace.baseCurrency} periodLabel={periodLabel} />
+            <AccountsOverview
+              balances={balances}
+              accounts={accounts}
+              currency={workspace.baseCurrency}
+              workspaceId={workspace.id}
+              periodLabel={periodLabel}
+            />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <ExpenseChart balances={balances} currency={workspace.baseCurrency} />
+              <div className="lg:col-span-2">
+                <TrendChart data={trends} currency={workspace.baseCurrency} trendParam={trend} hasDateFilter={!!(from || to)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <IncomeChart balances={balances} currency={workspace.baseCurrency} />
+              <div className="lg:col-span-2">
+                <NetWorthChart data={netWorthHistory} currency={workspace.baseCurrency} />
+              </div>
+            </div>
+          </>
+        )}
         <TransactionTable
           transactions={recentTransactions.rows}
           currency={workspace.baseCurrency}
