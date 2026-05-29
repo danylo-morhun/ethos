@@ -15,7 +15,7 @@ const COLORS = [
 	"oklch(0.65 0.18 330)",  // pink
 ];
 
-const PIE_SIZE = 128; // explicit px — no ResponsiveContainer stretching
+const PIE_SIZE = 108; // explicit px — no ResponsiveContainer stretching
 
 interface TooltipProps { active?: boolean; payload?: any[]; currency: string }
 
@@ -58,13 +58,13 @@ export function ExpenseBreakdown({ balances, currency }: Props) {
 			<div className="flex gap-3 min-w-max md:min-w-0 md:flex-wrap">
 
 				{/* Pie card */}
-				<Card className="w-44 h-44 shrink-0 p-3 flex flex-col">
+				<Card className="w-44 h-44 shrink-0 p-3 flex flex-col gap-0">
 					<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 						Expenses
 					</p>
 					<div className="flex flex-1 items-center justify-center">
 						{/* Fixed-size PieChart — no ResponsiveContainer, no layout surprises */}
-						<PieChart width={PIE_SIZE} height={PIE_SIZE} style={{ outline: "none" }}>
+						<PieChart width={PIE_SIZE} height={PIE_SIZE} style={{ outline: "none", border: "none" }}>
 							<Tooltip content={(props) => <PieTooltip {...props} currency={currency} />} />
 							<Pie
 								data={expenses}
@@ -72,9 +72,9 @@ export function ExpenseBreakdown({ balances, currency }: Props) {
 								nameKey="name"
 								cx={PIE_SIZE / 2}
 								cy={PIE_SIZE / 2}
-								innerRadius={36}
-								outerRadius={56}
-								strokeWidth={2}
+								innerRadius={28}
+								outerRadius={46}
+								strokeWidth={0}
 							>
 								{expenses.map((entry) => (
 									<Cell key={entry.accountId} fill={entry.fill} />
@@ -84,10 +84,10 @@ export function ExpenseBreakdown({ balances, currency }: Props) {
 										if (!viewBox || !("cx" in viewBox) || !("cy" in viewBox)) return null;
 										return (
 											<text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-												<tspan x={viewBox.cx} dy={-5} className="fill-foreground text-[11px] font-bold">
+												<tspan x={viewBox.cx} dy={-4} className="fill-foreground text-[10px] font-bold">
 													{formatCurrency(total, currency)}
 												</tspan>
-												<tspan x={viewBox.cx} dy={14} className="fill-muted-foreground text-[9px]">
+												<tspan x={viewBox.cx} dy={12} className="fill-muted-foreground text-[8px]">
 													total
 												</tspan>
 											</text>
