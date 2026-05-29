@@ -27,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   Button,
+  Input,
 } from '@ethos/ui';
 import { deleteTransaction } from '@/features/midas/actions/transactions';
 import type { RecentTransaction } from '@/features/midas/actions/transactions';
@@ -47,17 +48,20 @@ interface Props {
   workspaceId: string;
   page: number;
   hasMore: boolean;
+  total: number;
   accountFilterId?: string;
   accountFilterName?: string;
+  searchQuery?: string;
 }
 
-export function TransactionTable({ transactions, currency, workspaceId, page, hasMore, accountFilterId, accountFilterName }: Props) {
+export function TransactionTable({ transactions, currency, workspaceId, page, hasMore, total, accountFilterId, accountFilterName, searchQuery }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<RecentTransaction | null>(null);
+  const [localQuery, setLocalQuery] = useState(searchQuery ?? '');
 
   function navigate(newPage: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -80,6 +84,13 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
     router.push(`${pathname}?${params.toString()}`);
   }
 
+  function submitSearch(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value.trim()) params.set('q', value.trim()); else params.delete('q');
+    params.delete('page');
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
   function handleDelete(id: string) {
     startTransition(async () => {
       const result = await deleteTransaction(id);
@@ -93,10 +104,12 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
     });
   }
 
+  const totalPages = Math.ceil(total / 10);
+
   return (
     <section>
-      <div className="mb-4 flex items-center gap-3">
-        <h2 className="text-lg font-semibold">Recent Transactions</h2>
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <h2 className="text-lg font-semibold">Transactions</h2>
         {accountFilterId && accountFilterName && (
           <span className="flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium">
             {accountFilterName}
@@ -109,6 +122,16 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
             </button>
           </span>
         )}
+        <div className="ml-auto">
+          <Input
+            placeholder="Search transactions…"
+            className="h-8 w-52 text-sm"
+            value={localQuery}
+            onChange={(e) => setLocalQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') submitSearch(localQuery); }}
+            onBlur={() => submitSearch(localQuery)}
+          />
+        </div>
       </div>
       <div className="rounded-lg border">
         <Table>
@@ -212,21 +235,13 @@ export function TransactionTable({ transactions, currency, workspaceId, page, ha
       </div>
       {(page > 0 || hasMore) && (
         <div className="mt-4 flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === 0}
-            onClick={() => navigate(page - 1)}
-          >
+          <Button variant="outline" size="sm" disabled={page === 0} onClick={() => navigate(page - 1)}>
             Previous
           </Button>
-          <span className="text-sm text-muted-foreground">Page {page + 1}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!hasMore}
-            onClick={() => navigate(page + 1)}
-          >
+          <span className="text-sm text-muted-foreground">
+            Page {page + 1}{totalPages > 1 ? ` of ${totalPages}` : ''} · {total} transaction{total !== 1 ? 's' : ''}
+          </span>
+          <Button variant="outline" size="sm" disabled={!hasMore} onClick={() => navigate(page + 1)}>
             Next
           </Button>
         </div>

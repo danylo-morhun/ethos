@@ -36,12 +36,12 @@ function buildPeriodLabel(from: string | undefined, to: string | undefined): str
 export default async function MidasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; page?: string; account?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; page?: string; account?: string; q?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/');
 
-  const { from: rawFrom, to: rawTo, page: rawPage, account: rawAccount } = await searchParams;
+  const { from: rawFrom, to: rawTo, page: rawPage, account: rawAccount, q: rawQ } = await searchParams;
   const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const rawValidFrom = rawFrom && ISO_DATE.test(rawFrom) ? rawFrom : undefined;
@@ -50,6 +50,7 @@ export default async function MidasPage({
   const to        = rawValidFrom && rawValidTo && rawValidFrom > rawValidTo ? rawValidFrom : rawValidTo;
   const page      = rawPage    && /^\d+$/.test(rawPage)     ? Math.max(0, parseInt(rawPage, 10)) : 0;
   const accountId = rawAccount && UUID.test(rawAccount)     ? rawAccount : undefined;
+  const q         = rawQ && rawQ.trim().length > 0          ? rawQ.trim() : undefined;
 
   const workspace = await initializeWorkspace(session.user.id);
   const periodLabel = buildPeriodLabel(from, to);
@@ -57,7 +58,7 @@ export default async function MidasPage({
   const [balances, accounts, recentTransactions, trends] = await Promise.all([
     getBalances(workspace.id, from, to),
     getAccounts(workspace.id),
-    getRecentTransactions(workspace.id, from, to, page, accountId),
+    getRecentTransactions(workspace.id, from, to, page, accountId, q),
     getMonthlyTrends(workspace.id, from, to),
   ]);
 
@@ -94,8 +95,10 @@ export default async function MidasPage({
           workspaceId={workspace.id}
           page={page}
           hasMore={recentTransactions.hasMore}
+          total={recentTransactions.total}
           accountFilterId={accountId}
           accountFilterName={accountId ? accounts.find((a) => a.id === accountId)?.name : undefined}
+          searchQuery={q}
         />
       </div>
     </main>

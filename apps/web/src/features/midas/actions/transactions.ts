@@ -15,6 +15,8 @@ import {
   gte,
   lte,
   inArray,
+  ilike,
+  count,
 } from '@ethos/db';
 
 export type RecentTransaction = {
@@ -212,7 +214,8 @@ export async function getRecentTransactions(
   to: string | undefined,
   page = 0,
   accountId?: string,
-): Promise<{ rows: RecentTransaction[]; hasMore: boolean }> {
+  q?: string,
+): Promise<{ rows: RecentTransaction[]; hasMore: boolean; total: number }> {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
 
@@ -230,28 +233,31 @@ export async function getRecentTransactions(
         .where(eq(transactionEntries.accountId, accountId))
     : undefined;
 
-  const rows = await db.query.transactions.findMany({
-    where: and(
-      eq(transactions.workspaceId, workspaceId),
-      from ? gte(transactions.date, from) : undefined,
-      to ? lte(transactions.date, to) : undefined,
-      accountSubquery ? inArray(transactions.id, accountSubquery) : undefined,
-    ),
-    orderBy: [desc(transactions.date), desc(transactions.createdAt)],
-    limit: TRANSACTIONS_PAGE_SIZE + 1,
-    offset: page * TRANSACTIONS_PAGE_SIZE,
-    with: {
-      entries: {
-        with: { account: true },
-      },
-    },
-  });
+  const whereClause = and(
+    eq(transactions.workspaceId, workspaceId),
+    from ? gte(transactions.date, from) : undefined,
+    to ? lte(transactions.date, to) : undefined,
+    q ? ilike(transactions.description, `%${q}%`) : undefined,
+    accountSubquery ? inArray(transactions.id, accountSubquery) : undefined,
+  );
+
+  const [rows, [{ total }]] = await Promise.all([
+    db.query.transactions.findMany({
+      where: whereClause,
+      orderBy: [desc(transactions.date), desc(transactions.createdAt)],
+      limit: TRANSACTIONS_PAGE_SIZE + 1,
+      offset: page * TRANSACTIONS_PAGE_SIZE,
+      with: { entries: { with: { account: true } } },
+    }),
+    db.select({ total: count() }).from(transactions).where(whereClause),
+  ]);
 
   const hasMore = rows.length > TRANSACTIONS_PAGE_SIZE;
   const page_rows = hasMore ? rows.slice(0, TRANSACTIONS_PAGE_SIZE) : rows;
 
   return {
     hasMore,
+    total,
     rows: page_rows.map((txn) => {
       const fromEntry = txn.entries.find((e) => Number(e.baseAmount) < 0);
       const toEntry = txn.entries.find((e) => Number(e.baseAmount) > 0);
