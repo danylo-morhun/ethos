@@ -1,6 +1,7 @@
 'use server';
 
-import { db, accounts, transactionEntries, transactions, eq, and, sql } from '@ethos/db';
+import { auth } from '@/auth';
+import { db, accounts, transactionEntries, transactions, workspaces, eq, and, sql } from '@ethos/db';
 
 export type AccountBalance = {
   accountId: string;
@@ -15,6 +16,17 @@ export async function getBalances(
   from: string | undefined,
   to: string | undefined,
 ): Promise<AccountBalance[]> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
+  const [ws] = await db
+    .select({ userId: workspaces.userId })
+    .from(workspaces)
+    .where(eq(workspaces.id, workspaceId))
+    .limit(1);
+
+  if (!ws || ws.userId !== session.user.id) throw new Error('Forbidden');
+
   const assetLiabDateClause = to
     ? sql`and (${transactions.date} is null or ${transactions.date} <= ${to})`
     : sql``;

@@ -1,6 +1,7 @@
 'use server';
 
-import { db, accounts, transactionEntries, transactions, eq, and, sql, gte, inArray } from '@ethos/db';
+import { auth } from '@/auth';
+import { db, accounts, transactionEntries, transactions, workspaces, eq, and, sql, gte, inArray } from '@ethos/db';
 
 export type MonthlyTrend = {
   month: string; // YYYY-MM
@@ -12,6 +13,17 @@ export async function getMonthlyTrends(
   workspaceId: string,
   months = 6,
 ): Promise<MonthlyTrend[]> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
+  const [ws] = await db
+    .select({ userId: workspaces.userId })
+    .from(workspaces)
+    .where(eq(workspaces.id, workspaceId))
+    .limit(1);
+
+  if (!ws || ws.userId !== session.user.id) throw new Error('Forbidden');
+
   const cutoff = new Date();
   cutoff.setDate(1);
   cutoff.setMonth(cutoff.getMonth() - (months - 1));
