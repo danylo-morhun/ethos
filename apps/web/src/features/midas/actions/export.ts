@@ -56,8 +56,12 @@ export async function exportTransactionsCsv(
 	const lines = ["Date,Description,From,To,Amount,Currency,Base Amount"];
 
 	for (const txn of rows) {
-		const fromEntry = txn.entries.find((e) => Number(e.baseAmount) < 0);
-		const toEntry = txn.entries.find((e) => Number(e.baseAmount) > 0);
+		const fromEntries = txn.entries.filter((e) => Number(e.baseAmount) < 0);
+		const toEntries = txn.entries.filter((e) => Number(e.baseAmount) > 0);
+		const fromEntry = fromEntries[0];
+		const toEntry = toEntries[0];
+		const totalAmount = toEntries.reduce((s, e) => s + Number(e.amount), 0);
+		const totalBase = toEntries.reduce((s, e) => s + Number(e.baseAmount), 0);
 
 		const cell = (v: string | null | undefined) => `"${(v ?? "").replace(/"/g, '""')}"`;
 
@@ -65,11 +69,15 @@ export async function exportTransactionsCsv(
 			[
 				txn.date,
 				cell(txn.description),
-				cell(fromEntry?.account?.name),
-				cell(toEntry?.account?.name),
-				toEntry?.amount ?? "0",
+				fromEntries.length > 1
+					? `"Split (${fromEntries.length})"`
+					: cell(fromEntry?.account?.name),
+				toEntries.length > 1
+					? `"Split (${toEntries.length})"`
+					: cell(toEntry?.account?.name),
+				totalAmount.toFixed(2),
 				toEntry?.currency ?? "",
-				toEntry?.baseAmount ?? "0",
+				totalBase.toFixed(4),
 			].join(","),
 		);
 	}
