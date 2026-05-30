@@ -1,6 +1,9 @@
 import { auth } from "@/auth";
 import { getWorkspace } from "@/features/midas/actions/workspace";
+import { getCards } from "@/features/tasso/actions/cards";
+import { getColumns } from "@/features/tasso/actions/columns";
 import { getProjects } from "@/features/tasso/actions/projects";
+import { KanbanBoard } from "@/features/tasso/components/KanbanBoard";
 import { notFound, redirect } from "next/navigation";
 
 export default async function TassoProjectPage({
@@ -20,12 +23,16 @@ export default async function TassoProjectPage({
 
 	if (!project) notFound();
 
+	const [columns, cards] = await Promise.all([
+		getColumns(projectId),
+		getCards(projectId),
+	]);
+
 	return (
-		<div className="flex h-full items-center justify-center">
-			<div className="text-center space-y-2">
-				<p className="text-lg font-medium">{project.name}</p>
-				<p className="text-sm text-muted-foreground">Board coming in Phase 2.</p>
-			</div>
-		</div>
+		<KanbanBoard
+			projectId={projectId}
+			columns={columns}
+			cards={cards}
+		/>
 	);
 }
