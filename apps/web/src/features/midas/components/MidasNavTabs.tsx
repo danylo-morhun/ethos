@@ -86,7 +86,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 				<div className="mx-3 mb-3">
 					<div className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/85 px-2 py-1.5 shadow-lg backdrop-blur-xl">
 						{/* Left: Expenses, Accounts */}
-						<div className="flex items-center justify-around">
+						<div className="flex flex-1 items-center justify-around">
 							{TABS.slice(0, 2).map(({ value, label, icon }) => (
 								<button
 									key={value}
@@ -101,7 +101,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 						</div>
 
 						{/* Center: FAB */}
-						<div className="flex items-center justify-center">
+						<div className="flex shrink-0 items-center justify-center px-1">
 							<AddTransactionModal
 								workspaceId={workspaceId}
 								baseCurrency={baseCurrency}
@@ -117,7 +117,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 						</div>
 
 						{/* Right: History, Settings */}
-						<div className="flex items-center justify-around">
+						<div className="flex flex-1 items-center justify-around">
 							<button
 								type="button"
 								onClick={() => handleTabClick("transactions")}
