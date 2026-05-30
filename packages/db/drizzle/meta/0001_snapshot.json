@@ -1,6 +1,6 @@
 {
-	"id": "0a6f472d-ee98-40ee-aa54-d6a055c7be88",
-	"prevId": "00000000-0000-0000-0000-000000000000",
+	"id": "5e8370a7-c067-409f-809c-19ddab1af242",
+	"prevId": "0a6f472d-ee98-40ee-aa54-d6a055c7be88",
 	"version": "7",
 	"dialect": "postgresql",
 	"tables": {
@@ -169,6 +169,12 @@
 				},
 				"image": {
 					"name": "image",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"password_hash": {
+					"name": "password_hash",
 					"type": "text",
 					"primaryKey": false,
 					"notNull": false
@@ -415,6 +421,238 @@
 			"checkConstraints": {},
 			"isRLSEnabled": false
 		},
+		"public.recurring_transactions": {
+			"name": "recurring_transactions",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"workspace_id": {
+					"name": "workspace_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"from_account_id": {
+					"name": "from_account_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"to_account_id": {
+					"name": "to_account_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"amount": {
+					"name": "amount",
+					"type": "numeric(19, 4)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"currency": {
+					"name": "currency",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"frequency": {
+					"name": "frequency",
+					"type": "frequency",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"next_date": {
+					"name": "next_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"end_date": {
+					"name": "end_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"is_active": {
+					"name": "is_active",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"recurring_transactions_workspace_id_idx": {
+					"name": "recurring_transactions_workspace_id_idx",
+					"columns": [
+						{
+							"expression": "workspace_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"recurring_transactions_workspace_id_workspaces_id_fk": {
+					"name": "recurring_transactions_workspace_id_workspaces_id_fk",
+					"tableFrom": "recurring_transactions",
+					"tableTo": "workspaces",
+					"columnsFrom": ["workspace_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"recurring_transactions_from_account_id_accounts_id_fk": {
+					"name": "recurring_transactions_from_account_id_accounts_id_fk",
+					"tableFrom": "recurring_transactions",
+					"tableTo": "accounts",
+					"columnsFrom": ["from_account_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"recurring_transactions_to_account_id_accounts_id_fk": {
+					"name": "recurring_transactions_to_account_id_accounts_id_fk",
+					"tableFrom": "recurring_transactions",
+					"tableTo": "accounts",
+					"columnsFrom": ["to_account_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.tags": {
+			"name": "tags",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"workspace_id": {
+					"name": "workspace_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"color": {
+					"name": "color",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"tags_workspace_id_idx": {
+					"name": "tags_workspace_id_idx",
+					"columns": [
+						{
+							"expression": "workspace_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"tags_workspace_name_idx": {
+					"name": "tags_workspace_name_idx",
+					"columns": [
+						{
+							"expression": "workspace_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "name",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": true,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"tags_workspace_id_workspaces_id_fk": {
+					"name": "tags_workspace_id_workspaces_id_fk",
+					"tableFrom": "tags",
+					"tableTo": "workspaces",
+					"columnsFrom": ["workspace_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
 		"public.transaction_entries": {
 			"name": "transaction_entries",
 			"schema": "",
@@ -517,6 +755,55 @@
 				}
 			},
 			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.transaction_tags": {
+			"name": "transaction_tags",
+			"schema": "",
+			"columns": {
+				"transaction_id": {
+					"name": "transaction_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"tag_id": {
+					"name": "tag_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"transaction_tags_transaction_id_transactions_id_fk": {
+					"name": "transaction_tags_transaction_id_transactions_id_fk",
+					"tableFrom": "transaction_tags",
+					"tableTo": "transactions",
+					"columnsFrom": ["transaction_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"transaction_tags_tag_id_tags_id_fk": {
+					"name": "transaction_tags_tag_id_tags_id_fk",
+					"tableFrom": "transaction_tags",
+					"tableTo": "tags",
+					"columnsFrom": ["tag_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {
+				"transaction_tags_transaction_id_tag_id_pk": {
+					"name": "transaction_tags_transaction_id_tag_id_pk",
+					"columns": ["transaction_id", "tag_id"]
+				}
+			},
 			"uniqueConstraints": {},
 			"policies": {},
 			"checkConstraints": {},
@@ -668,6 +955,11 @@
 			"name": "account_type",
 			"schema": "public",
 			"values": ["ASSET", "LIABILITY", "INCOME", "EXPENSE"]
+		},
+		"public.frequency": {
+			"name": "frequency",
+			"schema": "public",
+			"values": ["daily", "weekly", "monthly", "yearly"]
 		}
 	},
 	"schemas": {},
