@@ -92,7 +92,7 @@ export function AppHeader({ workspaceId, baseCurrency }: Props) {
 						</>
 					)}
 					<ThemeToggle />
-					<Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+					<Button variant="ghost" size="icon" className="hidden h-8 w-8 md:inline-flex" asChild>
 						<Link href="/settings" aria-label="Settings">
 							<HugeiconsIcon icon={Settings01Icon} className="h-4 w-4" />
 						</Link>

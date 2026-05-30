@@ -10,7 +10,6 @@ import { AccountsOverview } from "@/features/midas/components/AccountsOverview";
 import { ExpenseBreakdown } from "@/features/midas/components/ExpenseBreakdown";
 import { ExpenseCategoryList } from "@/features/midas/components/ExpenseCategoryList";
 import type { MidasTab } from "@/features/midas/components/MidasNavTabs";
-import { MobileAddFab } from "@/features/midas/components/MobileAddFab";
 import { OnboardingCard } from "@/features/midas/components/OnboardingCard";
 import { TransactionTable } from "@/features/midas/components/TransactionTable";
 import { TrendChart } from "@/features/midas/components/TrendChart";
@@ -152,7 +151,6 @@ export default async function MidasPage({
 						/>
 					</div>
 				)}
-				<MobileAddFab workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
 			</main>
 		);
 	}
@@ -175,7 +173,6 @@ export default async function MidasPage({
 						periodLabel="All time"
 					/>
 				</div>
-				<MobileAddFab workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
 			</main>
 		);
 	}
@@ -208,7 +205,6 @@ export default async function MidasPage({
 					sortDir={sortDir}
 				/>
 			</div>
-			<MobileAddFab workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
 		</main>
 	);
 }
