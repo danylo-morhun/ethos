@@ -51,19 +51,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		}),
 	],
 	callbacks: {
-		async jwt({ token, user }) {
+		jwt({ token, user }) {
 			if (user?.id) token.sub = user.id;
-			if (token.sub) {
-				const dbUser = await db.query.authUsers.findFirst({
-					where: eq(authUsers.id, token.sub),
-					columns: { id: true, forceSignOutAt: true },
-				});
-				if (!dbUser) return null;
-				if (dbUser.forceSignOutAt) {
-					const iat = typeof token.iat === "number" ? token.iat * 1000 : 0;
-					if (iat < dbUser.forceSignOutAt.getTime()) return null;
-				}
-			}
 			return token;
 		},
 		session({ session, token }) {
