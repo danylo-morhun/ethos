@@ -86,7 +86,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 				<div className="mx-3 mb-3">
 					{/* FAB — exactly half above the bar (top-0 + -translate-y-1/2) */}
 					<div className="relative">
-						<div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
+						<div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-[35%]">
 							<AddTransactionModal
 								workspaceId={workspaceId}
 								baseCurrency={baseCurrency}
