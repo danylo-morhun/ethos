@@ -50,6 +50,7 @@ export async function exportTransactionsCsv(
 			accountSubquery ? inArray(transactions.id, accountSubquery) : undefined,
 		),
 		orderBy: [desc(transactions.date), desc(transactions.createdAt)],
+		limit: 10_000,
 		with: { entries: { with: { account: true } } },
 	});
 
