@@ -1,20 +1,27 @@
 {
-	"version": "7",
-	"dialect": "postgresql",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "7",
-			"when": 1780069712561,
-			"tag": "0000_nifty_grey_gargoyle",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1780144770523,
-			"tag": "0001_messy_lester",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1780069712561,
+      "tag": "0000_nifty_grey_gargoyle",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780144770523,
+      "tag": "0001_messy_lester",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780146762622,
+      "tag": "0002_uneven_kulan_gath",
+      "breakpoints": true
+    }
+  ]
 }

@@ -7,6 +7,8 @@ export const authUsers = pgTable("auth_users", {
 	emailVerified: timestamp("email_verified", { mode: "date" }),
 	image: text("image"),
 	passwordHash: text("password_hash"),
+	pendingEmail: text("pending_email"),
+	forceSignOutAt: timestamp("force_sign_out_at", { mode: "date" }),
 });
 
 export const authAccounts = pgTable(
