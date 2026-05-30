@@ -1,5 +1,6 @@
 "use client";
 
+import { PageLoader } from "@/components/PageLoader";
 import { AddTransactionModal } from "@/features/midas/components/AddTransactionModal";
 import { Button, cn } from "@ethos/ui";
 import {
@@ -64,7 +65,6 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 	function handleTabClick(tab: MidasTab) {
 		if (tab === displayTab && !isSettings) return;
 		setPendingTab(tab);
-		window.dispatchEvent(new CustomEvent("ethos:navigate-start"));
 		startTransition(() => {
 			router.push(tabHref(tab));
 		});
@@ -80,6 +80,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 
 	return (
 		<>
+			{isPending && <PageLoader overlay />}
 			<nav
 				className="fixed inset-x-0 bottom-0 z-40 md:hidden"
 				style={{ paddingBottom: "env(safe-area-inset-bottom)" }}

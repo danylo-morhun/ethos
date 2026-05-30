@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 type State = "idle" | "running" | "done";
@@ -8,12 +7,8 @@ type State = "idle" | "running" | "done";
 export function NavigationProgress() {
 	const [state, setState] = useState<State>("idle");
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const isNavRef = useRef(false); // true = nav-type (completes on path change), false = refresh-type
-	const pathname = usePathname();
-	const searchParams = useSearchParams();
 
-	function start(nav: boolean) {
-		isNavRef.current = nav;
+	function start() {
 		if (timerRef.current) clearTimeout(timerRef.current);
 		setState("running");
 	}
@@ -24,45 +19,22 @@ export function NavigationProgress() {
 		timerRef.current = setTimeout(() => setState("idle"), 400);
 	}
 
-	// Link clicks + programmatic navigation events
+	// Mutation progress only (data refreshes, not navigation)
+	// biome-ignore lint/correctness/useExhaustiveDependencies: start/complete are stable imperative helpers
 	useEffect(() => {
-		function handleClick(e: MouseEvent) {
-			const anchor = (e.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
-			if (!anchor) return;
-			const href = anchor.getAttribute("href");
-			if (!href) return;
-			if (href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("#")) return;
-			if (anchor.hasAttribute("download") || anchor.target === "_blank") return;
-			start(true);
-		}
-		function handleNavigate() {
-			start(true);
-		}
 		function handleRefreshStart() {
-			start(false);
+			start();
 		}
 		function handleRefreshEnd() {
 			complete();
 		}
-		document.addEventListener("click", handleClick);
-		window.addEventListener("ethos:navigate-start", handleNavigate);
 		window.addEventListener("ethos:refresh-start", handleRefreshStart);
 		window.addEventListener("ethos:refresh-end", handleRefreshEnd);
 		return () => {
-			document.removeEventListener("click", handleClick);
-			window.removeEventListener("ethos:navigate-start", handleNavigate);
 			window.removeEventListener("ethos:refresh-start", handleRefreshStart);
 			window.removeEventListener("ethos:refresh-end", handleRefreshEnd);
 		};
 	}, []);
-
-	// Complete nav-type progress when pathname/searchParams change
-	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional — path change = nav done
-	useEffect(() => {
-		if (state === "running" && isNavRef.current) {
-			complete();
-		}
-	}, [pathname, searchParams]);
 
 	if (state === "idle") return null;
 
