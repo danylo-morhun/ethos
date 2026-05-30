@@ -1,13 +1,18 @@
 "use client";
 
-import { PageLoader } from "@/components/PageLoader";
 import { AddTransactionModal } from "@/features/midas/components/AddTransactionModal";
 import { Button, cn } from "@ethos/ui";
-import { Add01Icon, Chart01Icon, Clock01Icon, Settings01Icon, Wallet01Icon } from "@hugeicons/core-free-icons";
+import {
+	Add01Icon,
+	Chart01Icon,
+	Clock01Icon,
+	Settings01Icon,
+	Wallet01Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 
 export type MidasTab = "overview" | "accounts" | "transactions";
 
@@ -59,6 +64,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 	function handleTabClick(tab: MidasTab) {
 		if (tab === displayTab && !isSettings) return;
 		setPendingTab(tab);
+		window.dispatchEvent(new CustomEvent("ethos:navigate-start"));
 		startTransition(() => {
 			router.push(tabHref(tab));
 		});
@@ -74,8 +80,6 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 
 	return (
 		<>
-			{isPending && <PageLoader overlay />}
-
 			<nav
 				className="fixed inset-x-0 bottom-0 z-40 md:hidden"
 				style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -89,7 +93,10 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 									key={value}
 									type="button"
 									onClick={() => handleTabClick(value)}
-									className={tabCls(displayTab === value && !isSettings, isPending && pendingTab === value)}
+									className={tabCls(
+										displayTab === value && !isSettings,
+										isPending && pendingTab === value,
+									)}
 								>
 									<HugeiconsIcon icon={icon} className="h-5 w-5" />
 									<span className="text-[10px] font-medium leading-none">{label}</span>
@@ -118,7 +125,10 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 							<button
 								type="button"
 								onClick={() => handleTabClick("transactions")}
-								className={tabCls(displayTab === "transactions" && !isSettings, isPending && pendingTab === "transactions")}
+								className={tabCls(
+									displayTab === "transactions" && !isSettings,
+									isPending && pendingTab === "transactions",
+								)}
 							>
 								<HugeiconsIcon icon={Clock01Icon} className="h-5 w-5" />
 								<span className="text-[10px] font-medium leading-none">History</span>
