@@ -22,8 +22,7 @@ export const metadata: Metadata = {
 		title: "ethos",
 	},
 	icons: {
-		icon: [{ url: "/icon", type: "image/png", sizes: "32x32" }],
-		shortcut: "/icon",
+		icon: [{ url: "/icons/favicon.svg?v=3", type: "image/svg+xml" }],
 		apple: "/icons/apple-touch-icon.png",
 	},
 };
