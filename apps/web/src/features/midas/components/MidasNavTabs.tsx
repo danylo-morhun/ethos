@@ -1,5 +1,6 @@
 "use client";
 
+import { PageLoader } from "@/components/PageLoader";
 import { AddTransactionModal } from "@/features/midas/components/AddTransactionModal";
 import { Button, cn } from "@ethos/ui";
 import { Add01Icon, Chart01Icon, Clock01Icon, Settings01Icon, Wallet01Icon } from "@hugeicons/core-free-icons";
@@ -73,11 +74,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 
 	return (
 		<>
-			{isPending && (
-				<div className="fixed inset-x-0 top-14 z-50 h-0.5 overflow-hidden md:hidden">
-					<div className="h-full w-1/2 animate-[nav-loader_1.2s_ease-in-out_infinite] rounded-full bg-primary" />
-				</div>
-			)}
+			{isPending && <PageLoader overlay />}
 
 			<nav
 				className="fixed inset-x-0 bottom-0 z-40 md:hidden"
