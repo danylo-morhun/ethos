@@ -65,9 +65,9 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 
 	function tabCls(active: boolean, loading = false) {
 		return cn(
-			"flex flex-col items-center gap-0.5 rounded-lg px-2 py-1 transition-colors",
+			"flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 transition-all duration-200",
 			active ? "text-primary" : "text-muted-foreground",
-			loading && "opacity-40",
+			loading && "opacity-50",
 		);
 	}
 
@@ -95,7 +95,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 									className={tabCls(displayTab === value && !isSettings, isPending && pendingTab === value)}
 								>
 									<HugeiconsIcon icon={icon} className="h-5 w-5" />
-									<span className="text-[10px] font-medium">{label}</span>
+									<span className="text-[10px] font-medium leading-none">{label}</span>
 								</button>
 							))}
 						</div>
@@ -124,11 +124,11 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 								className={tabCls(displayTab === "transactions" && !isSettings, isPending && pendingTab === "transactions")}
 							>
 								<HugeiconsIcon icon={Clock01Icon} className="h-5 w-5" />
-								<span className="text-[10px] font-medium">History</span>
+								<span className="text-[10px] font-medium leading-none">History</span>
 							</button>
 							<Link href="/settings" className={tabCls(isSettings)}>
 								<HugeiconsIcon icon={Settings01Icon} className="h-5 w-5" />
-								<span className="text-[10px] font-medium">Settings</span>
+								<span className="text-[10px] font-medium leading-none">Settings</span>
 							</Link>
 						</div>
 					</div>
