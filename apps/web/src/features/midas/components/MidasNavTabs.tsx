@@ -2,7 +2,7 @@
 
 import { AddTransactionModal } from "@/features/midas/components/AddTransactionModal";
 import { Button, cn } from "@ethos/ui";
-import { Add01Icon, BankIcon, BanknoteIcon, Chart01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Chart01Icon, Clock01Icon, Settings01Icon, Wallet01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -10,14 +10,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export type MidasTab = "overview" | "accounts" | "transactions";
 
-const NOTCH_R = 28; // matches FAB h-12/2 = 24px + 4px gap
-const CORNER_R = 14; // ~rounded-xl
+// FAB h-14 = 56px → radius 28px + 4px gap = 32
+const NOTCH_R = 32;
+const CORNER_R = 14;
 
-/** SVG bar shape with concave notch cut from top-center */
 function NavShape({ width, height }: { width: number; height: number }) {
 	if (!width || !height) return null;
 	const cx = width / 2;
-	// Smooth transition bezier radius at the notch entrance/exit
 	const br = 8;
 	const d = [
 		`M ${CORNER_R} 0`,
@@ -37,19 +36,17 @@ function NavShape({ width, height }: { width: number; height: number }) {
 	].join(" ");
 
 	return (
-		<svg
-			className="pointer-events-none absolute inset-0"
-			width={width}
-			height={height}
-			aria-hidden
-		>
-			<path
-				d={d}
-				style={{ fill: "var(--background)", stroke: "var(--border)", strokeWidth: 1 }}
-			/>
+		<svg className="pointer-events-none absolute inset-0" width={width} height={height} aria-hidden>
+			<path d={d} style={{ fill: "var(--background)", stroke: "var(--border)", strokeWidth: 1 }} />
 		</svg>
 	);
 }
+
+const TABS: { value: MidasTab; label: string; icon: typeof Chart01Icon }[] = [
+	{ value: "overview", label: "Expenses", icon: Chart01Icon },
+	{ value: "accounts", label: "Accounts", icon: Wallet01Icon },
+	{ value: "transactions", label: "History", icon: Clock01Icon },
+];
 
 interface Props {
 	workspaceId: string;
@@ -114,9 +111,9 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 		});
 	}
 
-	function iconBtn(active: boolean, loading = false) {
+	function tabCls(active: boolean, loading = false) {
 		return cn(
-			"flex h-10 w-10 items-center justify-center rounded-full transition-colors",
+			"flex flex-col items-center gap-0.5 rounded-lg px-2 py-1 transition-colors",
 			active ? "text-primary" : "text-muted-foreground",
 			loading && "opacity-40",
 		);
@@ -124,7 +121,6 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 
 	return (
 		<>
-			{/* Progress bar */}
 			{isPending && (
 				<div className="fixed inset-x-0 top-14 z-50 h-0.5 overflow-hidden md:hidden">
 					<div className="h-full w-1/2 animate-[nav-loader_1.2s_ease-in-out_infinite] rounded-full bg-primary" />
@@ -136,16 +132,13 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 				style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
 			>
 				<div className="mx-3 mb-3">
-					{/* ref wrapper — SVG measures and fills this exact box */}
 					<div ref={barRef} className="relative">
-						{/* SVG notch shape — behind everything */}
 						<NavShape width={dims.width} height={dims.height} />
-						{/* Fallback border while SVG measures (first render) */}
 						{!dims.width && (
 							<div className="absolute inset-0 rounded-xl border border-border bg-background" />
 						)}
 
-						{/* FAB — center pinned to bar's top edge */}
+						{/* FAB h-14 = 56px, center at bar top edge */}
 						<div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
 							<AddTransactionModal
 								workspaceId={workspaceId}
@@ -153,46 +146,56 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 								trigger={
 									<Button
 										size="icon"
-										className="h-12 w-12 rounded-full shadow-xl transition-transform active:scale-95"
+										className="h-14 w-14 rounded-full shadow-xl transition-transform active:scale-95"
 									>
-										<HugeiconsIcon icon={Add01Icon} className="h-5 w-5" />
+										<HugeiconsIcon icon={Add01Icon} className="h-6 w-6" />
 									</Button>
 								}
 							/>
 						</div>
 
-						{/* Icon grid — sits on top of SVG */}
-						<div className="relative grid grid-cols-[1fr_4rem_1fr] items-center px-3 py-3">
+						<div className="relative grid grid-cols-[1fr_4.5rem_1fr] items-center px-4 py-3">
+							{/* Left: Expenses, Accounts */}
 							<div className="flex items-center justify-around">
-								<button
-									type="button"
-									onClick={() => handleTabClick("overview")}
-									className={iconBtn(displayTab === "overview" && !isSettings, isPending && pendingTab === "overview")}
-								>
-									<HugeiconsIcon icon={Chart01Icon} className="h-5 w-5" />
-								</button>
-								<button
-									type="button"
-									onClick={() => handleTabClick("accounts")}
-									className={iconBtn(displayTab === "accounts" && !isSettings, isPending && pendingTab === "accounts")}
-								>
-									<HugeiconsIcon icon={BankIcon} className="h-5 w-5" />
-								</button>
+								{TABS.slice(0, 2).map(({ value, label, icon }) => {
+									const active = displayTab === value && !isSettings;
+									const loading = isPending && pendingTab === value;
+									return (
+										<button
+											key={value}
+											type="button"
+											onClick={() => handleTabClick(value)}
+											className={tabCls(active, loading)}
+										>
+											<HugeiconsIcon icon={icon} className="h-5 w-5" />
+											<span className="text-[10px] font-medium">{label}</span>
+										</button>
+									);
+								})}
 							</div>
 
-							{/* Center spacer — FAB sits here via absolute */}
 							<div aria-hidden />
 
+							{/* Right: History, Settings */}
 							<div className="flex items-center justify-around">
-								<button
-									type="button"
-									onClick={() => handleTabClick("transactions")}
-									className={iconBtn(displayTab === "transactions" && !isSettings, isPending && pendingTab === "transactions")}
-								>
-									<HugeiconsIcon icon={BanknoteIcon} className="h-5 w-5" />
-								</button>
-								<Link href="/settings" className={iconBtn(isSettings)}>
+								{(() => {
+									const { value, label, icon } = TABS[2];
+									const active = displayTab === value && !isSettings;
+									const loading = isPending && pendingTab === value;
+									return (
+										<button
+											type="button"
+											onClick={() => handleTabClick(value)}
+											className={tabCls(active, loading)}
+										>
+											<HugeiconsIcon icon={icon} className="h-5 w-5" />
+											<span className="text-[10px] font-medium">{label}</span>
+										</button>
+									);
+								})()}
+								<Link href="/settings" className={tabCls(isSettings)}>
 									<HugeiconsIcon icon={Settings01Icon} className="h-5 w-5" />
+									<span className="text-[10px] font-medium">Settings</span>
 								</Link>
 							</div>
 						</div>
