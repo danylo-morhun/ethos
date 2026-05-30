@@ -149,7 +149,7 @@ export function AppSidebar({ workspaceName, user }: Props) {
 								</SidebarMenuButton>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
-								className="w-56"
+								className="w-[var(--radix-dropdown-menu-trigger-width)]"
 								side="top"
 								align="start"
 								sideOffset={8}
