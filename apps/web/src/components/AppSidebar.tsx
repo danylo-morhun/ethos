@@ -135,9 +135,7 @@ export function AppSidebar({ workspaceName, user }: Props) {
 								>
 									<Avatar src={user?.image} name={user?.name} size="sm" />
 									<div className="flex min-w-0 flex-col text-left leading-none">
-										<span className="truncate text-sm font-medium">
-											{user?.name ?? "User"}
-										</span>
+										<span className="truncate text-sm font-medium">{user?.name ?? "User"}</span>
 										<span className="truncate text-xs text-muted-foreground">
 											{user?.email ?? ""}
 										</span>

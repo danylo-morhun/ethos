@@ -1,8 +1,8 @@
 "use client";
 
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { AddTransactionModal } from "@/features/midas/components/AddTransactionModal";
 import { DateRangePicker } from "@/features/midas/components/DateRangePicker";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { getAppForPath } from "@/lib/app-themes";
 import { Button, SidebarTrigger, cn } from "@ethos/ui";
 import { Settings01Icon } from "@hugeicons/core-free-icons";

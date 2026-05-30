@@ -22,10 +22,7 @@ export function SettingsNav() {
 		icon: APP_ICONS[appHref],
 	}));
 
-	const allLinks = [
-		...ACCOUNT_LINKS,
-		...appLinks,
-	];
+	const allLinks = [...ACCOUNT_LINKS, ...appLinks];
 
 	return (
 		<>

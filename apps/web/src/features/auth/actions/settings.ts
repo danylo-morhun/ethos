@@ -2,18 +2,10 @@
 
 import { auth, signOut } from "@/auth";
 import { sendEmailChangeVerification } from "@/features/auth/lib/email";
-import {
-	and,
-	authAccounts,
-	authUsers,
-	db,
-	eq,
-	verificationTokens,
-	workspaces,
-} from "@ethos/db";
+import { and, authAccounts, authUsers, db, eq, verificationTokens, workspaces } from "@ethos/db";
+import { put } from "@vercel/blob";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
-import { put } from "@vercel/blob";
 import { z } from "zod";
 
 export type SettingsState = { error: string } | { success: true } | null;
@@ -45,9 +37,10 @@ export async function updateProfile(
 		imageUrl = url;
 	} else {
 		const raw = formData.get("image");
-		const parsed = z.union([z.string().url(), z.literal("")]).optional().safeParse(
-			typeof raw === "string" ? raw : "",
-		);
+		const parsed = z
+			.union([z.string().url(), z.literal("")])
+			.optional()
+			.safeParse(typeof raw === "string" ? raw : "");
 		if (!parsed.success) return { error: "Invalid image URL." };
 		imageUrl = parsed.data || null;
 	}
@@ -130,10 +123,7 @@ export async function unlinkProvider(
 
 export async function signOutAllDevices(): Promise<never> {
 	const user = await requireUser();
-	await db
-		.update(authUsers)
-		.set({ forceSignOutAt: new Date() })
-		.where(eq(authUsers.id, user.id));
+	await db.update(authUsers).set({ forceSignOutAt: new Date() }).where(eq(authUsers.id, user.id));
 	await signOut({ redirectTo: "/" });
 	throw new Error("unreachable");
 }
