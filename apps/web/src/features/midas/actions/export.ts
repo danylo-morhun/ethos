@@ -69,12 +69,8 @@ export async function exportTransactionsCsv(
 			[
 				txn.date,
 				cell(txn.description),
-				fromEntries.length > 1
-					? `"Split (${fromEntries.length})"`
-					: cell(fromEntry?.account?.name),
-				toEntries.length > 1
-					? `"Split (${toEntries.length})"`
-					: cell(toEntry?.account?.name),
+				fromEntries.length > 1 ? `"Split (${fromEntries.length})"` : cell(fromEntry?.account?.name),
+				toEntries.length > 1 ? `"Split (${toEntries.length})"` : cell(toEntry?.account?.name),
 				totalAmount.toFixed(2),
 				toEntry?.currency ?? "",
 				totalBase.toFixed(4),

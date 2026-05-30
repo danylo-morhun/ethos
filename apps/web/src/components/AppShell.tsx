@@ -17,7 +17,13 @@ interface Props {
 	children: React.ReactNode;
 }
 
-export function AppShell({ workspaceName, workspaceId, baseCurrency, sidebarDefaultOpen = true, children }: Props) {
+export function AppShell({
+	workspaceName,
+	workspaceId,
+	baseCurrency,
+	sidebarDefaultOpen = true,
+	children,
+}: Props) {
 	const pathname = usePathname();
 	const theme = getThemeForPath(pathname);
 

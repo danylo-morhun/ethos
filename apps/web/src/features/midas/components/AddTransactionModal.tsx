@@ -34,10 +34,10 @@ import {
 	TabsTrigger,
 } from "@ethos/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import * as React from "react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import type { Control } from "react-hook-form";
 import { toast } from "sonner";

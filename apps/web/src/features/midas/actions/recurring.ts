@@ -256,10 +256,7 @@ export async function generateDueRecurring(workspaceId: string): Promise<{ gener
 				.select({ id: recurringTransactions.id })
 				.from(recurringTransactions)
 				.where(
-					and(
-						eq(recurringTransactions.id, rt.id),
-						eq(recurringTransactions.nextDate, rt.nextDate),
-					),
+					and(eq(recurringTransactions.id, rt.id), eq(recurringTransactions.nextDate, rt.nextDate)),
 				)
 				.for("update")
 				.limit(1);

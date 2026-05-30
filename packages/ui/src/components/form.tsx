@@ -1,14 +1,14 @@
 "use client";
 
-import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
+import * as React from "react";
 import {
 	Controller,
-	FormProvider,
-	useFormContext,
 	type ControllerProps,
 	type FieldPath,
 	type FieldValues,
+	FormProvider,
+	useFormContext,
 } from "react-hook-form";
 import { cn } from "../lib/utils";
 import { Label } from "./label";
@@ -20,9 +20,7 @@ type FormFieldContextValue<
 	TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > = { name: TName };
 
-const FormFieldContext = React.createContext<FormFieldContextValue>(
-	{} as FormFieldContextValue,
-);
+const FormFieldContext = React.createContext<FormFieldContextValue>({} as FormFieldContextValue);
 
 const FormField = <
 	TFieldValues extends FieldValues = FieldValues,
@@ -36,9 +34,7 @@ const FormField = <
 );
 
 type FormItemContextValue = { id: string };
-const FormItemContext = React.createContext<FormItemContextValue>(
-	{} as FormItemContextValue,
-);
+const FormItemContext = React.createContext<FormItemContextValue>({} as FormItemContextValue);
 
 const useFormField = () => {
 	const fieldContext = React.useContext(FormFieldContext);
@@ -99,9 +95,7 @@ const FormControl = React.forwardRef<
 		<Slot
 			ref={ref}
 			id={formItemId}
-			aria-describedby={
-				!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`
-			}
+			aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
 			aria-invalid={!!error}
 			{...props}
 		/>

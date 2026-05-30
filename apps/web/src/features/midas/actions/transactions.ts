@@ -368,8 +368,7 @@ export async function getRecentTransactions(
 	const [rows, [{ total }]] = await Promise.all([
 		db.query.transactions.findMany({
 			where: whereClause,
-			orderBy:
-				sortField === "date" ? [orderDate, orderCreated] : [orderAmount, orderDate],
+			orderBy: sortField === "date" ? [orderDate, orderCreated] : [orderAmount, orderDate],
 			limit: TRANSACTIONS_PAGE_SIZE + 1,
 			offset: page * TRANSACTIONS_PAGE_SIZE,
 			with: { entries: { with: { account: true } }, transactionTags: { with: { tag: true } } },

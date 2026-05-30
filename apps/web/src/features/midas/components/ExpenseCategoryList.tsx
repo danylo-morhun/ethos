@@ -60,11 +60,7 @@ export function ExpenseCategoryList({ balances, currency }: Props) {
 								<div
 									className={cn(
 										"h-full rounded-full transition-all",
-										pct > 66
-											? "bg-destructive"
-											: pct > 33
-												? "bg-orange-500"
-												: "bg-chart-1",
+										pct > 66 ? "bg-destructive" : pct > 33 ? "bg-orange-500" : "bg-chart-1",
 									)}
 									style={{ width: `${pct}%` }}
 								/>

@@ -148,8 +148,12 @@ export function AccountsOverview({
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
 	const [editTarget, setEditTarget] = React.useState<Account | null>(null);
-	const [confirmTarget, setConfirmTarget] = React.useState<{ id: string; name: string } | null>(null);
-	const [archiveTarget, setArchiveTarget] = React.useState<{ id: string; name: string } | null>(null);
+	const [confirmTarget, setConfirmTarget] = React.useState<{ id: string; name: string } | null>(
+		null,
+	);
+	const [archiveTarget, setArchiveTarget] = React.useState<{ id: string; name: string } | null>(
+		null,
+	);
 	const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
 
 	const accountMap = new Map(accounts.map((a) => [a.id, a]));
@@ -219,7 +223,8 @@ export function AccountsOverview({
 		const budget = acct.budget != null ? Number(acct.budget) : null;
 		const balance = Number(row.balance);
 		const absBalance = Math.abs(balance);
-		const showBudget = (row.type === "EXPENSE" || row.type === "INCOME") && budget != null && budget > 0;
+		const showBudget =
+			(row.type === "EXPENSE" || row.type === "INCOME") && budget != null && budget > 0;
 		const pct = showBudget ? Math.min((absBalance / budget!) * 100, 100) : null;
 		const overBudget = showBudget && absBalance > budget!;
 		const isIncome = row.type === "INCOME";
@@ -234,7 +239,10 @@ export function AccountsOverview({
 						{hasChildren ? (
 							<button
 								type="button"
-								onClick={(e) => { e.stopPropagation(); toggleExpand(row.accountId); }}
+								onClick={(e) => {
+									e.stopPropagation();
+									toggleExpand(row.accountId);
+								}}
 								className="shrink-0 text-muted-foreground/60 hover:text-foreground transition-colors"
 								aria-label={isExpanded ? "Collapse" : "Expand"}
 							>
@@ -247,9 +255,7 @@ export function AccountsOverview({
 							<span className="w-3.5 shrink-0" />
 						)}
 
-						<span className="flex-1 min-w-0 text-sm font-medium truncate">
-							{row.name}
-						</span>
+						<span className="flex-1 min-w-0 text-sm font-medium truncate">{row.name}</span>
 
 						<div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
 							<BalanceDisplay row={row} acct={acct} currency={currency} />
@@ -271,8 +277,12 @@ export function AccountsOverview({
 								className="h-1"
 								indicatorClassName={
 									isIncome
-										? overBudget ? "bg-green-500" : undefined
-										: overBudget ? "bg-destructive" : undefined
+										? overBudget
+											? "bg-green-500"
+											: undefined
+										: overBudget
+											? "bg-destructive"
+											: undefined
 								}
 							/>
 							<p className="text-xs text-muted-foreground/70">
@@ -293,7 +303,8 @@ export function AccountsOverview({
 			{TYPE_ORDER.map((type) => {
 				const group = grouped[type] ?? [];
 				const parents = group.filter(
-					(r) => !r.parentId || !accountIdSet.has(r.parentId) || rowMap.get(r.parentId)?.type !== type,
+					(r) =>
+						!r.parentId || !accountIdSet.has(r.parentId) || rowMap.get(r.parentId)?.type !== type,
 				);
 				if (parents.length === 0 && !listMode) return null;
 
@@ -316,28 +327,29 @@ export function AccountsOverview({
 						</div>
 
 						<div className="rounded-lg border divide-y overflow-hidden">
-							{listMode
-								? typeAccounts.map((acct) => {
-										const row = rowMap.get(acct.id);
-										return (
-											<div key={acct.id} className="flex items-center justify-between px-3 py-2.5">
-												<span className="text-sm font-medium">{acct.name}</span>
-												<div className="flex items-center gap-2">
-													{row && <BalanceDisplay row={row} acct={acct} currency={currency} />}
-													<AccountActions
-														acct={acct}
-														onEdit={setEditTarget}
-														onArchive={(id, name) => setArchiveTarget({ id, name })}
-														onDelete={(id, name) => setConfirmTarget({ id, name })}
-													/>
-												</div>
+							{listMode ? (
+								typeAccounts.map((acct) => {
+									const row = rowMap.get(acct.id);
+									return (
+										<div key={acct.id} className="flex items-center justify-between px-3 py-2.5">
+											<span className="text-sm font-medium">{acct.name}</span>
+											<div className="flex items-center gap-2">
+												{row && <BalanceDisplay row={row} acct={acct} currency={currency} />}
+												<AccountActions
+													acct={acct}
+													onEdit={setEditTarget}
+													onArchive={(id, name) => setArchiveTarget({ id, name })}
+													onDelete={(id, name) => setConfirmTarget({ id, name })}
+												/>
 											</div>
-										);
-									})
-								: parents.length === 0
-									? <p className="px-3 py-3 text-xs text-muted-foreground">No accounts</p>
-									: parents.map((row) => renderAccountRow(row, false))
-							}
+										</div>
+									);
+								})
+							) : parents.length === 0 ? (
+								<p className="px-3 py-3 text-xs text-muted-foreground">No accounts</p>
+							) : (
+								parents.map((row) => renderAccountRow(row, false))
+							)}
 						</div>
 					</div>
 				);
@@ -361,13 +373,17 @@ export function AccountsOverview({
 					account={editTarget}
 					workspaceId={workspaceId}
 					open={!!editTarget}
-					onOpenChange={(v) => { if (!v) setEditTarget(null); }}
+					onOpenChange={(v) => {
+						if (!v) setEditTarget(null);
+					}}
 				/>
 			)}
 
 			<AlertDialog
 				open={!!archiveTarget}
-				onOpenChange={(v) => { if (!v) setArchiveTarget(null); }}
+				onOpenChange={(v) => {
+					if (!v) setArchiveTarget(null);
+				}}
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
@@ -388,7 +404,9 @@ export function AccountsOverview({
 
 			<AlertDialog
 				open={!!confirmTarget}
-				onOpenChange={(v) => { if (!v) setConfirmTarget(null); }}
+				onOpenChange={(v) => {
+					if (!v) setConfirmTarget(null);
+				}}
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>

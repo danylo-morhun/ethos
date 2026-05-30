@@ -1,17 +1,18 @@
 "use client";
 
 import { buildPeriodLabel, parseLocal } from "@/features/midas/lib/dates";
-import { Button, Calendar, Popover, PopoverContent, PopoverTrigger, Separator, cn } from "@ethos/ui";
+import {
+	Button,
+	Calendar,
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+	Separator,
+	cn,
+} from "@ethos/ui";
 import { Calendar01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-	endOfMonth,
-	endOfYear,
-	format,
-	startOfMonth,
-	startOfYear,
-	subMonths,
-} from "date-fns";
+import { endOfMonth, endOfYear, format, startOfMonth, startOfYear, subMonths } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 
@@ -67,8 +68,12 @@ export function DateRangePicker() {
 	const [localTo, setLocalTo] = React.useState(committedTo);
 	const [picking, setPicking] = React.useState<"from" | "to">("from");
 
-	React.useEffect(() => { setLocalFrom(committedFrom); }, [committedFrom]);
-	React.useEffect(() => { setLocalTo(committedTo); }, [committedTo]);
+	React.useEffect(() => {
+		setLocalFrom(committedFrom);
+	}, [committedFrom]);
+	React.useEffect(() => {
+		setLocalTo(committedTo);
+	}, [committedTo]);
 
 	function push(f: string | undefined, t: string | undefined, allTime = false) {
 		const [safeFrom, safeTo] = f && t && f > t ? [t, f] : [f, t];
@@ -121,7 +126,11 @@ export function DateRangePicker() {
 	return (
 		<Popover open={open} onOpenChange={handleOpenChange}>
 			<PopoverTrigger asChild>
-				<Button variant="outline" size="icon" className="h-8 w-8 md:w-auto md:px-3 md:gap-2 font-normal">
+				<Button
+					variant="outline"
+					size="icon"
+					className="h-8 w-8 md:w-auto md:px-3 md:gap-2 font-normal"
+				>
 					<HugeiconsIcon icon={Calendar01Icon} className="h-4 w-4 shrink-0 opacity-70" />
 					<span className="hidden md:inline">{label}</span>
 					{hasFilter && (
@@ -156,7 +165,10 @@ export function DateRangePicker() {
 									variant={active ? "secondary" : "ghost"}
 									size="sm"
 									className="justify-start"
-									onClick={() => { push(pf, pt); setOpen(false); }}
+									onClick={() => {
+										push(pf, pt);
+										setOpen(false);
+									}}
 								>
 									{p.label}
 								</Button>
@@ -167,7 +179,10 @@ export function DateRangePicker() {
 							variant={isAllTime ? "secondary" : "ghost"}
 							size="sm"
 							className="justify-start"
-							onClick={() => { push(undefined, undefined, true); setOpen(false); }}
+							onClick={() => {
+								push(undefined, undefined, true);
+								setOpen(false);
+							}}
 						>
 							All time
 						</Button>

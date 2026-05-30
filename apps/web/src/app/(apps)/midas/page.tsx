@@ -6,11 +6,11 @@ import { getTags } from "@/features/midas/actions/tags";
 import { getRecentTransactions } from "@/features/midas/actions/transactions";
 import { getMonthlyTrends } from "@/features/midas/actions/trends";
 import { initializeWorkspace } from "@/features/midas/actions/workspace";
-import { MobileAddFab } from "@/features/midas/components/MobileAddFab";
 import { AccountsOverview } from "@/features/midas/components/AccountsOverview";
 import { ExpenseBreakdown } from "@/features/midas/components/ExpenseBreakdown";
 import { ExpenseCategoryList } from "@/features/midas/components/ExpenseCategoryList";
-import { type MidasTab, MidasNavTabs } from "@/features/midas/components/MidasNavTabs";
+import { MidasNavTabs, type MidasTab } from "@/features/midas/components/MidasNavTabs";
+import { MobileAddFab } from "@/features/midas/components/MobileAddFab";
 import { OnboardingCard } from "@/features/midas/components/OnboardingCard";
 import { TransactionTable } from "@/features/midas/components/TransactionTable";
 import { TrendChart } from "@/features/midas/components/TrendChart";
@@ -61,9 +61,7 @@ export default async function MidasPage({
 	const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 	const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-	const tab: MidasTab = VALID_TABS.includes(rawTab as MidasTab)
-		? (rawTab as MidasTab)
-		: "overview";
+	const tab: MidasTab = VALID_TABS.includes(rawTab as MidasTab) ? (rawTab as MidasTab) : "overview";
 
 	const isAllTime = rawAll === "1";
 	const rawValidFrom = rawFrom && ISO_DATE.test(rawFrom) ? rawFrom : undefined;
@@ -72,8 +70,8 @@ export default async function MidasPage({
 	const defaultFrom = fmt(startOfMonth(today));
 	const defaultTo = fmt(endOfMonth(today));
 	const swapped = rawValidFrom && rawValidTo && rawValidFrom > rawValidTo;
-	const from = isAllTime ? undefined : (swapped ? rawValidTo : rawValidFrom) ?? defaultFrom;
-	const to = isAllTime ? undefined : (swapped ? rawValidFrom : rawValidTo) ?? defaultTo;
+	const from = isAllTime ? undefined : ((swapped ? rawValidTo : rawValidFrom) ?? defaultFrom);
+	const to = isAllTime ? undefined : ((swapped ? rawValidFrom : rawValidTo) ?? defaultTo);
 
 	const pageNum = rawPage && /^\d+$/.test(rawPage) ? Math.max(0, Number.parseInt(rawPage, 10)) : 0;
 	const accountId = rawAccount && UUID.test(rawAccount) ? rawAccount : undefined;
@@ -93,7 +91,12 @@ export default async function MidasPage({
 
 		const [balances, trendData] = await Promise.all([
 			getBalances(workspace.id, from, to),
-			getMonthlyTrends(workspace.id, hasDateFilter ? from : undefined, hasDateFilter ? to : undefined, trendMonths),
+			getMonthlyTrends(
+				workspace.id,
+				hasDateFilter ? from : undefined,
+				hasDateFilter ? to : undefined,
+				trendMonths,
+			),
 		]);
 
 		const income = Math.abs(
@@ -130,7 +133,9 @@ export default async function MidasPage({
 							<div className="h-8 w-px bg-border" />
 							<div>
 								<p className="text-xs text-muted-foreground">Savings rate</p>
-								<p className={`text-2xl font-bold ${savingsRate !== null && savingsRate < 0 ? "text-destructive" : ""}`}>
+								<p
+									className={`text-2xl font-bold ${savingsRate !== null && savingsRate < 0 ? "text-destructive" : ""}`}
+								>
 									{savingsRate === null
 										? "—"
 										: `${savingsRate < 0 ? "−" : ""}${Math.abs(savingsRate).toFixed(1)}%`}

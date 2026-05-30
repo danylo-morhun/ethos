@@ -18,10 +18,7 @@ export function MobileAddFab({
 				workspaceId={workspaceId}
 				baseCurrency={baseCurrency}
 				trigger={
-					<Button
-						size="icon"
-						className="h-12 w-12 rounded-full shadow-lg"
-					>
+					<Button size="icon" className="h-12 w-12 rounded-full shadow-lg">
 						<HugeiconsIcon icon={Add01Icon} className="h-5 w-5" />
 					</Button>
 				}

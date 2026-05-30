@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
-import * as SelectPrimitive from "@radix-ui/react-select";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import * as SelectPrimitive from "@radix-ui/react-select";
+import * as React from "react";
 import { cn } from "../lib/utils";
 
 const Select = SelectPrimitive.Root;
