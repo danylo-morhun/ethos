@@ -22,7 +22,11 @@ export const metadata: Metadata = {
 		title: "ethos",
 	},
 	icons: {
-		icon: [{ url: "/icons/favicon.svg?v=3", type: "image/svg+xml" }],
+		icon: [
+			{ url: "/favicon.ico", sizes: "any" },
+			{ url: "/icons/favicon.svg", type: "image/svg+xml" },
+			{ url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+		],
 		apple: "/icons/apple-touch-icon.png",
 	},
 };
