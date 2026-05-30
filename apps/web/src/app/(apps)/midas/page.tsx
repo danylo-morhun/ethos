@@ -9,7 +9,7 @@ import { initializeWorkspace } from "@/features/midas/actions/workspace";
 import { AccountsOverview } from "@/features/midas/components/AccountsOverview";
 import { ExpenseBreakdown } from "@/features/midas/components/ExpenseBreakdown";
 import { ExpenseCategoryList } from "@/features/midas/components/ExpenseCategoryList";
-import { MidasNavTabs, type MidasTab } from "@/features/midas/components/MidasNavTabs";
+import type { MidasTab } from "@/features/midas/components/MidasNavTabs";
 import { MobileAddFab } from "@/features/midas/components/MobileAddFab";
 import { OnboardingCard } from "@/features/midas/components/OnboardingCard";
 import { TransactionTable } from "@/features/midas/components/TransactionTable";
@@ -109,8 +109,7 @@ export default async function MidasPage({
 		const savingsRate = income > 0 ? ((income - expenses) / income) * 100 : null;
 
 		return (
-			<main className="flex flex-col pb-16 md:pb-0">
-				<MidasNavTabs activeTab="overview" />
+			<main className="flex flex-col pb-28 md:pb-0">
 
 				{balances.length === 0 ? (
 					<div className="px-4 py-6 sm:px-6">
@@ -166,8 +165,7 @@ export default async function MidasPage({
 		]);
 
 		return (
-			<main className="flex flex-col pb-16 md:pb-0">
-				<MidasNavTabs activeTab="accounts" />
+			<main className="flex flex-col pb-28 md:pb-0">
 				<div className="px-4 py-6 sm:px-6">
 					<AccountsOverview
 						balances={balances}
@@ -190,8 +188,7 @@ export default async function MidasPage({
 	]);
 
 	return (
-		<main className="flex flex-col pb-16 md:pb-0">
-			<MidasNavTabs activeTab="transactions" />
+		<main className="flex flex-col pb-28 md:pb-0">
 			<div className="px-4 py-6 sm:px-6">
 				<TransactionTable
 					transactions={recentTransactions.rows}
