@@ -3,8 +3,8 @@
 import { cn } from "@ethos/ui";
 import { BankIcon, BanknoteIcon, Chart01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 
 export type MidasTab = "overview" | "accounts" | "transactions";
 
@@ -14,12 +14,18 @@ const TABS: { value: MidasTab; label: string; icon: typeof Chart01Icon }[] = [
 	{ value: "transactions", label: "Transactions", icon: BanknoteIcon },
 ];
 
-interface Props {
-	activeTab: MidasTab;
-}
-
-export function MidasNavTabs({ activeTab }: Props) {
+export function MidasNavTabs() {
 	const searchParams = useSearchParams();
+	const router = useRouter();
+	const [isPending, startTransition] = useTransition();
+	const [pendingTab, setPendingTab] = useState<MidasTab | null>(null);
+
+	const activeTab = (searchParams.get("tab") as MidasTab) || "overview";
+	const displayTab = pendingTab ?? activeTab;
+
+	useEffect(() => {
+		if (!isPending) setPendingTab(null);
+	}, [isPending]);
 
 	function tabHref(tab: MidasTab) {
 		const params = new URLSearchParams(searchParams.toString());
@@ -28,7 +34,6 @@ export function MidasNavTabs({ activeTab }: Props) {
 		} else {
 			params.set("tab", tab);
 		}
-		// Clear table-specific params when leaving transactions
 		if (tab !== "transactions") {
 			params.delete("page");
 			params.delete("account");
@@ -38,29 +43,40 @@ export function MidasNavTabs({ activeTab }: Props) {
 			params.delete("tag");
 		}
 		const qs = params.toString();
-		return qs ? `?${qs}` : "?";
+		return qs ? `/midas?${qs}` : "/midas";
+	}
+
+	function handleClick(tab: MidasTab) {
+		if (tab === displayTab) return;
+		setPendingTab(tab);
+		startTransition(() => {
+			router.push(tabHref(tab));
+		});
 	}
 
 	return (
-		<>
-			{/* Mobile — fixed bottom nav */}
-			<nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background md:hidden">
-				<div className="flex">
-					{TABS.map(({ value, label, icon }) => (
-						<Link
+		<nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background md:hidden">
+			<div className="flex">
+				{TABS.map(({ value, label, icon }) => {
+					const isActive = displayTab === value;
+					const isLoading = isPending && pendingTab === value;
+					return (
+						<button
 							key={value}
-							href={tabHref(value)}
+							type="button"
+							onClick={() => handleClick(value)}
 							className={cn(
 								"flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors",
-								activeTab === value ? "text-primary" : "text-muted-foreground",
+								isActive ? "text-primary" : "text-muted-foreground",
+								isLoading && "animate-pulse",
 							)}
 						>
 							<HugeiconsIcon icon={icon} className="h-5 w-5" />
 							{label}
-						</Link>
-					))}
-				</div>
-			</nav>
-		</>
+						</button>
+					);
+				})}
+			</div>
+		</nav>
 	);
 }
