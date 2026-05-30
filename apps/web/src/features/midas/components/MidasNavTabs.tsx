@@ -1,27 +1,30 @@
 "use client";
 
-import { cn } from "@ethos/ui";
-import { BankIcon, BanknoteIcon, Chart01Icon } from "@hugeicons/core-free-icons";
+import { AddTransactionModal } from "@/features/midas/components/AddTransactionModal";
+import { Button, cn } from "@ethos/ui";
+import { Add01Icon, BankIcon, BanknoteIcon, Chart01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 export type MidasTab = "overview" | "accounts" | "transactions";
 
-const TABS: { value: MidasTab; label: string; icon: typeof Chart01Icon }[] = [
-	{ value: "overview", label: "Expenses", icon: Chart01Icon },
-	{ value: "accounts", label: "Accounts", icon: BankIcon },
-	{ value: "transactions", label: "Transactions", icon: BanknoteIcon },
-];
+interface Props {
+	workspaceId: string;
+	baseCurrency: string;
+}
 
-export function MidasNavTabs() {
+export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 	const searchParams = useSearchParams();
+	const pathname = usePathname();
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
 	const [pendingTab, setPendingTab] = useState<MidasTab | null>(null);
 
 	const activeTab = (searchParams.get("tab") as MidasTab) || "overview";
 	const displayTab = pendingTab ?? activeTab;
+	const isSettings = pathname.startsWith("/settings");
 
 	useEffect(() => {
 		if (!isPending) setPendingTab(null);
@@ -46,36 +49,85 @@ export function MidasNavTabs() {
 		return qs ? `/midas?${qs}` : "/midas";
 	}
 
-	function handleClick(tab: MidasTab) {
-		if (tab === displayTab) return;
+	function handleTabClick(tab: MidasTab) {
+		if (tab === displayTab && !isSettings) return;
 		setPendingTab(tab);
 		startTransition(() => {
 			router.push(tabHref(tab));
 		});
 	}
 
+	function tabClass(active: boolean, loading = false) {
+		return cn(
+			"flex flex-col items-center gap-0.5 px-3 py-1.5 text-[10px] font-medium transition-colors",
+			active ? "text-primary" : "text-muted-foreground",
+			loading && "animate-pulse",
+		);
+	}
+
 	return (
-		<nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background md:hidden">
-			<div className="flex">
-				{TABS.map(({ value, label, icon }) => {
-					const isActive = displayTab === value;
-					const isLoading = isPending && pendingTab === value;
-					return (
-						<button
-							key={value}
-							type="button"
-							onClick={() => handleClick(value)}
-							className={cn(
-								"flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors",
-								isActive ? "text-primary" : "text-muted-foreground",
-								isLoading && "animate-pulse",
-							)}
-						>
-							<HugeiconsIcon icon={icon} className="h-5 w-5" />
-							{label}
-						</button>
-					);
-				})}
+		<nav
+			className="fixed z-40 md:hidden"
+			style={{
+				bottom: "max(1.25rem, env(safe-area-inset-bottom))",
+				left: "50%",
+				transform: "translateX(-50%)",
+			}}
+		>
+			<div className="relative">
+				{/* Elevated FAB */}
+				<div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
+					<AddTransactionModal
+						workspaceId={workspaceId}
+						baseCurrency={baseCurrency}
+						trigger={
+							<Button
+								size="icon"
+								className="h-12 w-12 rounded-full shadow-xl transition-transform active:scale-95"
+							>
+								<HugeiconsIcon icon={Add01Icon} className="h-5 w-5" />
+							</Button>
+						}
+					/>
+				</div>
+
+				{/* Pill */}
+				<div className="flex items-center rounded-full border border-border/40 bg-background/85 px-2 py-1 shadow-lg backdrop-blur-xl">
+					{/* Left: Expenses, Accounts */}
+					<button
+						type="button"
+						onClick={() => handleTabClick("overview")}
+						className={tabClass(displayTab === "overview" && !isSettings, isPending && pendingTab === "overview")}
+					>
+						<HugeiconsIcon icon={Chart01Icon} className="h-5 w-5" />
+						Expenses
+					</button>
+					<button
+						type="button"
+						onClick={() => handleTabClick("accounts")}
+						className={tabClass(displayTab === "accounts" && !isSettings, isPending && pendingTab === "accounts")}
+					>
+						<HugeiconsIcon icon={BankIcon} className="h-5 w-5" />
+						Accounts
+					</button>
+
+					{/* Spacer under FAB */}
+					<div className="w-14" aria-hidden />
+
+					{/* Right: Transactions, Settings */}
+					<button
+						type="button"
+						onClick={() => handleTabClick("transactions")}
+						className={tabClass(displayTab === "transactions" && !isSettings, isPending && pendingTab === "transactions")}
+					>
+						<HugeiconsIcon icon={BanknoteIcon} className="h-5 w-5" />
+						Txns
+					</button>
+					<Link href="/settings" className={tabClass(isSettings)}>
+						<HugeiconsIcon icon={Settings01Icon} className="h-5 w-5" />
+						Settings
+					</Link>
+				</div>
 			</div>
 		</nav>
 	);
