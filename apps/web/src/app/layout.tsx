@@ -13,6 +13,15 @@ const geistSans = Geist({
 export const metadata: Metadata = {
 	title: "ethos",
 	description: "Your personal suite of tools",
+	manifest: "/manifest.webmanifest",
+	appleWebApp: {
+		capable: true,
+		statusBarStyle: "black-translucent",
+		title: "ethos",
+	},
+	icons: {
+		apple: "/icons/apple-touch-icon.png",
+	},
 };
 
 export default function RootLayout({
