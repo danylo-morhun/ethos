@@ -85,7 +85,9 @@ export function AppHeader({ workspaceId, baseCurrency }: Props) {
 					{workspaceId && baseCurrency && (
 						<>
 							<DateRangePicker />
-							<AddTransactionModal workspaceId={workspaceId} baseCurrency={baseCurrency} />
+							<span className="hidden md:contents">
+								<AddTransactionModal workspaceId={workspaceId} baseCurrency={baseCurrency} />
+							</span>
 						</>
 					)}
 					<Button variant="ghost" size="icon" className="h-8 w-8" asChild>
