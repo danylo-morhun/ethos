@@ -75,34 +75,14 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 			)}
 
 			<nav
-				className="fixed z-40 md:hidden"
-				style={{
-					bottom: "max(1.25rem, env(safe-area-inset-bottom))",
-					left: "50%",
-					transform: "translateX(-50%)",
-				}}
+				className="fixed inset-x-0 bottom-0 z-40 md:hidden"
+				style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
 			>
-				<div className="relative">
-					{/* Elevated FAB — absolutely centered */}
-					<div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
-						<AddTransactionModal
-							workspaceId={workspaceId}
-							baseCurrency={baseCurrency}
-							trigger={
-								<Button
-									size="icon"
-									className="h-10 w-10 rounded-full shadow-xl transition-transform active:scale-95"
-								>
-									<HugeiconsIcon icon={Add01Icon} className="h-4 w-4" />
-								</Button>
-							}
-						/>
-					</div>
-
-					{/* Pill — grid ensures left/right columns equal so FAB lands dead center */}
-					<div className="grid grid-cols-[1fr_3rem_1fr] items-center rounded-full border border-border/40 bg-background/85 px-2 py-1 shadow-lg backdrop-blur-xl">
+				<div className="mx-3 mb-3">
+					{/* Grid: equal left/right columns guarantee FAB lands dead-center */}
+					<div className="grid grid-cols-[1fr_4rem_1fr] items-center rounded-2xl border border-border/40 bg-background/85 px-3 py-2 shadow-lg backdrop-blur-xl">
 						{/* Left: Overview, Accounts */}
-						<div className="flex items-center justify-end">
+						<div className="flex items-center justify-around">
 							<button
 								type="button"
 								onClick={() => handleTabClick("overview")}
@@ -119,11 +99,26 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 							</button>
 						</div>
 
-						{/* Center spacer (3rem = same as FAB width w-10 + breathing room) */}
-						<div aria-hidden />
+						{/* Center FAB — inside the bar, slightly raised with -mt-3 */}
+						<div className="flex items-center justify-center">
+							<div className="-mt-3">
+								<AddTransactionModal
+									workspaceId={workspaceId}
+									baseCurrency={baseCurrency}
+									trigger={
+										<Button
+											size="icon"
+											className="h-12 w-12 rounded-full shadow-xl transition-transform active:scale-95"
+										>
+											<HugeiconsIcon icon={Add01Icon} className="h-5 w-5" />
+										</Button>
+									}
+								/>
+							</div>
+						</div>
 
 						{/* Right: Transactions, Settings */}
-						<div className="flex items-center justify-start">
+						<div className="flex items-center justify-around">
 							<button
 								type="button"
 								onClick={() => handleTabClick("transactions")}
@@ -131,10 +126,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 							>
 								<HugeiconsIcon icon={BanknoteIcon} className="h-5 w-5" />
 							</button>
-							<Link
-								href="/settings"
-								className={iconBtn(isSettings)}
-							>
+							<Link href="/settings" className={iconBtn(isSettings)}>
 								<HugeiconsIcon icon={Settings01Icon} className="h-5 w-5" />
 							</Link>
 						</div>
