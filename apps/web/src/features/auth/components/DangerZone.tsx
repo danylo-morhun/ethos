@@ -87,7 +87,11 @@ export function DangerZone() {
 								disabled={deletePending}
 								onClick={handleDeleteAccount}
 							>
-								{deletePending ? <Spinner /> : <HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />}
+								{deletePending ? (
+									<Spinner />
+								) : (
+									<HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />
+								)}
 								{deletePending ? "Deleting…" : "Yes, delete everything"}
 							</AlertDialogAction>
 						</AlertDialogFooter>

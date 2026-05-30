@@ -10,10 +10,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 export default function ForgotPasswordPage() {
-	const [state, action, pending] = useActionState<ResetState, FormData>(
-		requestPasswordReset,
-		null,
-	);
+	const [state, action, pending] = useActionState<ResetState, FormData>(requestPasswordReset, null);
 
 	if (state && "success" in state) {
 		return (
@@ -40,25 +37,15 @@ export default function ForgotPasswordPage() {
 			<Card className="w-full max-w-sm">
 				<CardHeader>
 					<CardTitle>Forgot password</CardTitle>
-					<CardDescription>
-						Enter your email and we&apos;ll send a reset link.
-					</CardDescription>
+					<CardDescription>Enter your email and we&apos;ll send a reset link.</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<form action={action} className="space-y-4">
 						<div className="space-y-1.5">
 							<Label htmlFor="email">Email</Label>
-							<Input
-								id="email"
-								name="email"
-								type="email"
-								placeholder="you@example.com"
-								required
-							/>
+							<Input id="email" name="email" type="email" placeholder="you@example.com" required />
 						</div>
-						{state && "error" in state && (
-							<p className="text-sm text-destructive">{state.error}</p>
-						)}
+						{state && "error" in state && <p className="text-sm text-destructive">{state.error}</p>}
 						<Button type="submit" className="w-full" disabled={pending}>
 							{pending ? "Sending…" : "Send reset link"}
 						</Button>

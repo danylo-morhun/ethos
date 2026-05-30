@@ -39,13 +39,9 @@ export default async function AccountSettingsPage() {
 			<section className="mb-10">
 				<h2 className="mb-1 text-base font-semibold">Email address</h2>
 				<p className="mb-4 text-sm text-muted-foreground">
-					Current:{" "}
-					<span className="font-medium text-foreground">{dbUser.email}</span>
+					Current: <span className="font-medium text-foreground">{dbUser.email}</span>
 				</p>
-				<ChangeEmailForm
-					currentEmail={dbUser.email}
-					pendingEmail={dbUser.pendingEmail ?? null}
-				/>
+				<ChangeEmailForm currentEmail={dbUser.email} pendingEmail={dbUser.pendingEmail ?? null} />
 			</section>
 
 			<Separator className="my-8" />

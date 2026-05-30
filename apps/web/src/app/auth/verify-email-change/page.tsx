@@ -16,10 +16,7 @@ export default async function VerifyEmailChangePage({ searchParams }: Props) {
 
 	const identifier = `email-change:${uid}`;
 	const record = await db.query.verificationTokens.findFirst({
-		where: and(
-			eq(verificationTokens.identifier, identifier),
-			eq(verificationTokens.token, token),
-		),
+		where: and(eq(verificationTokens.identifier, identifier), eq(verificationTokens.token, token)),
 	});
 
 	if (!record) {
@@ -27,9 +24,7 @@ export default async function VerifyEmailChangePage({ searchParams }: Props) {
 	}
 
 	if (record.expires < new Date()) {
-		await db
-			.delete(verificationTokens)
-			.where(eq(verificationTokens.identifier, identifier));
+		await db.delete(verificationTokens).where(eq(verificationTokens.identifier, identifier));
 		return <Result error="Link has expired. Request a new one from settings." />;
 	}
 
@@ -47,9 +42,7 @@ export default async function VerifyEmailChangePage({ searchParams }: Props) {
 			.update(authUsers)
 			.set({ email: user.pendingEmail!, pendingEmail: null })
 			.where(eq(authUsers.id, uid));
-		await tx
-			.delete(verificationTokens)
-			.where(eq(verificationTokens.identifier, identifier));
+		await tx.delete(verificationTokens).where(eq(verificationTokens.identifier, identifier));
 	});
 
 	return <Result success={`Email updated to ${user.pendingEmail}.`} />;

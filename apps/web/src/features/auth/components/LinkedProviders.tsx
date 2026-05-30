@@ -41,7 +41,11 @@ function ProviderRow({ provider, canUnlink }: ProviderRowProps) {
 							disabled={pending}
 							className="h-7 gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
 						>
-							{pending ? <Spinner /> : <HugeiconsIcon icon={Unlink01Icon} className="h-3.5 w-3.5" />}
+							{pending ? (
+								<Spinner />
+							) : (
+								<HugeiconsIcon icon={Unlink01Icon} className="h-3.5 w-3.5" />
+							)}
 							{pending ? "Unlinking…" : "Unlink"}
 						</Button>
 					</form>

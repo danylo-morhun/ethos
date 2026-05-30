@@ -1,13 +1,13 @@
 "use client";
 
 import { Spinner } from "@/components/Spinner";
-import { useRefreshRouter } from "@/hooks/useRefreshRouter";
 import { exportTransactionsCsv } from "@/features/midas/actions/export";
 import { deleteTransaction, deleteTransactions } from "@/features/midas/actions/transactions";
 import type { RecentTransaction } from "@/features/midas/actions/transactions";
 import { EditTransactionModal } from "@/features/midas/components/EditTransactionModal";
 import { parseLocal } from "@/features/midas/lib/dates";
 import { formatCurrency } from "@/features/midas/lib/format";
+import { useRefreshRouter } from "@/hooks/useRefreshRouter";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -438,9 +438,12 @@ export function TransactionTable({
 											<AlertDialogContent>
 												<AlertDialogHeader>
 													<AlertDialogTitle className="flex items-center gap-2">
-								<HugeiconsIcon icon={Alert01Icon} className="h-5 w-5 text-destructive" />
-								Delete transaction?
-							</AlertDialogTitle>
+														<HugeiconsIcon
+															icon={Alert01Icon}
+															className="h-5 w-5 text-destructive"
+														/>
+														Delete transaction?
+													</AlertDialogTitle>
 													<AlertDialogDescription>
 														This will recalculate your account balances. This action cannot be
 														undone.
@@ -453,7 +456,11 @@ export function TransactionTable({
 														disabled={isPending}
 														onClick={() => handleDelete(txn.id)}
 													>
-														{isPending ? <Spinner /> : <HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />}
+														{isPending ? (
+															<Spinner />
+														) : (
+															<HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />
+														)}
 														{isPending ? "Deleting…" : "Delete"}
 													</AlertDialogAction>
 												</AlertDialogFooter>

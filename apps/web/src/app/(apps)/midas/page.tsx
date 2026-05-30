@@ -109,7 +109,6 @@ export default async function MidasPage({
 
 		return (
 			<main className="flex flex-col pb-28 md:pb-0">
-
 				{balances.length === 0 ? (
 					<div className="px-4 py-6 sm:px-6">
 						<OnboardingCard

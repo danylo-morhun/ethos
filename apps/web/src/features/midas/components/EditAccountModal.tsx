@@ -1,9 +1,9 @@
 "use client";
 
 import { Spinner } from "@/components/Spinner";
-import { useRefreshRouter } from "@/hooks/useRefreshRouter";
 import { getAccounts, updateAccount } from "@/features/midas/actions/accounts";
 import { CURRENCIES, toCurrency } from "@/features/midas/lib/constants";
+import { useRefreshRouter } from "@/hooks/useRefreshRouter";
 import {
 	Button,
 	Dialog,

@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@etho
 import { Input } from "@ethos/ui/input";
 import { Label } from "@ethos/ui/label";
 import Link from "next/link";
-import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useActionState } from "react";
 import { Suspense } from "react";
 
 function ResetPasswordForm() {
@@ -31,9 +31,7 @@ function ResetPasswordForm() {
 	if (state && "success" in state) {
 		return (
 			<div className="space-y-3 text-center">
-				<p className="text-sm text-muted-foreground">
-					Password updated. You can now sign in.
-				</p>
+				<p className="text-sm text-muted-foreground">Password updated. You can now sign in.</p>
 				<Link href="/" className="text-sm underline underline-offset-2">
 					Sign in
 				</Link>
@@ -56,9 +54,7 @@ function ResetPasswordForm() {
 					required
 				/>
 			</div>
-			{state && "error" in state && (
-				<p className="text-sm text-destructive">{state.error}</p>
-			)}
+			{state && "error" in state && <p className="text-sm text-destructive">{state.error}</p>}
 			<Button type="submit" className="w-full" disabled={pending}>
 				{pending ? "Updating…" : "Set new password"}
 			</Button>
