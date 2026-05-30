@@ -136,16 +136,35 @@ export async function createTransaction({
 				.values({ workspaceId, date, description: description ?? null })
 				.returning();
 
+			const totalDebitBase = specs
+				.filter((s) => s.debit)
+				.reduce((sum, s) => sum + s.amount * rate, 0);
+			const creditSpecs = specs.filter((s) => !s.debit);
+			let creditBaseAccum = 0;
+
 			await tx.insert(transactionEntries).values(
-				specs.map((spec) => ({
-					transactionId: txn.id,
-					accountId: spec.accountId,
-					amount: spec.debit ? String(-spec.amount) : String(spec.amount),
-					currency,
-					baseAmount: spec.debit
-						? (-spec.amount * rate).toFixed(4)
-						: (spec.amount * rate).toFixed(4),
-				})),
+				specs.map((spec) => {
+					let baseAmount: string;
+					if (spec.debit) {
+						baseAmount = (-spec.amount * rate).toFixed(4);
+					} else {
+						const isLastCredit = spec === creditSpecs[creditSpecs.length - 1];
+						if (isLastCredit) {
+							baseAmount = (totalDebitBase - creditBaseAccum).toFixed(4);
+						} else {
+							const ba = spec.amount * rate;
+							creditBaseAccum += ba;
+							baseAmount = ba.toFixed(4);
+						}
+					}
+					return {
+						transactionId: txn.id,
+						accountId: spec.accountId,
+						amount: spec.debit ? String(-spec.amount) : String(spec.amount),
+						currency,
+						baseAmount,
+					};
+				}),
 			);
 
 			if (tagIds && tagIds.length > 0) {
