@@ -48,9 +48,11 @@ type SplitField = SplitItem & { id: string };
 export function AddTransactionModal({
 	workspaceId,
 	baseCurrency,
+	trigger,
 }: {
 	workspaceId: string;
 	baseCurrency: string;
+	trigger?: React.ReactNode;
 }) {
 	const [open, setOpen] = React.useState(false);
 	const [accounts, setAccounts] = React.useState<Account[]>([]);
@@ -306,10 +308,12 @@ export function AddTransactionModal({
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogTrigger asChild>
-				<Button size="icon" className="h-8 w-8 md:w-auto md:px-3 md:gap-2">
-					<HugeiconsIcon icon={Add01Icon} className="h-4 w-4 shrink-0" />
-					<span className="hidden md:inline">New Transaction</span>
-				</Button>
+				{trigger ?? (
+					<Button size="icon" className="h-8 w-8 md:w-auto md:px-3 md:gap-2">
+						<HugeiconsIcon icon={Add01Icon} className="h-4 w-4 shrink-0" />
+						<span className="hidden md:inline">New Transaction</span>
+					</Button>
+				)}
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
