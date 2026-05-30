@@ -16,5 +16,10 @@ export function getAppForPath(pathname: string) {
 }
 
 export function getThemeForPath(pathname: string): string {
-	return getAppForPath(pathname)?.theme ?? "";
+	const direct = getAppForPath(pathname)?.theme;
+	if (direct) return direct;
+	for (const [href, { theme }] of Object.entries(APPS_CONFIG)) {
+		if (pathname.startsWith(`/settings${href}`)) return theme;
+	}
+	return "";
 }
