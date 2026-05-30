@@ -6,6 +6,7 @@ import { getTags } from "@/features/midas/actions/tags";
 import { getRecentTransactions } from "@/features/midas/actions/transactions";
 import { getMonthlyTrends } from "@/features/midas/actions/trends";
 import { initializeWorkspace } from "@/features/midas/actions/workspace";
+import { MobileAddFab } from "@/features/midas/components/MobileAddFab";
 import { AccountsOverview } from "@/features/midas/components/AccountsOverview";
 import { ExpenseBreakdown } from "@/features/midas/components/ExpenseBreakdown";
 import { ExpenseCategoryList } from "@/features/midas/components/ExpenseCategoryList";
@@ -147,6 +148,7 @@ export default async function MidasPage({
 						/>
 					</div>
 				)}
+				<MobileAddFab workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
 			</main>
 		);
 	}
@@ -170,6 +172,7 @@ export default async function MidasPage({
 						periodLabel="All time"
 					/>
 				</div>
+				<MobileAddFab workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
 			</main>
 		);
 	}
