@@ -1,5 +1,7 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
+import { useRefreshRouter } from "@/hooks/useRefreshRouter";
 import { getAccounts } from "@/features/midas/actions/accounts";
 import { getTags } from "@/features/midas/actions/tags";
 import type { Tag } from "@/features/midas/actions/tags";
@@ -32,7 +34,6 @@ import {
 	TabsTrigger,
 } from "@ethos/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -72,7 +73,7 @@ interface Props {
 }
 
 export function EditTransactionModal({ transaction, workspaceId, open, onOpenChange }: Props) {
-	const router = useRouter();
+	const refresh = useRefreshRouter();
 	const [accounts, setAccounts] = React.useState<Account[]>([]);
 	const [workspaceTags, setWorkspaceTags] = React.useState<Tag[]>([]);
 	const [selectedTagIds, setSelectedTagIds] = React.useState<string[]>(() =>
@@ -138,7 +139,7 @@ export function EditTransactionModal({ transaction, workspaceId, open, onOpenCha
 			toast.error(result.error);
 		} else {
 			toast.success("Transaction updated.");
-			router.refresh();
+			refresh();
 			onOpenChange(false);
 		}
 	};
@@ -310,7 +311,8 @@ export function EditTransactionModal({ transaction, workspaceId, open, onOpenCha
 						<Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
 							Cancel
 						</Button>
-						<Button type="submit" disabled={isSubmitting}>
+						<Button type="submit" disabled={isSubmitting} className="gap-1.5">
+							{isSubmitting && <Spinner />}
 							{isSubmitting ? "Saving…" : "Save"}
 						</Button>
 					</div>

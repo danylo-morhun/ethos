@@ -1,5 +1,7 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
+import { useRefreshRouter } from "@/hooks/useRefreshRouter";
 import { exportTransactionsCsv } from "@/features/midas/actions/export";
 import { deleteTransaction, deleteTransactions } from "@/features/midas/actions/transactions";
 import type { RecentTransaction } from "@/features/midas/actions/transactions";
@@ -88,6 +90,8 @@ export function TransactionTable({
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const [isPending, startTransition] = useTransition();
+	const [isExporting, setIsExporting] = useState(false);
+	const refresh = useRefreshRouter();
 	const [pendingId, setPendingId] = useState<string | null>(null);
 	const [editTarget, setEditTarget] = useState<RecentTransaction | null>(null);
 	const [localQuery, setLocalQuery] = useState(searchQuery ?? "");
@@ -150,6 +154,7 @@ export function TransactionTable({
 	}
 
 	async function handleExport() {
+		setIsExporting(true);
 		const result = await exportTransactionsCsv(
 			workspaceId,
 			dateFrom,
@@ -159,6 +164,7 @@ export function TransactionTable({
 		);
 		if ("error" in result) {
 			toast.error(result.error);
+			setIsExporting(false);
 			return;
 		}
 		const blob = new Blob([result.csv], { type: "text/csv" });
@@ -168,6 +174,7 @@ export function TransactionTable({
 		a.download = `transactions-${dateFrom ?? "all"}-${dateTo ?? "all"}.csv`;
 		a.click();
 		URL.revokeObjectURL(url);
+		setIsExporting(false);
 	}
 
 	function handleDelete(id: string) {
@@ -177,7 +184,7 @@ export function TransactionTable({
 				toast.error(result.error);
 			} else {
 				toast.success("Transaction deleted.");
-				router.refresh();
+				refresh();
 			}
 			setPendingId(null);
 		});
@@ -209,7 +216,7 @@ export function TransactionTable({
 			} else {
 				toast.success(`${result.deleted} transaction${result.deleted !== 1 ? "s" : ""} deleted.`);
 				setSelectedIds(new Set());
-				router.refresh();
+				refresh();
 			}
 			setBulkDeleteOpen(false);
 		});
@@ -273,9 +280,14 @@ export function TransactionTable({
 						size="icon"
 						className="h-8 w-8 shrink-0"
 						onClick={handleExport}
+						disabled={isExporting}
 						title="Export CSV"
 					>
-						<HugeiconsIcon icon={Download01Icon} className="h-4 w-4" />
+						{isExporting ? (
+							<Spinner />
+						) : (
+							<HugeiconsIcon icon={Download01Icon} className="h-4 w-4" />
+						)}
 					</Button>
 				</div>
 			</div>
@@ -433,10 +445,11 @@ export function TransactionTable({
 												<AlertDialogFooter>
 													<AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
 													<AlertDialogAction
-														className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+														className="gap-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90"
 														disabled={isPending}
 														onClick={() => handleDelete(txn.id)}
 													>
+														{isPending && <Spinner />}
 														{isPending ? "Deleting…" : "Delete"}
 													</AlertDialogAction>
 												</AlertDialogFooter>
@@ -489,10 +502,11 @@ export function TransactionTable({
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+							className="gap-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90"
 							disabled={isPending}
 							onClick={handleBulkDelete}
 						>
+							{isPending && <Spinner />}
 							{isPending ? "Deleting…" : "Delete"}
 						</AlertDialogAction>
 					</AlertDialogFooter>

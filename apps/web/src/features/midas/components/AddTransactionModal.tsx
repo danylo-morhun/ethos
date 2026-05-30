@@ -1,5 +1,7 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
+import { useRefreshRouter } from "@/hooks/useRefreshRouter";
 import { getAccounts } from "@/features/midas/actions/accounts";
 import { getTags } from "@/features/midas/actions/tags";
 import type { Tag } from "@/features/midas/actions/tags";
@@ -36,7 +38,6 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useRouter } from "next/navigation";
 import * as React from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import type { Control } from "react-hook-form";
@@ -59,7 +60,7 @@ export function AddTransactionModal({
 	const [workspaceTags, setWorkspaceTags] = React.useState<Tag[]>([]);
 	const [selectedTagIds, setSelectedTagIds] = React.useState<string[]>([]);
 	const [txType, setTxType] = React.useState<TxType>("expense");
-	const router = useRouter();
+	const refresh = useRefreshRouter();
 
 	const defaultCurrency = toCurrency(baseCurrency);
 	const today = new Date().toISOString().slice(0, 10);
@@ -206,7 +207,7 @@ export function AddTransactionModal({
 		}
 
 		toast.success("Transaction recorded.");
-		router.refresh();
+		refresh();
 		setOpen(false);
 	};
 
@@ -466,7 +467,8 @@ export function AddTransactionModal({
 						<Button type="button" variant="outline" onClick={() => setOpen(false)}>
 							Cancel
 						</Button>
-						<Button type="submit" disabled={isSubmitting}>
+						<Button type="submit" disabled={isSubmitting} className="gap-1.5">
+							{isSubmitting && <Spinner />}
 							{isSubmitting ? "Saving…" : "Save"}
 						</Button>
 					</div>

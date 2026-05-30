@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
 import { updateWorkspace } from "@/features/midas/actions/workspace";
 import { CURRENCIES } from "@/features/midas/lib/constants";
 import { Button, Input, Label } from "@ethos/ui";
@@ -50,7 +51,8 @@ export function WorkspaceSettingsForm({ workspaceId, initialName, baseCurrency }
 					<span className="text-xs text-muted-foreground">Currency change not yet supported</span>
 				</div>
 			</div>
-			<Button type="submit" disabled={isPending || name.trim() === initialName}>
+			<Button type="submit" disabled={isPending || name.trim() === initialName} className="gap-1.5">
+				{isPending && <Spinner />}
 				{isPending ? "Saving…" : "Save changes"}
 			</Button>
 		</form>

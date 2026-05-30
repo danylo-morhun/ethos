@@ -1,5 +1,7 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
+import { useRefreshRouter } from "@/hooks/useRefreshRouter";
 import { getAccounts, updateAccount } from "@/features/midas/actions/accounts";
 import { CURRENCIES, toCurrency } from "@/features/midas/lib/constants";
 import {
@@ -17,7 +19,6 @@ import {
 	SelectValue,
 } from "@ethos/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -45,7 +46,7 @@ interface Props {
 
 export function EditAccountModal({ account, workspaceId, open, onOpenChange }: Props) {
 	const [accounts, setAccounts] = React.useState<Account[]>([]);
-	const router = useRouter();
+	const refresh = useRefreshRouter();
 
 	const {
 		register,
@@ -91,7 +92,7 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
 					values.type === "EXPENSE" || values.type === "INCOME" ? (values.budget ?? null) : null,
 			});
 			toast.success("Account updated");
-			router.refresh();
+			refresh();
 			onOpenChange(false);
 		} catch {
 			toast.error("Failed to update account");
@@ -211,7 +212,8 @@ export function EditAccountModal({ account, workspaceId, open, onOpenChange }: P
 						<Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
 							Cancel
 						</Button>
-						<Button type="submit" disabled={isSubmitting}>
+						<Button type="submit" disabled={isSubmitting} className="gap-1.5">
+							{isSubmitting && <Spinner />}
 							{isSubmitting ? "Saving…" : "Save"}
 						</Button>
 					</div>

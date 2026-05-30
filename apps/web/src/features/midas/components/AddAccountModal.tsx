@@ -1,5 +1,7 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
+import { useRefreshRouter } from "@/hooks/useRefreshRouter";
 import { createAccount, getAccounts } from "@/features/midas/actions/accounts";
 import { CURRENCIES, toCurrency } from "@/features/midas/lib/constants";
 import {
@@ -18,7 +20,6 @@ import {
 	SelectValue,
 } from "@ethos/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -43,7 +44,7 @@ export function AddAccountModal({
 }: { workspaceId: string; baseCurrency?: string }) {
 	const [open, setOpen] = React.useState(false);
 	const [accounts, setAccounts] = React.useState<Account[]>([]);
-	const router = useRouter();
+	const refresh = useRefreshRouter();
 
 	const {
 		register,
@@ -85,7 +86,7 @@ export function AddAccountModal({
 				values.currency,
 			);
 			toast.success(`"${values.name}" created`);
-			router.refresh();
+			refresh();
 			setOpen(false);
 		} catch {
 			toast.error("Failed to create account");
@@ -208,7 +209,8 @@ export function AddAccountModal({
 						<Button type="button" variant="outline" onClick={() => setOpen(false)}>
 							Cancel
 						</Button>
-						<Button type="submit" disabled={isSubmitting}>
+						<Button type="submit" disabled={isSubmitting} className="gap-1.5">
+							{isSubmitting && <Spinner />}
 							{isSubmitting ? "Creating…" : "Create"}
 						</Button>
 					</div>
