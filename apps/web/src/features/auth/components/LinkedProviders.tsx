@@ -4,6 +4,8 @@ import { Spinner } from "@/components/Spinner";
 import { unlinkProvider } from "@/features/auth/actions/settings";
 import type { SettingsState } from "@/features/auth/actions/settings";
 import { Button } from "@ethos/ui/button";
+import { Unlink01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useActionState } from "react";
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -39,7 +41,7 @@ function ProviderRow({ provider, canUnlink }: ProviderRowProps) {
 							disabled={pending}
 							className="h-7 gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
 						>
-							{pending && <Spinner />}
+							{pending ? <Spinner /> : <HugeiconsIcon icon={Unlink01Icon} className="h-3.5 w-3.5" />}
 							{pending ? "Unlinking…" : "Unlink"}
 						</Button>
 					</form>
