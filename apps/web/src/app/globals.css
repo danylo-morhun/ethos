@@ -165,9 +165,14 @@
 	--chart-5: oklch(0.48 0.09 64);
 }
 
-@keyframes nav-loader {
-	0% { transform: translateX(-150%); }
-	100% { transform: translateX(450%); }
+@keyframes loader-appear {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+/* Full-screen sidebar sheet on mobile */
+[data-mobile="true"] {
+	--sidebar-width: 100vw !important;
 }
 
 input[type="number"]::-webkit-inner-spin-button,
