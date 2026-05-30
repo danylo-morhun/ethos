@@ -1,3 +1,4 @@
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { TooltipProvider } from "@ethos/ui";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
@@ -20,10 +21,12 @@ export default function RootLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		<html lang="en" className={`dark ${geistSans.variable}`}>
+		<html lang="en" className={geistSans.variable} suppressHydrationWarning>
 			<body className="antialiased">
-				<TooltipProvider delayDuration={0}>{children}</TooltipProvider>
-				<Toaster richColors position="bottom-right" />
+				<ThemeProvider>
+					<TooltipProvider delayDuration={0}>{children}</TooltipProvider>
+					<Toaster richColors position="bottom-right" />
+				</ThemeProvider>
 			</body>
 		</html>
 	);
