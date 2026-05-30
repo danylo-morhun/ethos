@@ -12,6 +12,7 @@ import { Input } from "@ethos/ui/input";
 import { Label } from "@ethos/ui/label";
 import { Separator } from "@ethos/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ethos/ui/tabs";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 
 function GoogleButton() {
@@ -87,6 +88,16 @@ function PasswordForm() {
 			<Button className="w-full" type="submit" disabled={pending}>
 				{pending ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
 			</Button>
+			{mode === "signin" && (
+				<p className="text-center text-sm">
+					<Link
+						href="/auth/forgot-password"
+						className="text-muted-foreground underline underline-offset-2 hover:text-foreground"
+					>
+						Forgot password?
+					</Link>
+				</p>
+			)}
 			<p className="text-muted-foreground text-center text-sm">
 				{mode === "signin" ? (
 					<>
