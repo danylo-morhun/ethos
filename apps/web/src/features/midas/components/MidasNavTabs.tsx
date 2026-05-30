@@ -93,7 +93,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 								trigger={
 									<Button
 										size="icon"
-										className="h-11 w-11 rounded-full shadow-lg transition-transform active:scale-95"
+										className="h-11 w-11 rounded-full shadow-lg ring-1 ring-border transition-transform active:scale-95"
 									>
 										<HugeiconsIcon icon={Add01Icon} className="h-5 w-5" />
 									</Button>
