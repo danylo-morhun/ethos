@@ -5,6 +5,9 @@ import { accounts, db, eq, workspaces } from "@ethos/db";
 import { revalidatePath } from "next/cache";
 
 export async function getWorkspace(userId: string) {
+	const session = await auth();
+	if (!session?.user?.id || session.user.id !== userId) throw new Error("Unauthorized");
+
 	const [workspace] = await db
 		.select()
 		.from(workspaces)
@@ -14,6 +17,9 @@ export async function getWorkspace(userId: string) {
 }
 
 export async function initializeWorkspace(userId: string) {
+	const session = await auth();
+	if (!session?.user?.id || session.user.id !== userId) throw new Error("Unauthorized");
+
 	const [inserted] = await db
 		.insert(workspaces)
 		.values({ userId, name: "Midas", baseCurrency: "PLN" })
