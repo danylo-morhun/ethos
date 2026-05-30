@@ -5,42 +5,10 @@ import { Button, cn } from "@ethos/ui";
 import { Add01Icon, Chart01Icon, Clock01Icon, Settings01Icon, Wallet01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export type MidasTab = "overview" | "accounts" | "transactions";
-
-// FAB h-14 = 56px → radius 28px + 4px gap = 32
-const NOTCH_R = 32;
-const CORNER_R = 14;
-
-function NavShape({ width, height }: { width: number; height: number }) {
-	if (!width || !height) return null;
-	const cx = width / 2;
-	const br = 8;
-	const d = [
-		`M ${CORNER_R} 0`,
-		`L ${cx - NOTCH_R - br} 0`,
-		`Q ${cx - NOTCH_R} 0 ${cx - NOTCH_R} ${br}`,
-		`A ${NOTCH_R} ${NOTCH_R} 0 0 1 ${cx + NOTCH_R} ${br}`,
-		`Q ${cx + NOTCH_R} 0 ${cx + NOTCH_R + br} 0`,
-		`L ${width - CORNER_R} 0`,
-		`Q ${width} 0 ${width} ${CORNER_R}`,
-		`L ${width} ${height - CORNER_R}`,
-		`Q ${width} ${height} ${width - CORNER_R} ${height}`,
-		`L ${CORNER_R} ${height}`,
-		`Q 0 ${height} 0 ${height - CORNER_R}`,
-		`L 0 ${CORNER_R}`,
-		`Q 0 0 ${CORNER_R} 0`,
-		`Z`,
-	].join(" ");
-
-	return (
-		<svg className="pointer-events-none absolute inset-0" width={width} height={height} aria-hidden>
-			<path d={d} style={{ fill: "var(--background)", stroke: "var(--border)", strokeWidth: 1 }} />
-		</svg>
-	);
-}
 
 const TABS: { value: MidasTab; label: string; icon: typeof Chart01Icon }[] = [
 	{ value: "overview", label: "Expenses", icon: Chart01Icon },
@@ -59,22 +27,6 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
 	const [pendingTab, setPendingTab] = useState<MidasTab | null>(null);
-
-	const barRef = useRef<HTMLDivElement>(null);
-	const [dims, setDims] = useState({ width: 0, height: 0 });
-
-	useEffect(() => {
-		const el = barRef.current;
-		if (!el) return;
-		const ro = new ResizeObserver(([entry]) => {
-			setDims({
-				width: Math.round(entry.contentRect.width),
-				height: Math.round(entry.contentRect.height),
-			});
-		});
-		ro.observe(el);
-		return () => ro.disconnect();
-	}, []);
 
 	const activeTab = (searchParams.get("tab") as MidasTab) || "overview";
 	const displayTab = pendingTab ?? activeTab;
@@ -132,13 +84,8 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 				style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
 			>
 				<div className="mx-3 mb-3">
-					<div ref={barRef} className="relative">
-						<NavShape width={dims.width} height={dims.height} />
-						{!dims.width && (
-							<div className="absolute inset-0 rounded-xl border border-border bg-background" />
-						)}
-
-						{/* FAB h-14 = 56px, center at bar top edge */}
+					{/* FAB — exactly half above the bar (top-0 + -translate-y-1/2) */}
+					<div className="relative">
 						<div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
 							<AddTransactionModal
 								workspaceId={workspaceId}
@@ -146,53 +93,42 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 								trigger={
 									<Button
 										size="icon"
-										className="h-14 w-14 rounded-full shadow-xl transition-transform active:scale-95"
+										className="h-11 w-11 rounded-full shadow-lg transition-transform active:scale-95"
 									>
-										<HugeiconsIcon icon={Add01Icon} className="h-6 w-6" />
+										<HugeiconsIcon icon={Add01Icon} className="h-5 w-5" />
 									</Button>
 								}
 							/>
 						</div>
 
-						<div className="relative grid grid-cols-[1fr_4.5rem_1fr] items-center px-4 py-3">
+						<div className="grid grid-cols-[1fr_3.5rem_1fr] items-center rounded-xl border border-border bg-background px-4 py-2 shadow-sm">
 							{/* Left: Expenses, Accounts */}
 							<div className="flex items-center justify-around">
-								{TABS.slice(0, 2).map(({ value, label, icon }) => {
-									const active = displayTab === value && !isSettings;
-									const loading = isPending && pendingTab === value;
-									return (
-										<button
-											key={value}
-											type="button"
-											onClick={() => handleTabClick(value)}
-											className={tabCls(active, loading)}
-										>
-											<HugeiconsIcon icon={icon} className="h-5 w-5" />
-											<span className="text-[10px] font-medium">{label}</span>
-										</button>
-									);
-								})}
+								{TABS.slice(0, 2).map(({ value, label, icon }) => (
+									<button
+										key={value}
+										type="button"
+										onClick={() => handleTabClick(value)}
+										className={tabCls(displayTab === value && !isSettings, isPending && pendingTab === value)}
+									>
+										<HugeiconsIcon icon={icon} className="h-5 w-5" />
+										<span className="text-[10px] font-medium">{label}</span>
+									</button>
+								))}
 							</div>
 
 							<div aria-hidden />
 
 							{/* Right: History, Settings */}
 							<div className="flex items-center justify-around">
-								{(() => {
-									const { value, label, icon } = TABS[2];
-									const active = displayTab === value && !isSettings;
-									const loading = isPending && pendingTab === value;
-									return (
-										<button
-											type="button"
-											onClick={() => handleTabClick(value)}
-											className={tabCls(active, loading)}
-										>
-											<HugeiconsIcon icon={icon} className="h-5 w-5" />
-											<span className="text-[10px] font-medium">{label}</span>
-										</button>
-									);
-								})()}
+								<button
+									type="button"
+									onClick={() => handleTabClick("transactions")}
+									className={tabCls(displayTab === "transactions" && !isSettings, isPending && pendingTab === "transactions")}
+								>
+									<HugeiconsIcon icon={Clock01Icon} className="h-5 w-5" />
+									<span className="text-[10px] font-medium">History</span>
+								</button>
 								<Link href="/settings" className={tabCls(isSettings)}>
 									<HugeiconsIcon icon={Settings01Icon} className="h-5 w-5" />
 									<span className="text-[10px] font-medium">Settings</span>
