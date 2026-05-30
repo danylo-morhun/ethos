@@ -5,17 +5,17 @@ import { AddTransactionModal } from "@/features/midas/components/AddTransactionM
 import { DateRangePicker } from "@/features/midas/components/DateRangePicker";
 import { getAppForPath } from "@/lib/app-themes";
 import { Button, SidebarTrigger, cn } from "@ethos/ui";
-import { Settings01Icon } from "@hugeicons/core-free-icons";
+import { Chart01Icon, Clock01Icon, Settings01Icon, Wallet01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
 type MidasTab = "overview" | "accounts" | "transactions";
 
-const MIDAS_TABS: { value: MidasTab; label: string }[] = [
-	{ value: "overview", label: "Expenses" },
-	{ value: "accounts", label: "Accounts" },
-	{ value: "transactions", label: "Transactions" },
+const MIDAS_TABS: { value: MidasTab; label: string; icon: typeof Chart01Icon }[] = [
+	{ value: "overview", label: "Expenses", icon: Chart01Icon },
+	{ value: "accounts", label: "Accounts", icon: Wallet01Icon },
+	{ value: "transactions", label: "Transactions", icon: Clock01Icon },
 ];
 
 interface Props {
@@ -64,17 +64,18 @@ export function AppHeader({ workspaceId, baseCurrency }: Props) {
 
 			{isMidasHome && (
 				<nav className="absolute left-1/2 hidden -translate-x-1/2 md:flex h-full items-stretch">
-					{MIDAS_TABS.map(({ value, label }) => (
+					{MIDAS_TABS.map(({ value, label, icon }) => (
 						<Link
 							key={value}
 							href={tabHref(value)}
 							className={cn(
-								"relative flex items-center px-3.5 text-sm font-medium transition-colors",
+								"relative flex items-center gap-1.5 px-3.5 text-sm font-medium transition-colors",
 								activeTab === value
 									? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
 									: "text-muted-foreground hover:text-foreground",
 							)}
 						>
+							<HugeiconsIcon icon={icon} className="h-4 w-4" />
 							{label}
 						</Link>
 					))}
