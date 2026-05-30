@@ -91,7 +91,7 @@ export function AppHeader({ workspaceId, baseCurrency }: Props) {
 						</>
 					)}
 					<Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-						<Link href={`${app.href}/settings`} aria-label="Settings">
+						<Link href="/settings" aria-label="Settings">
 							<HugeiconsIcon icon={Settings01Icon} className="h-4 w-4" />
 						</Link>
 					</Button>
