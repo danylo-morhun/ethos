@@ -4,6 +4,7 @@ import { getBalances } from "@/features/midas/actions/balances";
 import { generateDueRecurring } from "@/features/midas/actions/recurring";
 import { getTags } from "@/features/midas/actions/tags";
 import { getRecentTransactions } from "@/features/midas/actions/transactions";
+import { getMonthlyTrends } from "@/features/midas/actions/trends";
 import { initializeWorkspace } from "@/features/midas/actions/workspace";
 import { AccountsOverview } from "@/features/midas/components/AccountsOverview";
 import { ExpenseBreakdown } from "@/features/midas/components/ExpenseBreakdown";
@@ -11,6 +12,7 @@ import { ExpenseCategoryList } from "@/features/midas/components/ExpenseCategory
 import { type MidasTab, MidasNavTabs } from "@/features/midas/components/MidasNavTabs";
 import { OnboardingCard } from "@/features/midas/components/OnboardingCard";
 import { TransactionTable } from "@/features/midas/components/TransactionTable";
+import { TrendChart } from "@/features/midas/components/TrendChart";
 import { formatCurrency } from "@/features/midas/lib/format";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { redirect } from "next/navigation";
@@ -35,6 +37,7 @@ export default async function MidasPage({
 		sort?: string;
 		dir?: string;
 		tag?: string;
+		trend?: string;
 	}>;
 }) {
 	const session = await auth();
@@ -51,6 +54,7 @@ export default async function MidasPage({
 		sort: rawSort,
 		dir: rawDir,
 		tag: rawTag,
+		trend: rawTrend,
 	} = await searchParams;
 
 	const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -82,7 +86,14 @@ export default async function MidasPage({
 
 	// ── Overview ────────────────────────────────────────────────────────────────
 	if (tab === "overview") {
-		const balances = await getBalances(workspace.id, from, to);
+		const trendParam = rawTrend === "3m" || rawTrend === "1y" ? rawTrend : "6m";
+		const trendMonths = trendParam === "3m" ? 3 : trendParam === "1y" ? 12 : 6;
+		const hasDateFilter = !isAllTime && (rawValidFrom !== undefined || rawValidTo !== undefined);
+
+		const [balances, trendData] = await Promise.all([
+			getBalances(workspace.id, from, to),
+			getMonthlyTrends(workspace.id, hasDateFilter ? from : undefined, hasDateFilter ? to : undefined, trendMonths),
+		]);
 
 		const income = Math.abs(
 			balances.filter((b) => b.type === "INCOME").reduce((acc, b) => acc + Number(b.balance), 0),
@@ -128,6 +139,12 @@ export default async function MidasPage({
 
 						<ExpenseBreakdown balances={balances} currency={workspace.baseCurrency} />
 						<ExpenseCategoryList balances={balances} currency={workspace.baseCurrency} />
+						<TrendChart
+							data={trendData}
+							currency={workspace.baseCurrency}
+							trendParam={trendParam}
+							hasDateFilter={hasDateFilter}
+						/>
 					</div>
 				)}
 			</main>
@@ -186,6 +203,7 @@ export default async function MidasPage({
 					sortDir={sortDir}
 				/>
 			</div>
+			<MobileAddFab workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
 		</main>
 	);
 }
