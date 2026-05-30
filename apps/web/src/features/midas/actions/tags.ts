@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { and, db, eq, tags, transactionTags, transactions, workspaces } from "@ethos/db";
+import { and, db, eq, inArray, tags, transactionTags, transactions, workspaces } from "@ethos/db";
 import { revalidatePath } from "next/cache";
 
 export type Tag = { id: string; name: string; color: string | null };
@@ -100,6 +100,14 @@ export async function setTransactionTags(
 		.limit(1);
 
 	if (!txnRow || txnRow.workspaceId !== workspaceId) return { error: "Transaction not found" };
+
+	if (tagIds.length > 0) {
+		const valid = await db
+			.select({ id: tags.id })
+			.from(tags)
+			.where(and(inArray(tags.id, tagIds), eq(tags.workspaceId, workspaceId)));
+		if (valid.length !== tagIds.length) return { error: "Tag not found" };
+	}
 
 	await db.transaction(async (tx) => {
 		await tx.delete(transactionTags).where(eq(transactionTags.transactionId, transactionId));
