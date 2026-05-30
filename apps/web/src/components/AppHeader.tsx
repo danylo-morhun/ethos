@@ -2,6 +2,7 @@
 
 import { AddTransactionModal } from "@/features/midas/components/AddTransactionModal";
 import { DateRangePicker } from "@/features/midas/components/DateRangePicker";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { getAppForPath } from "@/lib/app-themes";
 import { Button, SidebarTrigger, cn } from "@ethos/ui";
 import { Settings01Icon } from "@hugeicons/core-free-icons";
@@ -90,6 +91,7 @@ export function AppHeader({ workspaceId, baseCurrency }: Props) {
 							</span>
 						</>
 					)}
+					<ThemeToggle />
 					<Button variant="ghost" size="icon" className="h-8 w-8" asChild>
 						<Link href="/settings" aria-label="Settings">
 							<HugeiconsIcon icon={Settings01Icon} className="h-4 w-4" />
