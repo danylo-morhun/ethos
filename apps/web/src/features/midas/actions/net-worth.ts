@@ -48,6 +48,7 @@ export async function getNetWorthHistory(
         join ${accounts} a on a.id = te.account_id
         where a.workspace_id = ${workspaceId}
           and a.type in ('ASSET', 'LIABILITY')
+          and a.archived_at is null
           and t.date <= (date_trunc('month', generate_series) + interval '1 month' - interval '1 day')::date
       ), 0)`,
 		})

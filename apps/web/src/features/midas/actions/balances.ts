@@ -6,6 +6,7 @@ import {
 	and,
 	db,
 	eq,
+	isNull,
 	sql,
 	transactionEntries,
 	transactions,
@@ -71,7 +72,7 @@ export async function getBalances(
 		.from(accounts)
 		.leftJoin(transactionEntries, eq(transactionEntries.accountId, accounts.id))
 		.leftJoin(transactions, and(eq(transactions.id, transactionEntries.transactionId)))
-		.where(eq(accounts.workspaceId, workspaceId))
+		.where(and(eq(accounts.workspaceId, workspaceId), isNull(accounts.archivedAt)))
 		.groupBy(accounts.id, accounts.name, accounts.type, accounts.currency);
 
 	return rows;
