@@ -57,78 +57,90 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 		});
 	}
 
-	function tabClass(active: boolean, loading = false) {
+	function iconBtn(active: boolean, loading = false) {
 		return cn(
-			"flex flex-col items-center gap-0.5 px-3 py-1.5 text-[10px] font-medium transition-colors",
+			"flex h-10 w-10 items-center justify-center rounded-full transition-colors",
 			active ? "text-primary" : "text-muted-foreground",
-			loading && "animate-pulse",
+			loading && "opacity-40",
 		);
 	}
 
 	return (
-		<nav
-			className="fixed z-40 md:hidden"
-			style={{
-				bottom: "max(1.25rem, env(safe-area-inset-bottom))",
-				left: "50%",
-				transform: "translateX(-50%)",
-			}}
-		>
-			<div className="relative">
-				{/* Elevated FAB */}
-				<div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
-					<AddTransactionModal
-						workspaceId={workspaceId}
-						baseCurrency={baseCurrency}
-						trigger={
-							<Button
-								size="icon"
-								className="h-12 w-12 rounded-full shadow-xl transition-transform active:scale-95"
+		<>
+			{/* Progress bar */}
+			{isPending && (
+				<div className="fixed inset-x-0 top-14 z-50 h-0.5 overflow-hidden md:hidden">
+					<div className="h-full w-1/2 animate-[nav-loader_1.2s_ease-in-out_infinite] rounded-full bg-primary" />
+				</div>
+			)}
+
+			<nav
+				className="fixed z-40 md:hidden"
+				style={{
+					bottom: "max(1.25rem, env(safe-area-inset-bottom))",
+					left: "50%",
+					transform: "translateX(-50%)",
+				}}
+			>
+				<div className="relative">
+					{/* Elevated FAB — absolutely centered */}
+					<div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2">
+						<AddTransactionModal
+							workspaceId={workspaceId}
+							baseCurrency={baseCurrency}
+							trigger={
+								<Button
+									size="icon"
+									className="h-10 w-10 rounded-full shadow-xl transition-transform active:scale-95"
+								>
+									<HugeiconsIcon icon={Add01Icon} className="h-4 w-4" />
+								</Button>
+							}
+						/>
+					</div>
+
+					{/* Pill — grid ensures left/right columns equal so FAB lands dead center */}
+					<div className="grid grid-cols-[1fr_3rem_1fr] items-center rounded-full border border-border/40 bg-background/85 px-2 py-1 shadow-lg backdrop-blur-xl">
+						{/* Left: Overview, Accounts */}
+						<div className="flex items-center justify-end">
+							<button
+								type="button"
+								onClick={() => handleTabClick("overview")}
+								className={iconBtn(displayTab === "overview" && !isSettings, isPending && pendingTab === "overview")}
 							>
-								<HugeiconsIcon icon={Add01Icon} className="h-5 w-5" />
-							</Button>
-						}
-					/>
+								<HugeiconsIcon icon={Chart01Icon} className="h-5 w-5" />
+							</button>
+							<button
+								type="button"
+								onClick={() => handleTabClick("accounts")}
+								className={iconBtn(displayTab === "accounts" && !isSettings, isPending && pendingTab === "accounts")}
+							>
+								<HugeiconsIcon icon={BankIcon} className="h-5 w-5" />
+							</button>
+						</div>
+
+						{/* Center spacer (3rem = same as FAB width w-10 + breathing room) */}
+						<div aria-hidden />
+
+						{/* Right: Transactions, Settings */}
+						<div className="flex items-center justify-start">
+							<button
+								type="button"
+								onClick={() => handleTabClick("transactions")}
+								className={iconBtn(displayTab === "transactions" && !isSettings, isPending && pendingTab === "transactions")}
+							>
+								<HugeiconsIcon icon={BanknoteIcon} className="h-5 w-5" />
+							</button>
+							<Link
+								href="/settings"
+								className={iconBtn(isSettings)}
+							>
+								<HugeiconsIcon icon={Settings01Icon} className="h-5 w-5" />
+							</Link>
+						</div>
+					</div>
 				</div>
-
-				{/* Pill */}
-				<div className="flex items-center rounded-full border border-border/40 bg-background/85 px-2 py-1 shadow-lg backdrop-blur-xl">
-					{/* Left: Expenses, Accounts */}
-					<button
-						type="button"
-						onClick={() => handleTabClick("overview")}
-						className={tabClass(displayTab === "overview" && !isSettings, isPending && pendingTab === "overview")}
-					>
-						<HugeiconsIcon icon={Chart01Icon} className="h-5 w-5" />
-						Expenses
-					</button>
-					<button
-						type="button"
-						onClick={() => handleTabClick("accounts")}
-						className={tabClass(displayTab === "accounts" && !isSettings, isPending && pendingTab === "accounts")}
-					>
-						<HugeiconsIcon icon={BankIcon} className="h-5 w-5" />
-						Accounts
-					</button>
-
-					{/* Spacer under FAB */}
-					<div className="w-14" aria-hidden />
-
-					{/* Right: Transactions, Settings */}
-					<button
-						type="button"
-						onClick={() => handleTabClick("transactions")}
-						className={tabClass(displayTab === "transactions" && !isSettings, isPending && pendingTab === "transactions")}
-					>
-						<HugeiconsIcon icon={BanknoteIcon} className="h-5 w-5" />
-						Txns
-					</button>
-					<Link href="/settings" className={tabClass(isSettings)}>
-						<HugeiconsIcon icon={Settings01Icon} className="h-5 w-5" />
-						Settings
-					</Link>
-				</div>
-			</div>
-		</nav>
+			</nav>
+		</>
 	);
 }
