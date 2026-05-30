@@ -13,6 +13,7 @@ import {
 } from "@ethos/db";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { put } from "@vercel/blob";
 import { z } from "zod";
 
 export type SettingsState = { error: string } | { success: true } | null;
@@ -28,20 +29,34 @@ export async function updateProfile(
 	formData: FormData,
 ): Promise<SettingsState> {
 	const user = await requireUser();
-	const schema = z.object({
-		name: z.string().min(1, "Name is required").max(100),
-		image: z.union([z.string().url("Invalid URL"), z.literal("")]).optional(),
-	});
-	const parsed = schema.safeParse({
-		name: formData.get("name"),
-		image: formData.get("image") ?? "",
-	});
-	if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+	const parsedName = z.string().min(1, "Name is required").max(100).safeParse(formData.get("name"));
+	if (!parsedName.success) return { error: parsedName.error.issues[0]?.message ?? "Invalid name" };
+
+	let imageUrl: string | null = null;
+
+	const avatarFile = formData.get("avatarFile");
+	if (avatarFile instanceof File && avatarFile.size > 0) {
+		if (!avatarFile.type.startsWith("image/")) return { error: "Only image files are allowed." };
+		if (avatarFile.size > 2 * 1024 * 1024) return { error: "Image must be under 2 MB." };
+		const { url } = await put(`avatars/${user.id}/${avatarFile.name}`, avatarFile, {
+			access: "public",
+		});
+		imageUrl = url;
+	} else {
+		const raw = formData.get("image");
+		const parsed = z.union([z.string().url(), z.literal("")]).optional().safeParse(
+			typeof raw === "string" ? raw : "",
+		);
+		if (!parsed.success) return { error: "Invalid image URL." };
+		imageUrl = parsed.data || null;
+	}
+
 	await db
 		.update(authUsers)
-		.set({ name: parsed.data.name, image: parsed.data.image || null })
+		.set({ name: parsedName.data, image: imageUrl })
 		.where(eq(authUsers.id, user.id));
-	revalidatePath("/settings");
+	revalidatePath("/settings/account");
 	return { success: true };
 }
 
