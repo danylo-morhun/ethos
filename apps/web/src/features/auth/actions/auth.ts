@@ -12,6 +12,10 @@ export async function signOutAction() {
 	await signOut({ redirectTo: "/" });
 }
 
+export async function signInWithGitHub() {
+	await signIn("github", { redirectTo: "/midas" });
+}
+
 export async function signInWithGoogle() {
 	await signIn("google", { redirectTo: "/midas" });
 }
