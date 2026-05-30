@@ -84,7 +84,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 				style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
 			>
 				<div className="mx-3 mb-3">
-					<div className="grid grid-cols-[1fr_3.5rem_1fr] items-center rounded-xl border border-border bg-background px-4 py-2 shadow-sm">
+					<div className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/85 px-2 py-1.5 shadow-lg backdrop-blur-xl">
 						{/* Left: Expenses, Accounts */}
 						<div className="flex items-center justify-around">
 							{TABS.slice(0, 2).map(({ value, label, icon }) => (
