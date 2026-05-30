@@ -1,7 +1,9 @@
+import { NavigationProgress } from "@/components/NavigationProgress";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { TooltipProvider } from "@ethos/ui";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { Suspense } from "react";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -20,6 +22,8 @@ export const metadata: Metadata = {
 		title: "ethos",
 	},
 	icons: {
+		icon: [{ url: "/icon", type: "image/png", sizes: "32x32" }],
+		shortcut: "/icon",
 		apple: "/icons/apple-touch-icon.png",
 	},
 };
@@ -33,6 +37,9 @@ export default function RootLayout({
 		<html lang="en" className={geistSans.variable} suppressHydrationWarning>
 			<body className="antialiased">
 				<ThemeProvider>
+					<Suspense>
+						<NavigationProgress />
+					</Suspense>
 					<TooltipProvider delayDuration={0}>{children}</TooltipProvider>
 					<Toaster richColors position="bottom-right" />
 				</ThemeProvider>
