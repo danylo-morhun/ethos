@@ -14,7 +14,7 @@ import {
 	AlertDialogTitle,
 	Button,
 } from "@ethos/ui";
-import { Delete01Icon, PauseIcon, PlayCircleIcon } from "@hugeicons/core-free-icons";
+import { Alert01Icon, Delete01Icon, PauseIcon, PlayCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -146,7 +146,10 @@ export function RecurringTransactionsList({
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Delete recurring transaction?</AlertDialogTitle>
+						<AlertDialogTitle className="flex items-center gap-2">
+							<HugeiconsIcon icon={Alert01Icon} className="h-5 w-5 text-destructive" />
+							Delete recurring transaction?
+						</AlertDialogTitle>
 						<AlertDialogDescription>
 							This removes the schedule. Already-generated transactions are not affected.
 						</AlertDialogDescription>
@@ -154,10 +157,11 @@ export function RecurringTransactionsList({
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+							className="gap-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90"
 							disabled={isPending}
 							onClick={handleDelete}
 						>
+							<HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />
 							{isPending ? "Deleting…" : "Delete"}
 						</AlertDialogAction>
 					</AlertDialogFooter>

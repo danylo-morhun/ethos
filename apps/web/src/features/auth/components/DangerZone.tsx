@@ -14,6 +14,8 @@ import {
 	AlertDialogTrigger,
 } from "@ethos/ui/alert-dialog";
 import { Button } from "@ethos/ui/button";
+import { Alert01Icon, Delete01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 
 export function DangerZone() {
@@ -62,13 +64,17 @@ export function DangerZone() {
 				</div>
 				<AlertDialog>
 					<AlertDialogTrigger asChild>
-						<Button variant="destructive" size="sm" className="shrink-0">
+						<Button variant="destructive" size="sm" className="shrink-0 gap-1.5">
+							<HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />
 							Delete account
 						</Button>
 					</AlertDialogTrigger>
 					<AlertDialogContent>
 						<AlertDialogHeader>
-							<AlertDialogTitle>Delete account?</AlertDialogTitle>
+							<AlertDialogTitle className="flex items-center gap-2">
+								<HugeiconsIcon icon={Alert01Icon} className="h-5 w-5 text-destructive" />
+								Delete account?
+							</AlertDialogTitle>
 							<AlertDialogDescription>
 								This will permanently delete your account, workspace, and all financial data. This
 								action cannot be undone.
@@ -81,7 +87,7 @@ export function DangerZone() {
 								disabled={deletePending}
 								onClick={handleDeleteAccount}
 							>
-								{deletePending && <Spinner />}
+								{deletePending ? <Spinner /> : <HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />}
 								{deletePending ? "Deleting…" : "Yes, delete everything"}
 							</AlertDialogAction>
 						</AlertDialogFooter>

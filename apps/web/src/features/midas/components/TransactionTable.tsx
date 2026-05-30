@@ -33,6 +33,7 @@ import {
 	TableRow,
 } from "@ethos/ui";
 import {
+	Alert01Icon,
 	Delete01Icon,
 	Download01Icon,
 	MoreHorizontalIcon,
@@ -436,7 +437,10 @@ export function TransactionTable({
 											</DropdownMenu>
 											<AlertDialogContent>
 												<AlertDialogHeader>
-													<AlertDialogTitle>Delete transaction?</AlertDialogTitle>
+													<AlertDialogTitle className="flex items-center gap-2">
+								<HugeiconsIcon icon={Alert01Icon} className="h-5 w-5 text-destructive" />
+								Delete transaction?
+							</AlertDialogTitle>
 													<AlertDialogDescription>
 														This will recalculate your account balances. This action cannot be
 														undone.
@@ -449,7 +453,7 @@ export function TransactionTable({
 														disabled={isPending}
 														onClick={() => handleDelete(txn.id)}
 													>
-														{isPending && <Spinner />}
+														{isPending ? <Spinner /> : <HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />}
 														{isPending ? "Deleting…" : "Delete"}
 													</AlertDialogAction>
 												</AlertDialogFooter>
@@ -491,7 +495,8 @@ export function TransactionTable({
 			<AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>
+						<AlertDialogTitle className="flex items-center gap-2">
+							<HugeiconsIcon icon={Alert01Icon} className="h-5 w-5 text-destructive" />
 							Delete {selectedIds.size} transaction{selectedIds.size !== 1 ? "s" : ""}?
 						</AlertDialogTitle>
 						<AlertDialogDescription>
@@ -506,7 +511,7 @@ export function TransactionTable({
 							disabled={isPending}
 							onClick={handleBulkDelete}
 						>
-							{isPending && <Spinner />}
+							{isPending ? <Spinner /> : <HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />}
 							{isPending ? "Deleting…" : "Delete"}
 						</AlertDialogAction>
 					</AlertDialogFooter>

@@ -24,6 +24,7 @@ import {
 	Progress,
 } from "@ethos/ui";
 import {
+	Alert01Icon,
 	Archive01Icon,
 	ArrowDown01Icon,
 	ArrowRight01Icon,
@@ -410,7 +411,10 @@ export function AccountsOverview({
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Delete "{confirmTarget?.name}"?</AlertDialogTitle>
+						<AlertDialogTitle className="flex items-center gap-2">
+							<HugeiconsIcon icon={Alert01Icon} className="h-5 w-5 text-destructive" />
+							Delete "{confirmTarget?.name}"?
+						</AlertDialogTitle>
 						<AlertDialogDescription>
 							This will permanently delete the account and all its transaction entries. This action
 							cannot be undone.
@@ -419,10 +423,11 @@ export function AccountsOverview({
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+							className="gap-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90"
 							disabled={isPending}
 							onClick={handleDeleteConfirm}
 						>
+							<HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />
 							{isPending ? "Deleting…" : "Delete"}
 						</AlertDialogAction>
 					</AlertDialogFooter>
