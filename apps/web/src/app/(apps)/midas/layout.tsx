@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { getWorkspace } from "@/features/midas/actions/workspace";
+import { MidasContentShell } from "@/features/midas/components/MidasContentShell";
 import { MidasNavTabs } from "@/features/midas/components/MidasNavTabs";
 
 export default async function MidasLayout({ children }: { children: React.ReactNode }) {
@@ -8,7 +9,7 @@ export default async function MidasLayout({ children }: { children: React.ReactN
 
 	return (
 		<>
-			{children}
+			<MidasContentShell>{children}</MidasContentShell>
 			{workspace && (
 				<MidasNavTabs workspaceId={workspace.id} baseCurrency={workspace.baseCurrency} />
 			)}
