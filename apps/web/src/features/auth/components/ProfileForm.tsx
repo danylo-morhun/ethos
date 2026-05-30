@@ -35,13 +35,14 @@ export function ProfileForm({ name, image }: Props) {
 	const [fileObjectUrl, setFileObjectUrl] = useState<string | null>(null);
 	const [urlInput, setUrlInput] = useState(image ?? "");
 	const [isDragging, setIsDragging] = useState(false);
+	const [clearedImage, setClearedImage] = useState(false);
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	// Derived — no separate state needed
 	const previewUrl =
 		tab === "file"
-			? (fileObjectUrl ?? image ?? null)
+			? (fileObjectUrl ?? (clearedImage ? null : image) ?? null)
 			: (isValidUrl(urlInput) ? urlInput : (image ?? null));
 
 	function handleFileSelect(file: File) {
@@ -86,6 +87,7 @@ export function ProfileForm({ name, image }: Props) {
 		setFileObjectUrl(null);
 		setSelectedFile(null);
 		setUrlInput("");
+		setClearedImage(true);
 		if (fileInputRef.current) fileInputRef.current.value = "";
 	}
 
@@ -100,7 +102,7 @@ export function ProfileForm({ name, image }: Props) {
 		} else if (tab === "url") {
 			formData.set("image", urlInput);
 		} else {
-			formData.set("image", image ?? "");
+			formData.set("image", clearedImage ? "" : (image ?? ""));
 		}
 
 		startTransition(async () => {
@@ -115,7 +117,7 @@ export function ProfileForm({ name, image }: Props) {
 			<div className="flex items-center gap-5">
 				<div className="relative shrink-0">
 					<Avatar src={previewUrl} name={name} size="lg" className="h-20 w-20 text-2xl" />
-					{(fileObjectUrl || (tab === "url" && urlInput)) && (
+					{(fileObjectUrl || (tab === "file" && !clearedImage && image) || (tab === "url" && urlInput)) && (
 						<button
 							type="button"
 							onClick={clearAll}
