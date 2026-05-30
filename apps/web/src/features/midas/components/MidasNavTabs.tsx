@@ -80,7 +80,7 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 			>
 				<div className="mx-3 mb-3">
 					{/* Grid: equal left/right columns guarantee FAB lands dead-center */}
-					<div className="grid grid-cols-[1fr_4rem_1fr] items-center rounded-2xl border border-border/40 bg-background/85 px-3 py-2 shadow-lg backdrop-blur-xl">
+					<div className="grid grid-cols-[1fr_4rem_1fr] items-center rounded-xl border border-border bg-background px-3 py-2 shadow-sm">
 						{/* Left: Overview, Accounts */}
 						<div className="flex items-center justify-around">
 							<button
@@ -99,9 +99,9 @@ export function MidasNavTabs({ workspaceId, baseCurrency }: Props) {
 							</button>
 						</div>
 
-						{/* Center FAB — inside the bar, slightly raised with -mt-3 */}
+						{/* Center FAB — center aligned with top edge of bar */}
 						<div className="flex items-center justify-center">
-							<div className="-mt-3">
+							<div className="-mt-6">
 								<AddTransactionModal
 									workspaceId={workspaceId}
 									baseCurrency={baseCurrency}
