@@ -42,6 +42,15 @@ export async function createAccount(
 	if (!workspace) throw new Error("Workspace not found");
 	if (workspace.userId !== session.user.id) throw new Error("Forbidden");
 
+	if (parentId) {
+		const [parent] = await db
+			.select({ workspaceId: accounts.workspaceId })
+			.from(accounts)
+			.where(eq(accounts.id, parentId))
+			.limit(1);
+		if (!parent || parent.workspaceId !== workspaceId) throw new Error("Parent account not found");
+	}
+
 	const [account] = await db
 		.insert(accounts)
 		.values({
@@ -125,6 +134,16 @@ export async function deleteAccount(
 		.limit(1);
 
 	if (!ws || ws.userId !== session.user.id) return { error: "Forbidden" };
+
+	const [child] = await db
+		.select({ id: accounts.id })
+		.from(accounts)
+		.where(eq(accounts.parentId, accountId))
+		.limit(1);
+
+	if (child) {
+		return { error: "Cannot delete account with sub-accounts" };
+	}
 
 	const entries = await db
 		.select({ id: transactionEntries.id })
