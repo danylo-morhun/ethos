@@ -2,6 +2,7 @@
 // AppSidebar imports APPS_CONFIG so path/name are never duplicated
 export const APPS_CONFIG = {
 	"/midas": { theme: "theme-midas", name: "Midas" },
+	"/tasso": { theme: "theme-tasso", name: "Tasso" },
 } satisfies Record<string, { theme: string; name: string }>;
 
 export const APP_THEMES = Object.fromEntries(
