@@ -9,11 +9,19 @@ import { useEffect } from "react";
 
 const ALL_THEMES = Object.values(APP_THEMES);
 
+interface User {
+	id: string;
+	name?: string | null;
+	email?: string | null;
+	image?: string | null;
+}
+
 interface Props {
 	workspaceName: string;
 	workspaceId?: string;
 	baseCurrency?: string;
 	sidebarDefaultOpen?: boolean;
+	user?: User | null;
 	children: React.ReactNode;
 }
 
@@ -22,6 +30,7 @@ export function AppShell({
 	workspaceId,
 	baseCurrency,
 	sidebarDefaultOpen = true,
+	user,
 	children,
 }: Props) {
 	const pathname = usePathname();
@@ -38,7 +47,7 @@ export function AppShell({
 
 	return (
 		<SidebarProvider defaultOpen={sidebarDefaultOpen} className={theme}>
-			<AppSidebar workspaceName={workspaceName} />
+			<AppSidebar workspaceName={workspaceName} user={user} />
 			<SidebarInset>
 				<AppHeader workspaceId={workspaceId} baseCurrency={baseCurrency} />
 				{children}

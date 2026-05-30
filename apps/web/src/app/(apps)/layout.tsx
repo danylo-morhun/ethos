@@ -17,6 +17,7 @@ export default async function AppsLayout({ children }: { children: React.ReactNo
 			workspaceId={workspace?.id}
 			baseCurrency={workspace?.baseCurrency}
 			sidebarDefaultOpen={defaultOpen}
+			user={session?.user ?? null}
 		>
 			{children}
 		</AppShell>

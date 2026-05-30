@@ -1,8 +1,10 @@
 "use client";
 
+import { signOutAction } from "@/features/auth/actions/auth";
 // Fix 7: import APPS_CONFIG as single source of truth for paths + names
 import { APPS_CONFIG } from "@/lib/app-themes";
 import {
+	Avatar,
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
@@ -11,6 +13,7 @@ import {
 	DropdownMenuTrigger,
 	Sidebar,
 	SidebarContent,
+	SidebarFooter,
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarGroupLabel,
@@ -23,7 +26,10 @@ import {
 	ArrowUpDownIcon,
 	CheckIcon,
 	GreekHelmetIcon,
+	Logout01Icon,
 	Money01Icon,
+	Settings01Icon,
+	UserCircleIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
@@ -34,11 +40,19 @@ const APP_ICONS: Record<string, typeof Money01Icon> = {
 	"/midas": Money01Icon,
 };
 
-interface Props {
-	workspaceName: string;
+interface User {
+	id: string;
+	name?: string | null;
+	email?: string | null;
+	image?: string | null;
 }
 
-export function AppSidebar({ workspaceName }: Props) {
+interface Props {
+	workspaceName: string;
+	user?: User | null;
+}
+
+export function AppSidebar({ workspaceName, user }: Props) {
 	const pathname = usePathname();
 
 	return (
@@ -109,6 +123,70 @@ export function AppSidebar({ workspaceName }: Props) {
 					</SidebarGroupContent>
 				</SidebarGroup>
 			</SidebarContent>
+
+			<SidebarFooter>
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<SidebarMenuButton
+									size="lg"
+									className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+								>
+									<Avatar src={user?.image} name={user?.name} size="sm" />
+									<div className="flex min-w-0 flex-col text-left leading-none">
+										<span className="truncate text-sm font-medium">
+											{user?.name ?? "User"}
+										</span>
+										<span className="truncate text-xs text-muted-foreground">
+											{user?.email ?? ""}
+										</span>
+									</div>
+									<HugeiconsIcon
+										icon={ArrowUpDownIcon}
+										className="ml-auto h-4 w-4 shrink-0 text-muted-foreground/60"
+									/>
+								</SidebarMenuButton>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent
+								className="w-56"
+								side="top"
+								align="start"
+								sideOffset={8}
+							>
+								<DropdownMenuLabel className="flex items-center gap-2">
+									<Avatar src={user?.image} name={user?.name} size="sm" />
+									<div className="flex min-w-0 flex-col leading-none">
+										<span className="truncate font-medium">{user?.name ?? "User"}</span>
+										<span className="truncate text-xs font-normal text-muted-foreground">
+											{user?.email ?? ""}
+										</span>
+									</div>
+								</DropdownMenuLabel>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem asChild>
+									<Link href="/settings">
+										<HugeiconsIcon icon={UserCircleIcon} className="h-4 w-4" />
+										Account settings
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem asChild>
+									<form action={signOutAction} className="w-full">
+										<button
+											type="submit"
+											className="flex w-full items-center gap-2 text-destructive"
+										>
+											<HugeiconsIcon icon={Logout01Icon} className="h-4 w-4" />
+											Sign out
+										</button>
+									</form>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarFooter>
 		</Sidebar>
 	);
 }

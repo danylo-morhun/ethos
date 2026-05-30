@@ -1,12 +1,16 @@
 "use server";
 
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 import { authUsers, db, eq } from "@ethos/db";
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { z } from "zod";
 
 export type AuthState = { error: string } | { success: true } | null;
+
+export async function signOutAction() {
+	await signOut({ redirectTo: "/" });
+}
 
 export async function signInWithGoogle() {
 	await signIn("google", { redirectTo: "/midas" });
