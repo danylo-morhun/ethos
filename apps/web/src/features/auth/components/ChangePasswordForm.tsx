@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
 import { changePassword } from "@/features/auth/actions/settings";
 import type { SettingsState } from "@/features/auth/actions/settings";
 import { Button } from "@ethos/ui/button";
@@ -39,7 +40,8 @@ export function ChangePasswordForm({ hasPassword }: Props) {
 					{hasPassword ? "Password updated." : "Password set."}
 				</p>
 			)}
-			<Button type="submit" disabled={pending}>
+			<Button type="submit" disabled={pending} className="gap-1.5">
+				{pending && <Spinner />}
 				{pending ? "Saving…" : hasPassword ? "Update password" : "Set password"}
 			</Button>
 		</form>

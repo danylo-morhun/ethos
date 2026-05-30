@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
 import { unlinkProvider } from "@/features/auth/actions/settings";
 import type { SettingsState } from "@/features/auth/actions/settings";
 import { Button } from "@ethos/ui/button";
@@ -21,17 +22,13 @@ function ProviderRow({ provider, canUnlink }: ProviderRowProps) {
 	return (
 		<div className="flex items-center justify-between py-2.5">
 			<div className="flex items-center gap-2">
-				<span className="text-sm font-medium">
-					{PROVIDER_LABELS[provider] ?? provider}
-				</span>
+				<span className="text-sm font-medium">{PROVIDER_LABELS[provider] ?? provider}</span>
 				<span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
 					Connected
 				</span>
 			</div>
 			<div className="flex items-center gap-2">
-				{state && "error" in state && (
-					<p className="text-xs text-destructive">{state.error}</p>
-				)}
+				{state && "error" in state && <p className="text-xs text-destructive">{state.error}</p>}
 				{canUnlink && (
 					<form action={action}>
 						<input type="hidden" name="provider" value={provider} />
@@ -40,8 +37,9 @@ function ProviderRow({ provider, canUnlink }: ProviderRowProps) {
 							variant="ghost"
 							size="sm"
 							disabled={pending}
-							className="h-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
+							className="h-7 gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
 						>
+							{pending && <Spinner />}
 							{pending ? "Unlinking…" : "Unlink"}
 						</Button>
 					</form>

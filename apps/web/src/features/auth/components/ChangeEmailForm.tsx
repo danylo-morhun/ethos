@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
 import { requestEmailChange } from "@/features/auth/actions/settings";
 import type { SettingsState } from "@/features/auth/actions/settings";
 import { Button } from "@ethos/ui/button";
@@ -45,7 +46,8 @@ export function ChangeEmailForm({ currentEmail, pendingEmail }: Props) {
 				/>
 			</div>
 			{state && "error" in state && <p className="text-sm text-destructive">{state.error}</p>}
-			<Button type="submit" disabled={pending}>
+			<Button type="submit" disabled={pending} className="gap-1.5">
+				{pending && <Spinner />}
 				{pending ? "Sending…" : "Send verification link"}
 			</Button>
 		</form>

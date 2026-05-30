@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
 import { updateProfile } from "@/features/auth/actions/settings";
 import type { SettingsState } from "@/features/auth/actions/settings";
 import { Avatar, cn } from "@ethos/ui";
@@ -43,7 +44,9 @@ export function ProfileForm({ name, image }: Props) {
 	const previewUrl =
 		tab === "file"
 			? (fileObjectUrl ?? (clearedImage ? null : image) ?? null)
-			: (isValidUrl(urlInput) ? urlInput : (image ?? null));
+			: isValidUrl(urlInput)
+				? urlInput
+				: (image ?? null);
 
 	function handleFileSelect(file: File) {
 		if (!file.type.startsWith("image/")) {
@@ -117,7 +120,9 @@ export function ProfileForm({ name, image }: Props) {
 			<div className="flex items-center gap-5">
 				<div className="relative shrink-0">
 					<Avatar src={previewUrl} name={name} size="lg" className="h-20 w-20 text-2xl" />
-					{(fileObjectUrl || (tab === "file" && !clearedImage && image) || (tab === "url" && urlInput)) && (
+					{(fileObjectUrl ||
+						(tab === "file" && !clearedImage && image) ||
+						(tab === "url" && urlInput)) && (
 						<button
 							type="button"
 							onClick={clearAll}
@@ -244,14 +249,11 @@ export function ProfileForm({ name, image }: Props) {
 				)}
 			</div>
 
-			{state && "error" in state && (
-				<p className="text-sm text-destructive">{state.error}</p>
-			)}
-			{state && "success" in state && (
-				<p className="text-sm text-green-500">Profile updated.</p>
-			)}
+			{state && "error" in state && <p className="text-sm text-destructive">{state.error}</p>}
+			{state && "success" in state && <p className="text-sm text-green-500">Profile updated.</p>}
 
-			<Button type="submit" disabled={pending}>
+			<Button type="submit" disabled={pending} className="gap-1.5">
+				{pending && <Spinner />}
 				{pending ? "Saving…" : "Save changes"}
 			</Button>
 		</form>

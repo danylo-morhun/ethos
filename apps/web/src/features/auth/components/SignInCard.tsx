@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
 import {
 	handleCredentials,
 	signInWithGoogle,
@@ -24,7 +25,8 @@ function GoogleButton() {
 				await signInWithGoogle();
 			}}
 		>
-			<Button className="w-full" variant="outline" type="submit" disabled={pending}>
+			<Button className="w-full gap-1.5" variant="outline" type="submit" disabled={pending}>
+				{pending && <Spinner />}
 				{pending ? "Redirecting…" : "Continue with Google"}
 			</Button>
 		</form>
@@ -49,7 +51,8 @@ function MagicLinkForm() {
 				<Input id="magic-email" name="email" type="email" placeholder="you@example.com" required />
 			</div>
 			{state && "error" in state && <p className="text-destructive text-sm">{state.error}</p>}
-			<Button className="w-full" type="submit" disabled={pending}>
+			<Button className="w-full gap-1.5" type="submit" disabled={pending}>
+				{pending && <Spinner />}
 				{pending ? "Sending…" : "Send magic link"}
 			</Button>
 		</form>
@@ -85,7 +88,8 @@ function PasswordForm() {
 				/>
 			</div>
 			{state && "error" in state && <p className="text-destructive text-sm">{state.error}</p>}
-			<Button className="w-full" type="submit" disabled={pending}>
+			<Button className="w-full gap-1.5" type="submit" disabled={pending}>
+				{pending && <Spinner />}
 				{pending ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
 			</Button>
 			{mode === "signin" && (

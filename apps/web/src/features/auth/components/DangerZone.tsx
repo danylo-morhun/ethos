@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner } from "@/components/Spinner";
 import { deleteAccount, signOutAllDevices } from "@/features/auth/actions/settings";
 import {
 	AlertDialog,
@@ -45,8 +46,9 @@ export function DangerZone() {
 					size="sm"
 					disabled={signOutPending}
 					onClick={handleSignOutAll}
-					className="shrink-0"
+					className="shrink-0 gap-1.5"
 				>
+					{signOutPending && <Spinner />}
 					{signOutPending ? "Signing out…" : "Sign out all"}
 				</Button>
 			</div>
@@ -68,17 +70,18 @@ export function DangerZone() {
 						<AlertDialogHeader>
 							<AlertDialogTitle>Delete account?</AlertDialogTitle>
 							<AlertDialogDescription>
-								This will permanently delete your account, workspace, and all financial data.
-								This action cannot be undone.
+								This will permanently delete your account, workspace, and all financial data. This
+								action cannot be undone.
 							</AlertDialogDescription>
 						</AlertDialogHeader>
 						<AlertDialogFooter>
 							<AlertDialogCancel>Cancel</AlertDialogCancel>
 							<AlertDialogAction
-								className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+								className="gap-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90"
 								disabled={deletePending}
 								onClick={handleDeleteAccount}
 							>
+								{deletePending && <Spinner />}
 								{deletePending ? "Deleting…" : "Yes, delete everything"}
 							</AlertDialogAction>
 						</AlertDialogFooter>
